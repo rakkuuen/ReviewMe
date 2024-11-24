@@ -1,23 +1,43 @@
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.GraphicsEnvironment;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
+
+
 
 class Main extends JFrame{
     class App extends JPanel implements MouseListener {
 
         boolean stageBuilt = false;
+        // Button mainButton;
+        // Point mousePos;
+        JButton button;
 
         public App() {
             setPreferredSize(new Dimension(1024, 720));
             this.addMouseListener(this);
+
+            // mainButton = new Button(200, 50, "Hi there");
+            // mainButton.x = 100;
+            // mainButton.y = 100;
+
+            // // // Initialize mouse position for hover detection
+            // mousePos = new Point(-1, -1);
+
+
+
+            // Add a button
+            button = new JButton("Click Me!");
+            button.setFont(new Font("Arial", Font.PLAIN, 20));
+
+            // Add ActionListener to the button
+            button.addActionListener(e -> System.out.println("Button Clicked!"));
+
+            // Add the button to this panel
+            this.setLayout(new FlowLayout()); // Optional layout manager
+            this.add(button);
         }
 
         @Override
