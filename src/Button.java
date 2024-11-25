@@ -9,6 +9,7 @@ class Button extends Rectangle{
     Color hoverColor;
 
     public Button(int sizeX, int sizeY, String text){
+        super(0, 0, sizeX, sizeY);
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.text = text;
