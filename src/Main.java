@@ -14,47 +14,44 @@ class Main extends JFrame{
 
         boolean stageBuilt = false;
         Button mainButton;
-        // Point mousePos;
+        Button anotherButton;
         JButton button;
+        GameCell fallout;
 
         public App() {
             setPreferredSize(new Dimension(1024, 720));
             this.addMouseListener(this);
+            // I should have a frontpage class made here that will set up where all elements are on the page
+            // and allow the user to move onto other pages
+            // I.e., I dont want to initiliase any buttons here like im doing below!!!!
 
-            mainButton = new Button(200, 50, "Hi there");
-            mainButton.x = 100;
-            mainButton.y = 100;
+            mainButton = new Button(200, 50, 100, 100, 10, "Hi there");
+            anotherButton = new Button(300, 100, 400, 100, 30,"Wazzaaaappp");
+            fallout = new GameCell(100, 100, 700, 300, 30, "src/fallout-4-icon-6.png");
 
-            // // Initialize mouse position for hover detection
-            mousePos = new Point(-1, -1);
+            
 
-
-
-            // // Add a button
-            // button = new JButton("Click Me!");
-            // button.setFont(new Font("Arial", Font.PLAIN, 20));
-
-            // // Add ActionListener to the button
-            // button.addActionListener(e -> System.out.println("Button Clicked!"));
-
-            // // Add the button to this panel
-            // this.setLayout(new FlowLayout()); // Optional layout manager
-            // this.add(button);
         }
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
 
             // Paint the button
-            if (mainButton != null) {
+            if (mainButton != null && anotherButton != null) {
                 mainButton.paint(g, mousePos);
+                anotherButton.paint(g, mousePos);
                 
             }
+            JLabel picLabel = new JLabel(new ImageIcon(fallout.GetIcon()));
+            add(picLabel);
         }
 
         @Override
         public void mouseClicked(MouseEvent e) {
+            // If mouse pos is contained in any button element do somehting here
             System.out.println("You clicked!!!!");
+            if(mainButton.contains(mousePos));
+            System.out.println("YOU CLICKED THE BUTTON");
         }
     
         @Override
@@ -103,9 +100,9 @@ class Main extends JFrame{
         while (true) {
             Instant startTime = Instant.now();
             this.repaint();
+            // Get mouse position while app is running
             mousePos = MouseInfo.getPointerInfo().getLocation();
             SwingUtilities.convertPointFromScreen(mousePos, canvas);
-            //System.out.println(mousePos);
 
             Instant endTime = Instant.now();
             long howLong = Duration.between(startTime, endTime).toMillis();
@@ -117,6 +114,11 @@ class Main extends JFrame{
                 System.out.println("application can't keep up with framerate");
             }
         }
+    }
+
+    // Get mouse position
+    public Point GetMousePos(){
+        return mousePos;
     }
 
 }
