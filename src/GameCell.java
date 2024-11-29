@@ -12,7 +12,7 @@ public class GameCell extends Rectangle{
     int sizeX;
     int sizeY;
     int archWAndH;
-    String text;
+    //String text;
     Color mainColor;
     Color hoverColor;
     BufferedImage myPicture;
@@ -24,8 +24,8 @@ public class GameCell extends Rectangle{
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.archWAndH = archWAndH;
-        mainColor = Color.BLUE;
-        hoverColor = Color.RED;
+        mainColor = Color.WHITE;
+        hoverColor = Color.GRAY;
         LoadImage(myPicture);
 
     
@@ -45,15 +45,23 @@ public class GameCell extends Rectangle{
         g.setColor(Color.BLACK);
         g.drawRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
 
-         // Draw button text
-         g.setColor(Color.WHITE);
-         g.setFont(new Font("Arial", Font.BOLD, 18));
-         FontMetrics fm = g.getFontMetrics();
-         int textWidth = fm.stringWidth(text);
-         int textHeight = fm.getAscent();
-         int textX = x + (sizeX - textWidth) / 2;
-         int textY = y + (sizeY + textHeight) / 2 - 4; // Adjust for baseline
-         g.drawString(text, textX, textY);
+        // Draw button text
+        // g.setColor(Color.WHITE);
+        // g.setFont(new Font("Arial", Font.BOLD, 18));
+        // FontMetrics fm = g.getFontMetrics();
+        // int textWidth = fm.stringWidth(text);
+        // int textHeight = fm.getAscent();
+        // int textX = x + (sizeX - textWidth) / 2;
+        // int textY = y + (sizeY + textHeight) / 2 - 4; // Adjust for baseline
+        // g.drawString(text, textX, textY);
+
+        // Draw the image icon to the right of the rectangle
+        if (myPicture != null) {
+            int iconX = x + 10; // 10 pixels padding to the right of the rectangle
+            int iconY = y + (sizeY/6); // Center vertically
+            g.drawImage(myPicture, iconX, iconY, 50, 50, null);
+        }
+
     }
 
     void LoadImage(String myPicture){

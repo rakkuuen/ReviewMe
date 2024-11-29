@@ -27,7 +27,7 @@ class Main extends JFrame{
 
             mainButton = new Button(200, 50, 100, 100, 10, "Hi there");
             anotherButton = new Button(300, 100, 400, 100, 30,"Wazzaaaappp");
-            fallout = new GameCell(100, 100, 700, 300, 30, "src/fallout-4-icon-6.png");
+            fallout = new GameCell(500, 70, 500, 300, 10, "src/fallout-4-icon-6.png");
 
             
 
@@ -40,10 +40,11 @@ class Main extends JFrame{
             if (mainButton != null && anotherButton != null) {
                 mainButton.paint(g, mousePos);
                 anotherButton.paint(g, mousePos);
+                fallout.paint(g, mousePos);
                 
             }
-            JLabel picLabel = new JLabel(new ImageIcon(fallout.GetIcon()));
-            add(picLabel);
+            // JLabel picLabel = new JLabel(new ImageIcon(fallout.GetIcon()));
+            // add(picLabel);
         }
 
         @Override
