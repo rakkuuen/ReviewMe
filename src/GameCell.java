@@ -8,21 +8,21 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
 
+
 public class GameCell extends Rectangle{
-    int sizeX;
-    int sizeY;
+    public static final int width = 500;
+    public static final int height = 70;
+
     int archWAndH;
     //String text;
     Color mainColor;
     Color hoverColor;
     BufferedImage myPicture;
 
-    public GameCell(int sizeX, int sizeY, int locX, int locY, int archWAndH, String myPicture){
-        super(locX, locY, sizeX, sizeY);
+    public GameCell(int width, int height, int locX, int locY, int archWAndH, String myPicture){
+        super(locX, locY, width, height);
         this.x = locX;
         this.y = locY;
-        this.sizeX = sizeX;
-        this.sizeY = sizeY;
         this.archWAndH = archWAndH;
         mainColor = Color.WHITE;
         hoverColor = Color.GRAY;
@@ -39,11 +39,11 @@ public class GameCell extends Rectangle{
         } else {
             g.setColor(mainColor);
         }
-        g.fillRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
+        g.fillRoundRect(x, y, width, height, archWAndH, archWAndH);
 
         // Button border
         g.setColor(Color.BLACK);
-        g.drawRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
+        g.drawRoundRect(x, y, width, height, archWAndH, archWAndH);
 
         // Draw button text
         // g.setColor(Color.WHITE);
@@ -51,14 +51,14 @@ public class GameCell extends Rectangle{
         // FontMetrics fm = g.getFontMetrics();
         // int textWidth = fm.stringWidth(text);
         // int textHeight = fm.getAscent();
-        // int textX = x + (sizeX - textWidth) / 2;
-        // int textY = y + (sizeY + textHeight) / 2 - 4; // Adjust for baseline
+        // int textX = x + (width - textWidth) / 2;
+        // int textY = y + (height + textHeight) / 2 - 4; // Adjust for baseline
         // g.drawString(text, textX, textY);
 
         // Draw the image icon to the right of the rectangle
         if (myPicture != null) {
             int iconX = x + 10; // 10 pixels padding to the right of the rectangle
-            int iconY = y + (sizeY/6); // Center vertically
+            int iconY = y + (height/6); // Center vertically
             g.drawImage(myPicture, iconX, iconY, 50, 50, null);
         }
 
