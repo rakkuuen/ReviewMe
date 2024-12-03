@@ -32,7 +32,7 @@ class Main extends JFrame{
 
             mainButton = new Button(200, 50, 100, 100, 10, "Hi there");
             anotherButton = new Button(300, 100, 400, 100, 30,"Wazzaaaappp");
-            fallout = new GameCell(500, 300, 10, "src/fallout-4-icon-6.png");
+            fallout = new GameCell(500, 300, 10, "src/Resources/Images/fallout-4-icon-6.png");
 
             
 
@@ -88,6 +88,8 @@ class Main extends JFrame{
 
     public static void main(String[] args) throws Exception {
         System.out.println("Hello, World!");
+        MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
+
         //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Main window = new Main();
         window.run();

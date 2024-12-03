@@ -4,21 +4,10 @@ public class GameReview {
     private String gameplay, story, setting, achievements, replayability, music,
             conclusion, voiceActing;
     private String alternateTitles;
-    int finalRating;
+    private int finalRating;
 
-    public GameReview(String gameplay, String story, String setting, String achievements, 
-    String replayability, String music, String conclusion, String voiceActing, 
-    String alternateTitles, int finalRating){
-        this.gameplay = gameplay;
-        this.story = story;
-        this.setting = setting;
-        this.achievements = achievements;
-        this.replayability = replayability;
-        this.music = music;
-        this.conclusion = conclusion;
-        this.voiceActing = voiceActing;
-        this.alternateTitles = alternateTitles;
-        this.finalRating = finalRating;
+    public GameReview(){
+        // Set defualt values?
                     
     }
 
