@@ -1,3 +1,4 @@
+package Model;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -19,7 +20,7 @@ public class GameCell extends Rectangle{
     Color hoverColor;
     BufferedImage myPicture;
 
-    public GameCell(int width, int height, int locX, int locY, int archWAndH, String myPicture){
+    public GameCell(int locX, int locY, int archWAndH, String myPicture){
         super(locX, locY, width, height);
         this.x = locX;
         this.y = locY;
@@ -27,11 +28,9 @@ public class GameCell extends Rectangle{
         mainColor = Color.WHITE;
         hoverColor = Color.GRAY;
         LoadImage(myPicture);
-
-    
     }
 
-    void paint(Graphics g, Point mousePos){
+    public void paint(Graphics g, Point mousePos){
 
         // Hover Colour
         if(contains(mousePos)){

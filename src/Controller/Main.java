@@ -1,6 +1,11 @@
+package Controller;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+
+import Model.Button;
+import Model.GameCell;
+
 import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
@@ -27,7 +32,7 @@ class Main extends JFrame{
 
             mainButton = new Button(200, 50, 100, 100, 10, "Hi there");
             anotherButton = new Button(300, 100, 400, 100, 30,"Wazzaaaappp");
-            fallout = new GameCell(500, 70, 500, 300, 10, "src/fallout-4-icon-6.png");
+            fallout = new GameCell(500, 300, 10, "src/fallout-4-icon-6.png");
 
             
 

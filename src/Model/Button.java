@@ -1,7 +1,8 @@
+package Model;
 import java.awt.*;
 
 
-class Button extends Rectangle{
+public class Button extends Rectangle{
     int sizeX;
     int sizeY;
     int archWAndH;
@@ -21,7 +22,7 @@ class Button extends Rectangle{
         hoverColor = Color.RED;
     }
     
-    void paint(Graphics g, Point mousePos){
+    public void paint(Graphics g, Point mousePos){
 
         // Hover Colour
         if(contains(mousePos)){
