@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
+import Database.GameReviewDao;
 import Model.Button;
 import Model.GameCell;
 
@@ -89,6 +90,8 @@ class Main extends JFrame{
     public static void main(String[] args) throws Exception {
         System.out.println("Hello, World!");
         MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
+        GameReviewDao mydb = new GameReviewDao();
+        mydb.Setup();
         //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Main window = new Main();
         window.run();
