@@ -73,6 +73,8 @@ public class MarkdownProcessor {
 
             for(String line : lines){
                 line = line.trim();
+                // Remove any formating specifiers from line
+                line = RemoveFormatingSpecifiers(line);
                 // Check if the line is a heading
                 if (line.startsWith("#")) {
                     currentHeading = line.replaceAll("#+", "").trim(); // Remove '#' characters
@@ -95,6 +97,7 @@ public class MarkdownProcessor {
             try {
                 currentGameReview.SetFinalRating(Integer.parseInt(finalRatingText));
             } catch (NumberFormatException e) {
+                // Maybe change default so its more obvious when it fails.
                 currentGameReview.SetFinalRating(0); // Default if parsing fails
             }
 
@@ -111,5 +114,10 @@ public class MarkdownProcessor {
     private static String getContent(Map<String, StringBuilder> map, String key) {
         // Safely retrieve the content for the specified heading
         return map.getOrDefault(key, new StringBuilder()).toString().trim();
+    }
+
+    private static String RemoveFormatingSpecifiers(String input) {
+        // Remove everything between < and >, including the angle brackets
+        return input.replaceAll("<.*?>", "");
     }
 }

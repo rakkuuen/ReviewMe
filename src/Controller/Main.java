@@ -89,7 +89,6 @@ class Main extends JFrame{
     public static void main(String[] args) throws Exception {
         System.out.println("Hello, World!");
         MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
-
         //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Main window = new Main();
         window.run();
