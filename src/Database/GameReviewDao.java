@@ -1,4 +1,5 @@
 package Database;
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -10,15 +11,36 @@ import Model.GameReview;
 
 
 public class GameReviewDao {
-    private static final String dbPath = "/Resources/Databases/GameReview.db";
+    private static final String dbPath = "Resources/Databases/GameReview.db";
 
     public static void Setup(){
+        System.out.println("Hello");
+        File dbFile = new File(dbPath);
+        File dbDir = dbFile.getParentFile(); // Get the directory of the database file
+        if (!dbDir.exists()) {
+            System.out.println("it doesnt exist");
+        }
+        else{
+            System.out.println("It does exist!");
+        }
+
+
+        // Load the SQLite JDBC driver
+        try {
+            Class.forName("org.sqlite.JDBC");  // Explicitly load the SQLite driver
+        } catch (ClassNotFoundException e) {
+            System.err.println("SQLite JDBC driver not found!");
+            e.printStackTrace();
+            return;
+        }
+
         String url = "jdbc:sqlite:" + dbPath;
         try (Connection conn = DriverManager.getConnection(url)) {
             if (conn != null) {
                 System.out.println("Database created or opened successfully.");
             }
         } catch (SQLException e) {
+            System.out.println("It failed and this is the message:");
             System.err.println(e.getMessage());
         }
 
