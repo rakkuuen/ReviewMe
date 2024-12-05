@@ -17,19 +17,19 @@ public class MarkdownProcessor {
         // Here after I get the list of GameReview objects, I need to place them into a json file or sql database. (XML is for losers)
         
         // Temp console print for testing:
-        for (GameReview gameReview : gameReviews) {
-            System.out.println("---------- Game Review ----------");
-            System.out.println("Gameplay: " + gameReview.GetGameplay());
-            System.out.println("Story: " + gameReview.GetStory());
-            System.out.println("Setting: " + gameReview.GetSetting());
-            System.out.println("Music/Audio: " + gameReview.GetMusic());
-            System.out.println("Alternate Titles: " + gameReview.GetAlternateTitles());
-            System.out.println("Achievements: " + gameReview.GetAchievements());
-            System.out.println("Replayability: " + gameReview.GetReplayability());
-            System.out.println("Final Rating: " + gameReview.GetFinalRating());
-            System.out.println("Conclusion: " + gameReview.GetConclusion());
-            System.out.println("---------------------------------");
-        }
+        // for (GameReview gameReview : gameReviews) {
+        //     System.out.println("---------- Game Review ----------");
+        //     System.out.println("Gameplay: " + gameReview.GetGameplay());
+        //     System.out.println("Story: " + gameReview.GetStory());
+        //     System.out.println("Setting: " + gameReview.GetSetting());
+        //     System.out.println("Music/Audio: " + gameReview.GetMusic());
+        //     System.out.println("Alternate Titles: " + gameReview.GetAlternateTitles());
+        //     System.out.println("Achievements: " + gameReview.GetAchievements());
+        //     System.out.println("Replayability: " + gameReview.GetReplayability());
+        //     System.out.println("Final Rating: " + gameReview.GetFinalRating());
+        //     System.out.println("Conclusion: " + gameReview.GetConclusion());
+        //     System.out.println("---------------------------------");
+        // }
 
     }
 
@@ -43,7 +43,7 @@ public class MarkdownProcessor {
                 for(File child: directoryFiles){
                     // Make sure to only check md files
                     if(child.isFile() && child.getName().endsWith(".md")){
-                        System.out.println(child);
+                        //System.out.println(child);
                         GameReview gameReview = ParseMDContents(child);
                         gameReviews.add(gameReview);
                     }
