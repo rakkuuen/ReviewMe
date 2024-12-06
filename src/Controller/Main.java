@@ -26,6 +26,7 @@ class Main extends JFrame{
         JButton button;
         GameCell fallout;
         GameCellFactory myFactoryOfCells = new GameCellFactory();
+        List<GameCell> myCellsToPaint = myFactoryOfCells.GetAllGameCells();
 
 
         public App() {
@@ -46,7 +47,6 @@ class Main extends JFrame{
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
             // Paint all of the cells to screen after setting them up in cell factory
-            List<GameCell> myCellsToPaint = myFactoryOfCells.GetAllGameCells();
             for(GameCell cell : myCellsToPaint){
                 if(cell != null){
                     cell.paint(g, mousePos);
@@ -58,9 +58,13 @@ class Main extends JFrame{
         @Override
         public void mouseClicked(MouseEvent e) {
             // If mouse pos is contained in any button element do somehting here
-            System.out.println("You clicked!!!!");
+            // System.out.println("You clicked!!!!");
             if(mainButton.contains(mousePos));
-            System.out.println("YOU CLICKED THE BUTTON");
+            for(GameCell cell : myCellsToPaint){
+                if(cell.contains(mousePos)){
+                    System.out.println("You clicked: " + cell.gameTitle);
+                }
+            }
         }
     
         @Override
@@ -72,7 +76,6 @@ class Main extends JFrame{
         @Override
         public void mouseReleased(MouseEvent e) {
             System.out.println("You Released!!!!");
-
         }
     
         @Override

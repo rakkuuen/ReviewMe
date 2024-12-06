@@ -10,9 +10,9 @@ public class GameCellFactory {
     // It will need to pull from some database to fill details and make my life easier
     List<GameReview> allGameReviews;
     List<GameCell> allGameCells;
-    public int locY = 100;
+    public int locY = 50;
     public static final int locX = 300;
-    public static final int spaceBetweenCellsY = 60;
+    public static final int spaceBetweenCellsY = 70;
 
     public GameCellFactory(){
         allGameReviews = GameReviewDao.GetAllGameReviews();
