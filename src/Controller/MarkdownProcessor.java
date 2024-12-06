@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+
+import Database.GameReviewDao;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,25 +15,13 @@ import java.nio.file.Files;
 public class MarkdownProcessor {
     // Need to read content from md files and place them into database/json 
     public MarkdownProcessor() {
+        // Subject to change so that user can specify file location in future (not hardcoded)
         String reviewFolderPath = "D:\\stuff\\0 Vault\\All_Encompassing\\Games\\Reviews";
-        List<GameReview> gameReviews = FindMDFiles(reviewFolderPath);
-        // Here after I get the list of GameReview objects, I need to place them into a json file or sql database. (XML is for losers)
-        
-        // Temp console print for testing:
-        // for (GameReview gameReview : gameReviews) {
-        //     System.out.println("---------- Game Review ----------");
-        //     System.out.println("Gameplay: " + gameReview.GetGameplay());
-        //     System.out.println("Story: " + gameReview.GetStory());
-        //     System.out.println("Setting: " + gameReview.GetSetting());
-        //     System.out.println("Music/Audio: " + gameReview.GetMusic());
-        //     System.out.println("Alternate Titles: " + gameReview.GetAlternateTitles());
-        //     System.out.println("Achievements: " + gameReview.GetAchievements());
-        //     System.out.println("Replayability: " + gameReview.GetReplayability());
-        //     System.out.println("Final Rating: " + gameReview.GetFinalRating());
-        //     System.out.println("Conclusion: " + gameReview.GetConclusion());
-        //     System.out.println("---------------------------------");
-        // }
 
+        List<GameReview> gameReviews = FindMDFiles(reviewFolderPath);
+
+        // Here after I get the list of GameReview objects, I need to place them into a json file or sql database. (XML is for losers)
+        GameReviewDao.InsertGameReviews(gameReviews);
     }
 
     public static List<GameReview> FindMDFiles(String reviewFolderPath){
@@ -86,6 +77,7 @@ public class MarkdownProcessor {
                 }
             }
             // Map the headings to GameReview properties
+            currentGameReview.SetTitle(reviewFilePath.getName().replaceAll(".md$", "")); // Remove .md from end of file names
             currentGameReview.SetGameplay(getContent(headingsMap, "Gameplay"));
             currentGameReview.SetStory(getContent(headingsMap, "Story"));
             currentGameReview.SetSetting(getContent(headingsMap, "Setting"));
@@ -94,6 +86,7 @@ public class MarkdownProcessor {
             currentGameReview.SetAchievements(getContent(headingsMap, "Achievements"));
             currentGameReview.SetReplayability(getContent(headingsMap, "Replay-ability out of 10"));
             String finalRatingText = getContent(headingsMap, "Final Rating").replaceAll("<.*?>", "").trim();
+            
             try {
                 currentGameReview.SetFinalRating(Integer.parseInt(finalRatingText));
             } catch (NumberFormatException e) {
