@@ -2,8 +2,10 @@ package Controller;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.util.List;
 
 import Database.GameReviewDao;
+import Factory.GameCellFactory;
 import Model.Button;
 import Model.GameCell;
 
@@ -23,6 +25,8 @@ class Main extends JFrame{
         Button anotherButton;
         JButton button;
         GameCell fallout;
+        GameCellFactory myFactoryOfCells = new GameCellFactory();
+
 
         public App() {
             setPreferredSize(new Dimension(1024, 720));
@@ -33,7 +37,7 @@ class Main extends JFrame{
 
             mainButton = new Button(200, 50, 100, 100, 10, "Hi there");
             anotherButton = new Button(300, 100, 400, 100, 30,"Wazzaaaappp");
-            fallout = new GameCell(500, 300, 10, "Resources/Images/fallout-4-icon-6.png");
+            fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
 
             
 
@@ -41,16 +45,14 @@ class Main extends JFrame{
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
-
-            // Paint the button
-            if (mainButton != null && anotherButton != null) {
-                mainButton.paint(g, mousePos);
-                anotherButton.paint(g, mousePos);
-                fallout.paint(g, mousePos);
-                
+            // Paint all of the cells to screen after setting them up in cell factory
+            List<GameCell> myCellsToPaint = myFactoryOfCells.GetAllGameCells();
+            for(GameCell cell : myCellsToPaint){
+                if(cell != null){
+                    cell.paint(g, mousePos);
+                }
             }
-            // JLabel picLabel = new JLabel(new ImageIcon(fallout.GetIcon()));
-            // add(picLabel);
+
         }
 
         @Override
@@ -92,6 +94,7 @@ class Main extends JFrame{
         GameReviewDao.Setup();
 
         MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
+
 
         //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Main window = new Main();

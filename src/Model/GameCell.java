@@ -5,26 +5,26 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
+
 
 
 
 public class GameCell extends Rectangle{
     public static final int width = 500;
     public static final int height = 70;
+    public static final int archWAndH = 10;
 
-    int archWAndH;
     //String text;
     Color mainColor;
     Color hoverColor;
     BufferedImage myPicture;
+    public String gameTitle;
 
-    public GameCell(int locX, int locY, int archWAndH, String myPicture){
+    public GameCell(String gameTitle, int locX, int locY, String myPicture){
         super(locX, locY, width, height);
         this.x = locX;
         this.y = locY;
-        this.archWAndH = archWAndH;
+        this.gameTitle = gameTitle;
         mainColor = Color.WHITE;
         hoverColor = Color.GRAY;
         LoadImage(myPicture);
@@ -45,14 +45,14 @@ public class GameCell extends Rectangle{
         g.drawRoundRect(x, y, width, height, archWAndH, archWAndH);
 
         // Draw button text
-        // g.setColor(Color.WHITE);
-        // g.setFont(new Font("Arial", Font.BOLD, 18));
-        // FontMetrics fm = g.getFontMetrics();
-        // int textWidth = fm.stringWidth(text);
-        // int textHeight = fm.getAscent();
-        // int textX = x + (width - textWidth) / 2;
-        // int textY = y + (height + textHeight) / 2 - 4; // Adjust for baseline
-        // g.drawString(text, textX, textY);
+        g.setColor(Color.BLACK);
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics fm = g.getFontMetrics();
+        int textWidth = fm.stringWidth(gameTitle);
+        int textHeight = fm.getAscent();
+        int textX = x + (width - textWidth) / 2;
+        int textY = y + (height + textHeight) / 2 - 4; // Adjust for baseline
+        g.drawString(gameTitle, textX, textY);
 
         // Draw the image icon to the right of the rectangle
         if (myPicture != null) {
@@ -64,23 +64,25 @@ public class GameCell extends Rectangle{
     }
 
     void LoadImage(String myPicture){
-        try{
-            File file = new File(myPicture);
-            if(!file.exists()){
-                throw new IOException("File does not exist: " + file.getAbsolutePath());
+        if(myPicture != ""){
+            try{
+                File file = new File(myPicture);
+                if(!file.exists()){
+                    throw new IOException("File does not exist: " + file.getAbsolutePath());
+                }
+                else if (!file.canRead()){
+                    throw new IOException("Cannot read file: " + file.getAbsolutePath());
+                }            
+                this.myPicture = ImageIO.read(file);
+    
+    
             }
-            else if (!file.canRead()){
-                throw new IOException("Cannot read file: " + file.getAbsolutePath());
-            }            
-            this.myPicture = ImageIO.read(file);
-
-
+            catch(IOException e){
+                System.err.println("Error loading image: " + e.getMessage());
+                e.printStackTrace();
+            }
+    
         }
-        catch(IOException e){
-            System.err.println("Error loading image: " + e.getMessage());
-            e.printStackTrace();
-        }
-
     }
 
     public BufferedImage GetIcon(){

@@ -2,8 +2,10 @@ package Database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 import Model.GameReview;
@@ -71,7 +73,6 @@ public class GameReviewDao {
             pstmt.setString(10, review.GetConclusion());
 
             pstmt.executeUpdate();
-            System.out.println("GameReview inserted successfully.");
         } catch (SQLException e) {
             System.err.println("Error inserting GameReview: " + e.getMessage());
         }
@@ -81,5 +82,37 @@ public class GameReviewDao {
         for (GameReview review : reviews) {
             InsertGameReview(review);
         }
+    }
+
+    public static List<GameReview> GetAllGameReviews(){
+        List<GameReview> allGameReviews = new ArrayList<>();
+        String url = "jdbc:sqlite:" + dbPath;
+        String query = "SELECT * FROM GameReview";
+
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                GameReview review = new GameReview();
+                review.SetTitle(rs.getString("title"));  
+                review.SetGameplay(rs.getString("gameplay"));
+                review.SetStory(rs.getString("story"));
+                review.SetSetting(rs.getString("setting"));
+                review.SetMusic(rs.getString("music"));
+                review.SetAchievements(rs.getString("achievements"));
+                review.SetReplayability(rs.getString("replayability"));
+                review.SetAlternateTitles(rs.getString("alternateTitles"));
+                review.SetFinalRating(rs.getInt("finalRating"));
+                review.SetConclusion(rs.getString("conclusion"));
+
+                allGameReviews.add(review);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving GameReviews: " + e.getMessage());
+        }
+
+
+        return allGameReviews;
     }
 }
