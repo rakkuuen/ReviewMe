@@ -88,10 +88,11 @@ class Main extends JFrame{
     }
 
     public static void main(String[] args) throws Exception {
-        //System.out.println("Hello, World!");
+        // Setup Dao (future have a class to do all setup features simultaniously)
+        GameReviewDao.Setup();
+
         MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
-        GameReviewDao mydb = new GameReviewDao();
-        mydb.Setup();
+
         //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Main window = new Main();
         window.run();

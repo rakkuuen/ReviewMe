@@ -1,5 +1,4 @@
 package Database;
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -14,40 +13,21 @@ public class GameReviewDao {
     private static final String dbPath = "Resources/Databases/GameReview.db";
 
     public static void Setup(){
-        System.out.println("Hello");
-        File dbFile = new File(dbPath);
-        File dbDir = dbFile.getParentFile(); // Get the directory of the database file
-        if (!dbDir.exists()) {
-            System.out.println("it doesnt exist");
-        }
-        else{
-            System.out.println("It does exist!");
-        }
-
-
-        // Load the SQLite JDBC driver
-        try {
-            Class.forName("org.sqlite.JDBC");  // Explicitly load the SQLite driver
-        } catch (ClassNotFoundException e) {
-            System.err.println("SQLite JDBC driver not found!");
-            e.printStackTrace();
-            return;
-        }
-
+        // Connect to sql database (or create one if one does not exist)
         String url = "jdbc:sqlite:" + dbPath;
         try (Connection conn = DriverManager.getConnection(url)) {
             if (conn != null) {
                 System.out.println("Database created or opened successfully.");
             }
         } catch (SQLException e) {
-            System.out.println("It failed and this is the message:");
             System.err.println(e.getMessage());
         }
 
-        // Create table in database
+        // Create table in database if one does not already exist
         String createTableSQL = """
             CREATE TABLE IF NOT EXISTS GameReview (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
                 gameplay TEXT,
                 story TEXT,
                 setting TEXT,
@@ -69,26 +49,26 @@ public class GameReviewDao {
         }
     }
     
-    public static void InsertGameReview(GameReview review, String dbPath){
+    public static void InsertGameReview(GameReview review){
         String url = "jdbc:sqlite:" + dbPath;
         String insertSQL = """
-            INSERT INTO GameReview (gameplay, story, setting, music, achievements, 
+            INSERT INTO GameReview (title, gameplay, story, setting, music, achievements, 
                                     replayability, alternateTitles, finalRating, conclusion) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """;
 
         try (Connection conn = DriverManager.getConnection(url);
              PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
-
-            pstmt.setString(1, review.GetGameplay());
-            pstmt.setString(2, review.GetStory());
-            pstmt.setString(3, review.GetSetting());
-            pstmt.setString(4, review.GetMusic());
-            pstmt.setString(5, review.GetAchievements());
-            pstmt.setString(6, review.GetReplayability());
-            pstmt.setString(7, review.GetAlternateTitles());
-            pstmt.setInt(8, review.GetFinalRating());
-            pstmt.setString(9, review.GetConclusion());
+            pstmt.setString(1, review.GetTitle());
+            pstmt.setString(2, review.GetGameplay());
+            pstmt.setString(3, review.GetStory());
+            pstmt.setString(4, review.GetSetting());
+            pstmt.setString(5, review.GetMusic());
+            pstmt.setString(6, review.GetAchievements());
+            pstmt.setString(7, review.GetReplayability());
+            pstmt.setString(8, review.GetAlternateTitles());
+            pstmt.setInt(9, review.GetFinalRating());
+            pstmt.setString(10, review.GetConclusion());
 
             pstmt.executeUpdate();
             System.out.println("GameReview inserted successfully.");
@@ -97,9 +77,9 @@ public class GameReviewDao {
         }
     }
 
-    public static void InsertGameReviews(List<GameReview> reviews, String dbPath) {
+    public static void InsertGameReviews(List<GameReview> reviews) {
         for (GameReview review : reviews) {
-            InsertGameReview(review, dbPath);
+            InsertGameReview(review);
         }
     }
 }

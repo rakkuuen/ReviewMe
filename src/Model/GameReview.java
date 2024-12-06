@@ -1,7 +1,7 @@
 package Model;
 
 public class GameReview {
-    private String gameplay, story, setting, achievements, replayability, music,
+    private String gameTitle, gameplay, story, setting, achievements, replayability, music,
             conclusion, voiceActing;
     private String alternateTitles;
     private int finalRating;
@@ -12,6 +12,14 @@ public class GameReview {
     }
 
     // Getters / Setters
+    public String GetTitle() {
+        return gameTitle;
+    }
+
+    public void SetTitle(String gameTitle) {
+        this.gameTitle = gameTitle;
+    }
+
     public String GetGameplay() {
         return gameplay;
     }
