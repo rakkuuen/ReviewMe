@@ -2,14 +2,10 @@ package Controller;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import java.util.List;
 
 import Database.GameReviewDao;
-import Factory.GameCellFactory;
-import Model.Button;
-import Model.GameCell;
+import Screens.FrontPage;
 
-import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -19,52 +15,26 @@ class Main extends JFrame{
     App canvas;
     Point mousePos;
     class App extends JPanel implements MouseListener {
-
-        boolean stageBuilt = false;
-        Button mainButton;
-        Button anotherButton;
-        JButton button;
-        GameCell fallout;
-        GameCellFactory myFactoryOfCells = new GameCellFactory();
-        List<GameCell> myCellsToPaint = myFactoryOfCells.GetAllGameCells();
-
+        FrontPage myFrontPage = new FrontPage();
 
         public App() {
             setPreferredSize(new Dimension(1024, 720));
             this.addMouseListener(this);
-            // I should have a frontpage class made here that will set up where all elements are on the page
-            // and allow the user to move onto other pages
-            // I.e., I dont want to initiliase any buttons here like im doing below!!!!
 
-            mainButton = new Button(200, 50, 100, 100, 10, "Hi there");
-            anotherButton = new Button(300, 100, 400, 100, 30,"Wazzaaaappp");
-            fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
-
-            
-
+            // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
         }
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
-            // Paint all of the cells to screen after setting them up in cell factory
-            for(GameCell cell : myCellsToPaint){
-                if(cell != null){
-                    cell.paint(g, mousePos);
-                }
-            }
+            // This paints front page for now but will change when I have a screen manager
+            myFrontPage.paint(g, mousePos);
 
         }
 
         @Override
         public void mouseClicked(MouseEvent e) {
             // If mouse pos is contained in any button element do somehting here
-            // System.out.println("You clicked!!!!");
-            if(mainButton.contains(mousePos));
-            for(GameCell cell : myCellsToPaint){
-                if(cell.contains(mousePos)){
-                    System.out.println("You clicked: " + cell.gameTitle);
-                }
-            }
+            myFrontPage.CheckWhichCellWasClicked(mousePos);
         }
     
         @Override
