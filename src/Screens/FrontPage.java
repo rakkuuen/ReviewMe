@@ -2,7 +2,9 @@ package Screens;
 
 import java.util.List;
 
+import Database.GameReviewDao;
 import Factory.GameCellFactory;
+import Model.GameReview;
 
 import java.awt.Point;
 import java.awt.Graphics;
@@ -32,6 +34,10 @@ public class FrontPage {
             if(cell.contains(mousePos)){
                 // This should take me to another screen with the games info and ability to add or edit a review
                 System.out.println("You clicked: " + cell.gameTitle);
+
+                // Need to get the game review from the cell name
+                GameReview myGameReview = GameReviewDao.GetGameReview(cell.gameTitle);
+                GameInfoScreen myGameInfoScreen = new GameInfoScreen(myGameReview);
             }
         }
     }

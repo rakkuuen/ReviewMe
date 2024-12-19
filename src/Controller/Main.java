@@ -5,6 +5,7 @@ import javax.swing.*;
 
 import Database.GameReviewDao;
 import Screens.FrontPage;
+import Screens.GameInfoScreen;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -13,10 +14,12 @@ import java.time.Instant;
 
 class Main extends JFrame{
     App canvas;
+    Dimension windowDimension;
     Point mousePos;
     class App extends JPanel implements MouseListener {
         FrontPage myFrontPage = new FrontPage();
-
+        GameInfoScreen myGameInfoScreen;
+    
         public App() {
             setPreferredSize(new Dimension(1024, 720));
             this.addMouseListener(this);
@@ -28,6 +31,7 @@ class Main extends JFrame{
             super.paintComponent(g); // Clears the panel before repainting
             // This paints front page for now but will change when I have a screen manager
             myFrontPage.paint(g, mousePos);
+            
 
         }
 
@@ -68,7 +72,6 @@ class Main extends JFrame{
 
         MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
 
-
         //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         Main window = new Main();
         window.run();
@@ -81,6 +84,8 @@ class Main extends JFrame{
         this.setContentPane(canvas);
         this.pack();
         this.setVisible(true);
+        // Get dimension of window to pass through and use
+        windowDimension = canvas.getSize();
     }
     
     public void run() {

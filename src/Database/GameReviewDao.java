@@ -34,6 +34,7 @@ public class GameReviewDao {
                 story TEXT,
                 setting TEXT,
                 music TEXT,
+                voiceActing TEXT,
                 achievements TEXT,
                 replayability TEXT,
                 alternateTitles TEXT,
@@ -54,9 +55,9 @@ public class GameReviewDao {
     public static void InsertGameReview(GameReview review){
         String url = "jdbc:sqlite:" + dbPath;
         String insertSQL = """
-            INSERT INTO GameReview (title, gameplay, story, setting, music, achievements, 
+            INSERT INTO GameReview (title, gameplay, story, setting, music, voiceActing, achievements, 
                                     replayability, alternateTitles, finalRating, conclusion) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """;
 
         try (Connection conn = DriverManager.getConnection(url);
@@ -66,11 +67,12 @@ public class GameReviewDao {
             pstmt.setString(3, review.GetStory());
             pstmt.setString(4, review.GetSetting());
             pstmt.setString(5, review.GetMusic());
-            pstmt.setString(6, review.GetAchievements());
-            pstmt.setString(7, review.GetReplayability());
-            pstmt.setString(8, review.GetAlternateTitles());
-            pstmt.setInt(9, review.GetFinalRating());
-            pstmt.setString(10, review.GetConclusion());
+            pstmt.setString(6, review.GetVoiceActing());
+            pstmt.setString(7, review.GetAchievements());
+            pstmt.setString(8, review.GetReplayability());
+            pstmt.setString(9, review.GetAlternateTitles());
+            pstmt.setInt(10, review.GetFinalRating());
+            pstmt.setString(11, review.GetConclusion());
 
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -100,6 +102,7 @@ public class GameReviewDao {
                 review.SetStory(rs.getString("story"));
                 review.SetSetting(rs.getString("setting"));
                 review.SetMusic(rs.getString("music"));
+                review.SetVoiceActing(rs.getString("voiceActing"));
                 review.SetAchievements(rs.getString("achievements"));
                 review.SetReplayability(rs.getString("replayability"));
                 review.SetAlternateTitles(rs.getString("alternateTitles"));
@@ -114,5 +117,41 @@ public class GameReviewDao {
 
 
         return allGameReviews;
+    }
+
+    public static GameReview GetGameReview(String gameTitle){
+        GameReview myGameReview = new GameReview();
+        String url = "jdbc:sqlite:" + dbPath;
+        String query = "SELECT * FROM GameReview WHERE title = ?";
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+
+            pstmt.setString(1, gameTitle); // Set the string parameter
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                // Extract data from the result set
+                myGameReview.SetGameplay(rs.getString("gameplay"));
+                myGameReview.SetStory(rs.getString("story"));
+                myGameReview.SetSetting(rs.getString("setting"));
+                myGameReview.SetMusic(rs.getString("music"));
+                myGameReview.SetVoiceActing(rs.getString("voiceActing"));
+                myGameReview.SetAchievements(rs.getString("achievements"));
+                myGameReview.SetReplayability(rs.getString("replayability"));
+                myGameReview.SetAlternateTitles(rs.getString("alternateTitles"));
+                myGameReview.SetFinalRating(rs.getInt("finalRating"));
+                myGameReview.SetConclusion(rs.getString("conclusion"));
+
+                return myGameReview;
+                
+            } else {
+                System.out.println("No GameReview found with the title: " + gameTitle);
+                return null;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error retrieving GameReview: " + e.getMessage());
+            return null;
+        }
     }
 }

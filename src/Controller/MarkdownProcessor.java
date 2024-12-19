@@ -82,6 +82,7 @@ public class MarkdownProcessor {
             currentGameReview.SetStory(getContent(headingsMap, "Story"));
             currentGameReview.SetSetting(getContent(headingsMap, "Setting"));
             currentGameReview.SetMusic(getContent(headingsMap, "Music/Audio"));
+            currentGameReview.SetVoiceActing(getContent(headingsMap, "Voice Acting"));
             currentGameReview.SetAlternateTitles(getContent(headingsMap, "Alternate Titles"));
             currentGameReview.SetAchievements(getContent(headingsMap, "Achievements"));
             currentGameReview.SetReplayability(getContent(headingsMap, "Replay-ability out of 10"));
