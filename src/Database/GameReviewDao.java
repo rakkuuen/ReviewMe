@@ -131,6 +131,7 @@ public class GameReviewDao {
 
             if (rs.next()) {
                 // Extract data from the result set
+                myGameReview.SetTitle(rs.getString("title"));
                 myGameReview.SetGameplay(rs.getString("gameplay"));
                 myGameReview.SetStory(rs.getString("story"));
                 myGameReview.SetSetting(rs.getString("setting"));
