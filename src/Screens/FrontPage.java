@@ -29,7 +29,7 @@ public class FrontPage {
         }
     }
 
-    public void CheckWhichCellWasClicked(Point mousePos){
+    public GameReview CheckWhichCellWasClicked(Point mousePos){
         for(GameCell cell : myCellsToPaint){
             if(cell.contains(mousePos)){
                 // This should take me to another screen with the games info and ability to add or edit a review
@@ -37,8 +37,9 @@ public class FrontPage {
 
                 // Need to get the game review from the cell name
                 GameReview myGameReview = GameReviewDao.GetGameReview(cell.gameTitle);
-                GameInfoScreen myGameInfoScreen = new GameInfoScreen(myGameReview);
+                return myGameReview;
             }
         }
+        return null;
     }
 }

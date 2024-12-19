@@ -19,11 +19,17 @@ public class GameInfoScreen{
         // Draw Title text
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 40));
+
+        String title = gameReview.GetTitle();
+        if (title == null || title.isEmpty()) {
+            title = "Unknown Game"; // Fallback title
+        }
+
         FontMetrics fm = g.getFontMetrics();
-        int textWidth = fm.stringWidth(gameReview.GetTitle());
+        int textWidth = fm.stringWidth(title);
         int textHeight = fm.getAscent();
-        double textX = 300;
-        double textY = 200; // Adjust for baseline
-        g.drawString(gameReview.GetTitle(), (int)textX, (int)textY);
+        int textX = 300;
+        int textY = 200; // Adjust for baseline
+        g.drawString(title, textX, textY);
     }
 }

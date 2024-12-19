@@ -6,6 +6,7 @@ import javax.swing.*;
 import Database.GameReviewDao;
 import Screens.FrontPage;
 import Screens.GameInfoScreen;
+import Model.GameReview;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -16,9 +17,17 @@ class Main extends JFrame{
     App canvas;
     Dimension windowDimension;
     Point mousePos;
+
+    // This will track my screens to switch through
+    enum Screen{
+        FRONT_PAGE,
+        GAME_INFO_SCREEN
+    }
+
     class App extends JPanel implements MouseListener {
-        FrontPage myFrontPage = new FrontPage();
-        GameInfoScreen myGameInfoScreen;
+        private FrontPage myFrontPage = new FrontPage();
+        private GameInfoScreen myGameInfoScreen;
+        private Screen currentScreen = Screen.FRONT_PAGE;
     
         public App() {
             setPreferredSize(new Dimension(1024, 720));
@@ -30,14 +39,38 @@ class Main extends JFrame{
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
             // This paints front page for now but will change when I have a screen manager
-            myFrontPage.paint(g, mousePos);
+            //myFrontPage.paint(g, mousePos);
             
+            switch(currentScreen){
+                case FRONT_PAGE:
+                    myFrontPage.paint(g, mousePos);
+                    break;
+                case GAME_INFO_SCREEN:
+                    if(myGameInfoScreen != null){
+                        myGameInfoScreen.paint(g, mousePos, windowDimension);
+                    }
+                    break;
+                default:
+                    throw new IllegalStateException("Unexpected Screen: " + currentScreen);
+            }
 
         }
 
         @Override
         public void mouseClicked(MouseEvent e) {
             // If mouse pos is contained in any button element do somehting here
+            switch (currentScreen) {
+                case FRONT_PAGE:
+                    GameReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
+                    if(clickedReview != null){
+                        myGameInfoScreen = new GameInfoScreen(clickedReview);
+                        currentScreen = Screen.GAME_INFO_SCREEN;
+                    }
+                    break;
+            
+                default:
+                    break;
+            }
             myFrontPage.CheckWhichCellWasClicked(mousePos);
         }
     
