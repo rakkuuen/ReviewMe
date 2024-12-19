@@ -67,7 +67,10 @@ class Main extends JFrame{
                         currentScreen = Screen.GAME_INFO_SCREEN;
                     }
                     break;
-            
+                case GAME_INFO_SCREEN:
+                    if(myGameInfoScreen.WasBackClicked(mousePos)){
+                        currentScreen = Screen.FRONT_PAGE;
+                    }
                 default:
                     break;
             }
