@@ -35,6 +35,7 @@ class Main extends JFrame{
 
             // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
         }
+        
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
