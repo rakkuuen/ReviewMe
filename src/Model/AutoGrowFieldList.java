@@ -105,6 +105,12 @@ public class AutoGrowFieldList {
         return scrollPane;
     }
 
+    public void SetFieldsEditable(boolean editable){
+        for(FieldRow row : fieldRows){
+            row.field.SetEditingEnabled(editable);
+        }
+    }
+
     public void ScrollToTop(){
         // Force scroll back to top; adding fields can leave it auto-scrolled to the bottom
         SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));

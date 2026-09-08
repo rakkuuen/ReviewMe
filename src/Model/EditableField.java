@@ -16,6 +16,7 @@ import java.awt.event.FocusEvent;
 public class EditableField extends JTextArea {
     public static final int archWAndH = 10;
     Color mainColour;
+    Color readOnlyColour;
     Color borderColour;
     Color focusedBorderColour;
     Color placeholderColour;
@@ -31,6 +32,7 @@ public class EditableField extends JTextArea {
         this.placeholderText = initialText == null ? placeholderText : null;
 
         mainColour = Color.WHITE;
+        readOnlyColour = new Color(235, 235, 235);
         borderColour = Color.BLACK;
         focusedBorderColour = new Color(30, 120, 220);
         placeholderColour = Color.GRAY;
@@ -53,7 +55,7 @@ public class EditableField extends JTextArea {
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(mainColour);
+        g2.setColor(isEditable() ? mainColour : readOnlyColour);
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), archWAndH, archWAndH);
         g2.dispose();
         super.paintComponent(g);
@@ -85,5 +87,11 @@ public class EditableField extends JTextArea {
 
     public void SetValue(String value){
         setText(value == null ? "" : value);
+    }
+
+    public void SetEditingEnabled(boolean enabled){
+        setEditable(enabled);
+        setFocusable(enabled);
+        repaint();
     }
 }

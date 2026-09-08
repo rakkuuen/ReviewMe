@@ -20,7 +20,9 @@ import Database.GameReviewDao;
 public class GameInfoScreen{
     private GameReview gameReview;
     private BackButton backButton;
+    private Button editButton;
     private Button saveButton;
+    private boolean isEditing = false;
 
     private AutoGrowFieldList fieldList;
     private JScrollPane scrollPane;
@@ -49,10 +51,13 @@ public class GameInfoScreen{
     private static final int rowGap = 20;
 
     private static final int saveButtonWidth = 120;
+    private static final int editButtonWidth = 100;
+    private static final int buttonGap = 10;
 
     public GameInfoScreen(GameReview gameReview, Dimension windowDimension, Runnable onBack){
         this.gameReview = gameReview;
         backButton = new BackButton(onBack);
+        editButton = new Button(editButtonWidth, 50, 0, 20, 10, "Edit"); // x corrected by Reflow below
         saveButton = new Button(saveButtonWidth, 50, 0, 20, 10, "Save"); // x corrected by Reflow below
 
         fieldList = new AutoGrowFieldList(fieldX, fieldWidth, headingHeight, minFieldHeight, rowGap);
@@ -80,11 +85,16 @@ public class GameInfoScreen{
         fieldList.Relayout();
         scrollPane = fieldList.GetComponent();
 
+        // Start read-only - Edit must be clicked before anything's editable
+        fieldList.SetFieldsEditable(false);
+        saveButton.SetEnabled(false);
+
         Reflow(windowDimension);
     }
 
     public void Reflow(Dimension windowDimension){
         saveButton.x = windowDimension.width - saveButtonWidth - rightMargin;
+        editButton.x = saveButton.x - editButtonWidth - buttonGap;
 
         int scrollWidth = windowDimension.width - scrollX - rightMargin;
         int scrollHeight = windowDimension.height - scrollY - bottomMargin;
@@ -92,8 +102,9 @@ public class GameInfoScreen{
     }
 
     public void paint(Graphics g, Point mousePos, Dimension windowDimension){
-        // Back / Save buttons
+        // Back / Edit / Save buttons
         backButton.paint(g, mousePos);
+        editButton.paint(g, mousePos);
         saveButton.paint(g, mousePos);
 
         // Draw Title text
@@ -119,8 +130,19 @@ public class GameInfoScreen{
         backButton.HandleRelease(mousePos);
     }
 
+    public boolean WasEditClicked(Point mousePos){
+        return editButton.contains(mousePos);
+    }
+
     public boolean WasSaveClicked(Point mousePos){
         return saveButton.contains(mousePos);
+    }
+
+    public void EnterEditMode(){
+        isEditing = true;
+        fieldList.SetFieldsEditable(true);
+        editButton.SetEnabled(false);
+        saveButton.SetEnabled(true);
     }
 
     public void SaveChanges(){
@@ -148,6 +170,11 @@ public class GameInfoScreen{
         gameReview.SetConclusion(conclusionField.GetValue());
 
         GameReviewDao.UpdateGameReview(gameReview);
+
+        isEditing = false;
+        fieldList.SetFieldsEditable(false);
+        editButton.SetEnabled(true);
+        saveButton.SetEnabled(false);
     }
 
     public void AddComponentsTo(JPanel panel){

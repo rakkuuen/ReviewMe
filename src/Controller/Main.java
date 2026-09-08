@@ -29,6 +29,7 @@ class Main extends JFrame{
 
         // What the current press landed on, so release only acts if it's still on the same target
         private GameCell pressedCell;
+        private boolean pressedOnEditButton;
         private boolean pressedOnSaveButton;
 
         public App() {
@@ -96,6 +97,7 @@ class Main extends JFrame{
                     break;
                 case GAME_INFO_SCREEN:
                     myGameInfoScreen.NotifyBackPressed(mousePos);
+                    pressedOnEditButton = myGameInfoScreen.WasEditClicked(mousePos);
                     pressedOnSaveButton = myGameInfoScreen.WasSaveClicked(mousePos);
                     break;
                 default:
@@ -121,7 +123,9 @@ class Main extends JFrame{
                     break;
                 case GAME_INFO_SCREEN:
                     myGameInfoScreen.NotifyBackReleased(mousePos);
-                    if(pressedOnSaveButton && myGameInfoScreen.WasSaveClicked(mousePos)){
+                    if(pressedOnEditButton && myGameInfoScreen.WasEditClicked(mousePos)){
+                        myGameInfoScreen.EnterEditMode();
+                    } else if(pressedOnSaveButton && myGameInfoScreen.WasSaveClicked(mousePos)){
                         myGameInfoScreen.SaveChanges();
                     }
                     break;
@@ -129,6 +133,7 @@ class Main extends JFrame{
                     break;
             }
             pressedCell = null;
+            pressedOnEditButton = false;
             pressedOnSaveButton = false;
             repaint(); // Reflect any state change immediately, don't wait for the next mouseMoved
         }
