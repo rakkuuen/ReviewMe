@@ -7,9 +7,7 @@ import Database.GameReviewDao;
 import Screens.FrontPage;
 import Screens.GameInfoScreen;
 import Model.GameReview;
-
-import java.time.Duration;
-import java.time.Instant;
+import Model.GameCell;
 
 
 
@@ -24,14 +22,19 @@ class Main extends JFrame{
         GAME_INFO_SCREEN
     }
 
-    class App extends JPanel implements MouseListener {
+    class App extends JPanel implements MouseListener, MouseMotionListener {
         private FrontPage myFrontPage = new FrontPage();
         private GameInfoScreen myGameInfoScreen;
         private Screen currentScreen = Screen.FRONT_PAGE;
-    
+
+        // What the current press landed on, so release only acts if it's still on the same target
+        private GameCell pressedCell;
+        private boolean pressedOnBackButton;
+
         public App() {
             setPreferredSize(new Dimension(1024, 720));
             this.addMouseListener(this);
+            this.addMouseMotionListener(this);
 
             // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
         }
@@ -59,34 +62,51 @@ class Main extends JFrame{
 
         @Override
         public void mouseClicked(MouseEvent e) {
-            // If mouse pos is contained in any button element do somehting here
+            // Intentionally unused: AWT only synthesizes mouseClicked when press+release
+            // happen with zero pixel movement between them, so it's unreliable for real
+            // mouse/trackpad input. Hit-testing is handled in mousePressed instead, which
+            // always fires the instant the button goes down.
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            // Just note what the press landed on; the actual action only fires on release,
+            // and only if the release is still on the same target (see mouseReleased)
             switch (currentScreen) {
                 case FRONT_PAGE:
-                    GameReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
-                    if(clickedReview != null){
-                        myGameInfoScreen = new GameInfoScreen(clickedReview);
-                        currentScreen = Screen.GAME_INFO_SCREEN;
-                    }
+                    pressedCell = myFrontPage.GetCellAt(mousePos);
                     break;
                 case GAME_INFO_SCREEN:
-                    if(myGameInfoScreen.WasBackClicked(mousePos)){
-                        currentScreen = Screen.FRONT_PAGE;
-                    }
+                    pressedOnBackButton = myGameInfoScreen.WasBackClicked(mousePos);
+                    break;
                 default:
                     break;
             }
-            myFrontPage.CheckWhichCellWasClicked(mousePos);
         }
-    
-        @Override
-        public void mousePressed(MouseEvent e) {
-            System.out.println("You pressed!!!!");
 
-        }
-    
         @Override
         public void mouseReleased(MouseEvent e) {
-            System.out.println("You Released!!!!");
+            switch (currentScreen) {
+                case FRONT_PAGE:
+                    if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
+                        GameReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
+                        if(clickedReview != null){
+                            myGameInfoScreen = new GameInfoScreen(clickedReview);
+                            currentScreen = Screen.GAME_INFO_SCREEN;
+                        }
+                    }
+                    break;
+                case GAME_INFO_SCREEN:
+                    if(pressedOnBackButton && myGameInfoScreen.WasBackClicked(mousePos)){
+                        currentScreen = Screen.FRONT_PAGE;
+                    }
+                    break;
+                default:
+                    break;
+            }
+            pressedCell = null;
+            pressedOnBackButton = false;
+            repaint(); // Reflect any state change immediately, don't wait for the next mouseMoved
         }
     
         @Override
@@ -101,6 +121,18 @@ class Main extends JFrame{
 
         }
 
+        @Override
+        public void mouseMoved(MouseEvent e) {
+            mousePos = e.getPoint();
+            repaint();
+        }
+
+        @Override
+        public void mouseDragged(MouseEvent e) {
+            mousePos = e.getPoint();
+            repaint();
+        }
+
     }
 
     public static void main(String[] args) throws Exception {
@@ -109,40 +141,19 @@ class Main extends JFrame{
 
         MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
 
-        //GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        Main window = new Main();
-        window.run();
-
+        // Swing GUI work (creation, events, painting) all belongs on the EDT
+        SwingUtilities.invokeLater(() -> new Main());
     }
 
     private Main() {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mousePos = new Point(-1, -1); // Off-screen default so contains(mousePos) doesn't NPE before the first mouseMoved
         canvas = new App();
         this.setContentPane(canvas);
         this.pack();
         this.setVisible(true);
         // Get dimension of window to pass through and use
         windowDimension = canvas.getSize();
-    }
-    
-    public void run() {
-        while (true) {
-            Instant startTime = Instant.now();
-            this.repaint();
-            // Get mouse position while app is running
-            mousePos = MouseInfo.getPointerInfo().getLocation();
-            SwingUtilities.convertPointFromScreen(mousePos, canvas);
-
-            Instant endTime = Instant.now();
-            long howLong = Duration.between(startTime, endTime).toMillis();
-            try {
-                Thread.sleep(20L - howLong);
-            } catch (InterruptedException e) {
-                System.out.println("thread was interrupted, but who cares?");
-            } catch (IllegalArgumentException e) {
-                System.out.println("application can't keep up with framerate");
-            }
-        }
     }
 
     // Get mouse position

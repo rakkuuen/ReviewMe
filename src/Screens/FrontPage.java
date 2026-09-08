@@ -29,17 +29,26 @@ public class FrontPage {
         }
     }
 
-    public GameReview CheckWhichCellWasClicked(Point mousePos){
+    // Pure hit-test, no side effects - lets callers check where a press landed and where
+    // a release landed separately, without querying the database on every check
+    public GameCell GetCellAt(Point mousePos){
         for(GameCell cell : myCellsToPaint){
             if(cell.contains(mousePos)){
-                // This should take me to another screen with the games info and ability to add or edit a review
-                System.out.println("You clicked: " + cell.gameTitle);
-
-                // Need to get the game review from the cell name
-                GameReview myGameReview = GameReviewDao.GetGameReview(cell.gameTitle);
-                return myGameReview;
+                return cell;
             }
         }
         return null;
+    }
+
+    public GameReview CheckWhichCellWasClicked(Point mousePos){
+        GameCell cell = GetCellAt(mousePos);
+        if(cell == null){
+            return null;
+        }
+        // This should take me to another screen with the games info and ability to add or edit a review
+        System.out.println("You clicked: " + cell.gameTitle);
+
+        // Need to get the game review from the cell name
+        return GameReviewDao.GetGameReview(cell.gameTitle);
     }
 }
