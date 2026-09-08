@@ -22,7 +22,7 @@ class Main extends JFrame{
         GAME_INFO_SCREEN
     }
 
-    class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
+    class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ComponentListener {
         private FrontPage myFrontPage = new FrontPage();
         private GameInfoScreen myGameInfoScreen;
         private Screen currentScreen = Screen.FRONT_PAGE;
@@ -30,12 +30,15 @@ class Main extends JFrame{
         // What the current press landed on, so release only acts if it's still on the same target
         private GameCell pressedCell;
         private boolean pressedOnBackButton;
+        private boolean pressedOnSaveButton;
 
         public App() {
             setPreferredSize(new Dimension(1024, 720));
+            setLayout(null); // Absolute positioning, to match GameCell/Button's coordinate style
             this.addMouseListener(this);
             this.addMouseMotionListener(this);
             this.addMouseWheelListener(this);
+            this.addComponentListener(this);
 
             // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
         }
@@ -79,6 +82,7 @@ class Main extends JFrame{
                     break;
                 case GAME_INFO_SCREEN:
                     pressedOnBackButton = myGameInfoScreen.WasBackClicked(mousePos);
+                    pressedOnSaveButton = myGameInfoScreen.WasSaveClicked(mousePos);
                     break;
                 default:
                     break;
@@ -93,13 +97,17 @@ class Main extends JFrame{
                         GameReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
                         if(clickedReview != null){
                             myGameInfoScreen = new GameInfoScreen(clickedReview);
+                            myGameInfoScreen.AddComponentsTo(this);
                             currentScreen = Screen.GAME_INFO_SCREEN;
                         }
                     }
                     break;
                 case GAME_INFO_SCREEN:
                     if(pressedOnBackButton && myGameInfoScreen.WasBackClicked(mousePos)){
+                        myGameInfoScreen.RemoveComponentsFrom(this);
                         currentScreen = Screen.FRONT_PAGE;
+                    } else if(pressedOnSaveButton && myGameInfoScreen.WasSaveClicked(mousePos)){
+                        myGameInfoScreen.SaveChanges();
                     }
                     break;
                 default:
@@ -107,6 +115,7 @@ class Main extends JFrame{
             }
             pressedCell = null;
             pressedOnBackButton = false;
+            pressedOnSaveButton = false;
             repaint(); // Reflect any state change immediately, don't wait for the next mouseMoved
         }
     
@@ -144,6 +153,23 @@ class Main extends JFrame{
             }
         }
 
+        @Override
+        public void componentResized(ComponentEvent e) {
+            // windowDimension used to be a one-time snapshot taken right after pack();
+            // keep it live so screens can reflow against the panel's actual current size
+            windowDimension = getSize();
+            repaint();
+        }
+
+        @Override
+        public void componentMoved(ComponentEvent e) { }
+
+        @Override
+        public void componentShown(ComponentEvent e) { }
+
+        @Override
+        public void componentHidden(ComponentEvent e) { }
+
     }
 
     public static void main(String[] args) throws Exception {
@@ -162,6 +188,8 @@ class Main extends JFrame{
         canvas = new App();
         this.setContentPane(canvas);
         this.pack();
+        this.setMinimumSize(this.getSize()); // Window can grow freely but not shrink below the initial 1024x720 layout
+
         this.setVisible(true);
         // Get dimension of window to pass through and use
         windowDimension = canvas.getSize();

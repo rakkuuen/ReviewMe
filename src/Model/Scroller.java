@@ -5,7 +5,6 @@ import java.awt.Point;
 
 // Reusable vertical scroll offset for custom-painted (non-Swing-component) screens.
 // Handles clamping the offset to valid bounds, and translating painted content /
-// mouse-position hit-tests to match, so each screen doesn't re-derive this math itself.
 public class Scroller {
     private static final int defaultScrollStep = 40;
 
@@ -17,6 +16,7 @@ public class Scroller {
         this(contentHeight, viewportHeight, defaultScrollStep);
     }
 
+    // Set custon scroll step option 
     public Scroller(int contentHeight, int viewportHeight, int scrollStep){
         this.scrollStep = scrollStep;
         this.offsetY = 0;

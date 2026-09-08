@@ -12,9 +12,7 @@ import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
-// A real Swing text component reskinned to match GameCell/Button's rounded-rect look,
-// so editable review fields keep Swing's built-in text editing (caret, selection,
-// copy/paste, word-wrap) instead of it being hand-rolled.
+// Swing text component that fits into my custom elements (lets not reinvent every wheel sis)
 public class EditableField extends JTextArea {
     public static final int archWAndH = 10;
     Color mainColour;
