@@ -86,6 +86,38 @@ public class GameReviewDao {
         }
     }
 
+    public static void UpdateGameReview(GameReview review){
+        String url = "jdbc:sqlite:" + dbPath;
+        String updateSQL = """
+            UPDATE GameReview
+            SET gameplay = ?, story = ?, setting = ?, music = ?, voiceActing = ?, achievements = ?,
+                replayability = ?, alternateTitles = ?, finalRating = ?, conclusion = ?
+            WHERE title = ?;
+        """;
+
+        try (Connection conn = DriverManager.getConnection(url);
+             PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
+            pstmt.setString(1, review.GetGameplay());
+            pstmt.setString(2, review.GetStory());
+            pstmt.setString(3, review.GetSetting());
+            pstmt.setString(4, review.GetMusic());
+            pstmt.setString(5, review.GetVoiceActing());
+            pstmt.setString(6, review.GetAchievements());
+            pstmt.setString(7, review.GetReplayability());
+            pstmt.setString(8, review.GetAlternateTitles());
+            pstmt.setInt(9, review.GetFinalRating());
+            pstmt.setString(10, review.GetConclusion());
+            pstmt.setString(11, review.GetTitle());
+
+            int rowsAffected = pstmt.executeUpdate();
+            if (rowsAffected == 0) {
+                System.err.println("No GameReview found with the title: " + review.GetTitle());
+            }
+        } catch (SQLException e) {
+            System.err.println("Error updating GameReview: " + e.getMessage());
+        }
+    }
+
     public static List<GameReview> GetAllGameReviews(){
         List<GameReview> allGameReviews = new ArrayList<>();
         String url = "jdbc:sqlite:" + dbPath;
