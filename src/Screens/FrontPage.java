@@ -9,31 +9,50 @@ import Model.GameReview;
 import java.awt.Point;
 import java.awt.Graphics;
 import Model.GameCell;
+import Model.Scroller;
 
 
 public class FrontPage {
     private GameCellFactory myFactoryOfCells;
     private List<GameCell> myCellsToPaint;
+
+    // Cells are custom-painted (not real Swing components), so scrolling is handled by
+    // Scroller rather than a JScrollPane
+    private static final int viewportHeight = 720;
+    private static final int bottomPadding = 40; // Buffer past the last cell so scroll doesn't dead-stop right on its edge
+    private Scroller scroller;
+
     public FrontPage(){
         myFactoryOfCells = new GameCellFactory();
         myCellsToPaint = myFactoryOfCells.GetAllGameCells();
 
+        // locY ends up sitting at the bottom edge of the last cell once the factory's done
+        scroller = new Scroller(myFactoryOfCells.locY + bottomPadding, viewportHeight);
+    }
+
+    public void Scroll(int wheelRotation){
+        scroller.Scroll(wheelRotation);
     }
 
     public void paint(Graphics g, Point mousePos){
+        Point adjustedMousePos = scroller.AdjustPoint(mousePos);
+
+        Graphics g2 = scroller.ApplyTo(g);
         // Paint all of the cells to screen after setting them up in cell factory
         for(GameCell cell : myCellsToPaint){
             if(cell != null){
-                cell.paint(g, mousePos);
+                cell.paint(g2, adjustedMousePos);
             }
         }
+        g2.dispose();
     }
 
     // Pure hit-test, no side effects - lets callers check where a press landed and where
     // a release landed separately, without querying the database on every check
     public GameCell GetCellAt(Point mousePos){
+        Point adjustedMousePos = scroller.AdjustPoint(mousePos);
         for(GameCell cell : myCellsToPaint){
-            if(cell.contains(mousePos)){
+            if(cell.contains(adjustedMousePos)){
                 return cell;
             }
         }

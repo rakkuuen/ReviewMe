@@ -22,7 +22,7 @@ class Main extends JFrame{
         GAME_INFO_SCREEN
     }
 
-    class App extends JPanel implements MouseListener, MouseMotionListener {
+    class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener {
         private FrontPage myFrontPage = new FrontPage();
         private GameInfoScreen myGameInfoScreen;
         private Screen currentScreen = Screen.FRONT_PAGE;
@@ -35,6 +35,7 @@ class Main extends JFrame{
             setPreferredSize(new Dimension(1024, 720));
             this.addMouseListener(this);
             this.addMouseMotionListener(this);
+            this.addMouseWheelListener(this);
 
             // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
         }
@@ -131,6 +132,16 @@ class Main extends JFrame{
         public void mouseDragged(MouseEvent e) {
             mousePos = e.getPoint();
             repaint();
+        }
+
+        @Override
+        public void mouseWheelMoved(MouseWheelEvent e) {
+            // GameInfoScreen scrolls itself via its own JScrollPane; only FrontPage's
+            // custom-painted cells need scrolling driven manually here
+            if(currentScreen == Screen.FRONT_PAGE){
+                myFrontPage.Scroll(e.getWheelRotation());
+                repaint();
+            }
         }
 
     }

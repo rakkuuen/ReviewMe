@@ -50,13 +50,23 @@ public class GameReviewDao {
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
+
+        // Enforce one row per title, so re-running MarkdownProcessor against the same
+        // .md files on every launch doesn't keep appending duplicate rows
+        String createUniqueIndexSQL = "CREATE UNIQUE INDEX IF NOT EXISTS idx_gamereview_title ON GameReview(title);";
+        try (Connection conn = DriverManager.getConnection(url);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(createUniqueIndexSQL);
+        } catch (SQLException e) {
+            System.err.println("Error creating unique title index: " + e.getMessage());
+        }
     }
     
     public static void InsertGameReview(GameReview review){
         String url = "jdbc:sqlite:" + dbPath;
         String insertSQL = """
-            INSERT INTO GameReview (title, gameplay, story, setting, music, voiceActing, achievements, 
-                                    replayability, alternateTitles, finalRating, conclusion) 
+            INSERT OR IGNORE INTO GameReview (title, gameplay, story, setting, music, voiceActing, achievements,
+                                    replayability, alternateTitles, finalRating, conclusion)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """;
 
