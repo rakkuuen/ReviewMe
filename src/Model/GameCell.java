@@ -15,8 +15,8 @@ public class GameCell extends Rectangle{
     public static final int archWAndH = 10;
 
     //String text;
-    Color mainColor;
-    Color hoverColor;
+    Color mainColour;
+    Color hoverColour;
     BufferedImage myPicture;
     public String gameTitle;
 
@@ -25,8 +25,8 @@ public class GameCell extends Rectangle{
         this.x = locX;
         this.y = locY;
         this.gameTitle = gameTitle;
-        mainColor = Color.WHITE;
-        hoverColor = Color.GRAY;
+        mainColour = Color.WHITE;
+        hoverColour = Color.GRAY;
         LoadImage(myPicture);
     }
 
@@ -34,9 +34,9 @@ public class GameCell extends Rectangle{
 
         // Hover Colour
         if(contains(mousePos)){
-            g.setColor(hoverColor);
+            g.setColor(hoverColour);
         } else {
-            g.setColor(mainColor);
+            g.setColor(mainColour);
         }
         g.fillRoundRect(x, y, width, height, archWAndH, archWAndH);
 

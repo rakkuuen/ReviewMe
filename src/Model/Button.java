@@ -7,8 +7,8 @@ public class Button extends Rectangle{
     int sizeY;
     int archWAndH;
     String text;
-    Color mainColor;
-    Color hoverColor;
+    Color mainColour;
+    Color hoverColour;
 
     public Button(int sizeX, int sizeY, int locX, int locY, int archWAndH, String text){
         super(0, 0, sizeX, sizeY);
@@ -18,17 +18,17 @@ public class Button extends Rectangle{
         this.sizeY = sizeY;
         this.archWAndH = archWAndH;
         this.text = text;
-        mainColor = Color.BLUE;
-        hoverColor = Color.RED;
+        mainColour = Color.BLUE;
+        hoverColour = Color.RED;
     }
     
     public void paint(Graphics g, Point mousePos){
 
         // Hover Colour
         if(contains(mousePos)){
-            g.setColor(hoverColor);
+            g.setColor(hoverColour);
         } else {
-            g.setColor(mainColor);
+            g.setColor(mainColour);
         }
         g.fillRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
 
