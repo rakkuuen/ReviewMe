@@ -2,6 +2,8 @@ package Screens;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Color;
 import java.awt.Font;
@@ -37,11 +39,13 @@ public class GameInfoScreen{
     private EditableField conclusionField;
 
     // Single column, top to bottom, scrolled - so each field can be given comfortable
-    // height for paragraph text instead of being squeezed to fit the window
+    // height for paragraph text instead of being squeezed to fit the window.
+    // scrollX/scrollY anchor the viewport's top-left corner (fixed); its width/height
+    // instead track the live window size via Reflow().
     private static final int scrollX = 40;
     private static final int scrollY = 90;
-    private static final int scrollWidth = 960;
-    private static final int scrollHeight = 600;
+    private static final int rightMargin = 20;
+    private static final int bottomMargin = 30;
 
     private static final int fieldX = 20;
     private static final int fieldWidth = 900;
@@ -53,10 +57,12 @@ public class GameInfoScreen{
     private static final int contentWidth = fieldX * 2 + fieldWidth;
     private static final int contentHeight = rowPitch * rowCount;
 
-    public GameInfoScreen(GameReview gameReview){
+    private static final int saveButtonWidth = 120;
+
+    public GameInfoScreen(GameReview gameReview, Dimension windowDimension){
         this.gameReview = gameReview;
         backButton = new Button(100, 50, 20, 20, 10, "Back");
-        saveButton = new Button(120, 50, 884, 20, 10, "Save");
+        saveButton = new Button(saveButtonWidth, 50, 0, 20, 10, "Save"); // x corrected by Reflow below
 
         fieldsContainer = new JPanel();
         fieldsContainer.setLayout(null);
@@ -114,8 +120,29 @@ public class GameInfoScreen{
                 fieldX, row9 + headingHeight, fieldWidth, fieldHeight);
         AddRow(fieldsContainer, "Conclusion", row9, conclusionField);
 
-        scrollPane = new JScrollPane(fieldsContainer,
+        // fieldsContainer is a fixed width; JScrollPane would otherwise show it left-anchored
+        // rather than centered whenever the viewport is wider than the content. GridBagLayout
+        // centers a single unconstrained child by default - NORTH anchor keeps it centered
+        // horizontally while still pinning it to the top (not vertically centered) when
+        // there's little content.
+        JPanel centeringWrapper = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.NORTH;
+        centeringWrapper.add(fieldsContainer, gbc);
+
+        scrollPane = new JScrollPane(centeringWrapper,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        Reflow(windowDimension);
+    }
+
+    // Re-anchors the Save button to the right edge and resizes the scroll viewport
+    // against the window's current size - called on construction and again on resize
+    public void Reflow(Dimension windowDimension){
+        saveButton.x = windowDimension.width - saveButtonWidth - rightMargin;
+
+        int scrollWidth = windowDimension.width - scrollX - rightMargin;
+        int scrollHeight = windowDimension.height - scrollY - bottomMargin;
         scrollPane.setBounds(scrollX, scrollY, scrollWidth, scrollHeight);
     }
 

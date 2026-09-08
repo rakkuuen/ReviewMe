@@ -53,6 +53,9 @@ class Main extends JFrame{
         // the window is packed to its real size, and again on every resize
         public void ReflowAll(){
             myFrontPage.Reflow(windowDimension);
+            if(myGameInfoScreen != null){
+                myGameInfoScreen.Reflow(windowDimension);
+            }
         }
         
         @Override
@@ -108,7 +111,7 @@ class Main extends JFrame{
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
                         GameReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
                         if(clickedReview != null){
-                            myGameInfoScreen = new GameInfoScreen(clickedReview);
+                            myGameInfoScreen = new GameInfoScreen(clickedReview, windowDimension);
                             myGameInfoScreen.AddComponentsTo(this);
                             currentScreen = Screen.GAME_INFO_SCREEN;
                         }
