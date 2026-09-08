@@ -6,6 +6,7 @@ import Database.GameReviewDao;
 import Factory.GameCellFactory;
 import Model.GameReview;
 
+import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Graphics;
 import Model.GameCell;
@@ -18,16 +19,26 @@ public class FrontPage {
 
     // Cells are custom-painted (not real Swing components), so scrolling is handled by
     // Scroller rather than a JScrollPane
-    private static final int viewportHeight = 720;
     private static final int bottomPadding = 40; // Buffer past the last cell so scroll doesn't dead-stop right on its edge
     private Scroller scroller;
 
-    public FrontPage(){
+    public FrontPage(Dimension windowDimension){
         myFactoryOfCells = new GameCellFactory();
         myCellsToPaint = myFactoryOfCells.GetAllGameCells();
 
         // locY ends up sitting at the bottom edge of the last cell once the factory's done
-        scroller = new Scroller(myFactoryOfCells.locY + bottomPadding, viewportHeight);
+        scroller = new Scroller(myFactoryOfCells.locY + bottomPadding, windowDimension.height);
+        Reflow(windowDimension);
+    }
+
+    // Re-centers cells horizontally and updates the scrollable viewport height against
+    // the window's current size - called on construction and again on every resize
+    public void Reflow(Dimension windowDimension){
+        int centeredX = (windowDimension.width - GameCell.width) / 2;
+        for(GameCell cell : myCellsToPaint){
+            cell.x = centeredX;
+        }
+        scroller.SetContentHeight(myFactoryOfCells.locY + bottomPadding, windowDimension.height);
     }
 
     public void Scroll(int wheelRotation){

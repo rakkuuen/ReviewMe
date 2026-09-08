@@ -10,6 +10,7 @@ import java.awt.FontMetrics;
 import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 import Model.GameReview;
 import Model.Button;
@@ -180,6 +181,13 @@ public class GameInfoScreen{
         panel.add(scrollPane);
         panel.revalidate();
         panel.repaint();
+
+        // Populating the fields during construction can leave the viewport auto-scrolled
+        // to whichever field was last touched (the bottom one) via caret-visibility
+        // behavior - force it back to the top now that the screen is actually shown.
+        // Deferred via invokeLater since revalidate() only schedules layout rather than
+        // running it immediately; setting the position before that pass completes doesn't stick.
+        SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));
     }
 
     public void RemoveComponentsFrom(JPanel panel){

@@ -23,7 +23,7 @@ class Main extends JFrame{
     }
 
     class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ComponentListener {
-        private FrontPage myFrontPage = new FrontPage();
+        private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;
         private Screen currentScreen = Screen.FRONT_PAGE;
 
@@ -40,7 +40,19 @@ class Main extends JFrame{
             this.addMouseWheelListener(this);
             this.addComponentListener(this);
 
+            // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
+            // use the preferred size as the initial layout estimate. ReflowAll() (called from
+            // Main's constructor once the real windowDimension is known after pack()) corrects
+            // it to the actual final size.
+            myFrontPage = new FrontPage(getPreferredSize());
+
             // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
+        }
+
+        // Re-lays out every screen against the current windowDimension - called once after
+        // the window is packed to its real size, and again on every resize
+        public void ReflowAll(){
+            myFrontPage.Reflow(windowDimension);
         }
         
         @Override
@@ -158,6 +170,7 @@ class Main extends JFrame{
             // windowDimension used to be a one-time snapshot taken right after pack();
             // keep it live so screens can reflow against the panel's actual current size
             windowDimension = getSize();
+            ReflowAll();
             repaint();
         }
 
@@ -193,6 +206,7 @@ class Main extends JFrame{
         this.setVisible(true);
         // Get dimension of window to pass through and use
         windowDimension = canvas.getSize();
+        canvas.ReflowAll(); // Correct the initial estimate (preferred size) to the real packed size
     }
 
     // Get mouse position
