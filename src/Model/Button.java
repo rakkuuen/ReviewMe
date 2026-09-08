@@ -9,6 +9,8 @@ public class Button extends Rectangle{
     String text;
     Color mainColour;
     Color hoverColour;
+    Color disabledColour;
+    boolean enabled = true;
 
     public Button(int sizeX, int sizeY, int locX, int locY, int archWAndH, String text){
         super(0, 0, sizeX, sizeY);
@@ -20,12 +22,30 @@ public class Button extends Rectangle{
         this.text = text;
         mainColour = Color.BLUE;
         hoverColour = Color.RED;
+        disabledColour = Color.GRAY;
     }
-    
+
+    public void SetEnabled(boolean enabled){
+        this.enabled = enabled;
+    }
+
+    public boolean IsEnabled(){
+        return enabled;
+    }
+
+    // Disabled buttons aren't clickable - callers checking contains() for hit-testing
+    // get this for free without needing their own enabled checks
+    @Override
+    public boolean contains(Point p){
+        return enabled && super.contains(p);
+    }
+
     public void paint(Graphics g, Point mousePos){
 
-        // Hover Colour
-        if(contains(mousePos)){
+        // Hover Colour - uses super.contains() since our own contains() gates on enabled
+        if(!enabled){
+            g.setColor(disabledColour);
+        } else if(super.contains(mousePos)){
             g.setColor(hoverColour);
         } else {
             g.setColor(mainColour);

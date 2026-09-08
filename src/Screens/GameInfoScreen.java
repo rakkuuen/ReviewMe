@@ -2,46 +2,41 @@ package Screens;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Point;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 
 import javax.swing.JPanel;
-import javax.swing.JLabel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 
 import Model.GameReview;
 import Model.Button;
+import Model.BackButton;
 import Model.EditableField;
+import Model.AutoGrowFieldList;
 import Database.GameReviewDao;
 
 public class GameInfoScreen{
     private GameReview gameReview;
-    private Button backButton;
+    private BackButton backButton;
     private Button saveButton;
 
+    private AutoGrowFieldList fieldList;
     private JScrollPane scrollPane;
-    private JPanel fieldsContainer;
 
     private EditableField gameplayField;
     private EditableField storyField;
     private EditableField settingField;
     private EditableField musicField;
-    private EditableField voiceActingField;
-    private EditableField alternateTitlesField;
+    private EditableField voiceActingField; // null if this review's template didn't have it
+    private EditableField alternateTitlesField; // null if this review's template didn't have it
     private EditableField achievementsField;
     private EditableField replayabilityField;
     private EditableField finalRatingField;
     private EditableField conclusionField;
 
-    // Single column, top to bottom, scrolled - so each field can be given comfortable
-    // height for paragraph text instead of being squeezed to fit the window.
-    // scrollX/scrollY anchor the viewport's top-left corner (fixed); its width/height
-    // instead track the live window size via Reflow().
+    // scrollX/scrollY are fixed; width/height track window size via Reflow()
     private static final int scrollX = 40;
     private static final int scrollY = 90;
     private static final int rightMargin = 20;
@@ -50,109 +45,50 @@ public class GameInfoScreen{
     private static final int fieldX = 20;
     private static final int fieldWidth = 900;
     private static final int headingHeight = 22;
-    private static final int fieldHeight = 140;
+    private static final int minFieldHeight = 60; // Floor for empty/short fields
     private static final int rowGap = 20;
-    private static final int rowPitch = headingHeight + fieldHeight + rowGap;
-    private static final int rowCount = 10;
-    private static final int contentWidth = fieldX * 2 + fieldWidth;
-    private static final int contentHeight = rowPitch * rowCount;
 
     private static final int saveButtonWidth = 120;
 
-    public GameInfoScreen(GameReview gameReview, Dimension windowDimension){
+    public GameInfoScreen(GameReview gameReview, Dimension windowDimension, Runnable onBack){
         this.gameReview = gameReview;
-        backButton = new Button(100, 50, 20, 20, 10, "Back");
+        backButton = new BackButton(onBack);
         saveButton = new Button(saveButtonWidth, 50, 0, 20, 10, "Save"); // x corrected by Reflow below
 
-        fieldsContainer = new JPanel();
-        fieldsContainer.setLayout(null);
-        fieldsContainer.setPreferredSize(new Dimension(contentWidth, contentHeight));
+        fieldList = new AutoGrowFieldList(fieldX, fieldWidth, headingHeight, minFieldHeight, rowGap);
 
-        int row0 = 0;
-        int row1 = row0 + rowPitch;
-        int row2 = row1 + rowPitch;
-        int row3 = row2 + rowPitch;
-        int row4 = row3 + rowPitch;
-        int row5 = row4 + rowPitch;
-        int row6 = row5 + rowPitch;
-        int row7 = row6 + rowPitch;
-        int row8 = row7 + rowPitch;
-        int row9 = row8 + rowPitch;
+        gameplayField = fieldList.AddField("Gameplay", gameReview.GetGameplay(), "Tell me about the gameplay... is it good or shit");
+        storyField = fieldList.AddField("Story", gameReview.GetStory(), "Once upon a time there was a story and it goes like this.");
+        settingField = fieldList.AddField("Setting", gameReview.GetSetting(), "Whats the setting of the game");
+        musicField = fieldList.AddField("Music/Audio", gameReview.GetMusic(), "Thoughts on the music/audio was it poppin");
 
-        gameplayField = new EditableField(gameReview.GetGameplay(), "How did the gameplay feel?",
-                fieldX, row0 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Gameplay", row0, gameplayField);
+        if(gameReview.GetVoiceActing() != null){
+            voiceActingField = fieldList.AddField("Voice Acting", gameReview.GetVoiceActing(), "Thoughts on the voice acting...");
+        }
 
-        storyField = new EditableField(gameReview.GetStory(), "What did you think of the story?",
-                fieldX, row1 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Story", row1, storyField);
+        if(gameReview.GetAlternateTitles() != null){
+            alternateTitlesField = fieldList.AddField("Alternate Titles", gameReview.GetAlternateTitles(), "<Alternate title here>");
+        }
 
-        settingField = new EditableField(gameReview.GetSetting(), "Describe the game's setting...",
-                fieldX, row2 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Setting", row2, settingField);
-
-        musicField = new EditableField(gameReview.GetMusic(), "Thoughts on the music/audio...",
-                fieldX, row3 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Music/Audio", row3, musicField);
-
-        voiceActingField = new EditableField(gameReview.GetVoiceActing(), "Thoughts on the voice acting...",
-                fieldX, row4 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Voice Acting", row4, voiceActingField);
-
-        alternateTitlesField = new EditableField(gameReview.GetAlternateTitles(), "Any alternate titles?",
-                fieldX, row5 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Alternate Titles", row5, alternateTitlesField);
-
-        achievementsField = new EditableField(gameReview.GetAchievements(), "Notable achievements...",
-                fieldX, row6 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Achievements", row6, achievementsField);
-
-        replayabilityField = new EditableField(gameReview.GetReplayability(), "Replay-ability out of 10...",
-                fieldX, row7 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Replay-ability out of 10", row7, replayabilityField);
-
-        finalRatingField = new EditableField(
+        achievementsField = fieldList.AddField("Achievements", gameReview.GetAchievements(), "Notable achievements...");
+        replayabilityField = fieldList.AddField("Replay-ability out of 10", gameReview.GetReplayability(), "Replay-ability out of 10...");
+        finalRatingField = fieldList.AddField("Final Rating",
                 gameReview.GetFinalRating() == 0 ? null : String.valueOf(gameReview.GetFinalRating()),
-                "Final rating (number)", fieldX, row8 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Final Rating", row8, finalRatingField);
+                "Final rating (number)");
+        conclusionField = fieldList.AddField("Conclusion", gameReview.GetConclusion(), "Final thoughts / conclusion...");
 
-        conclusionField = new EditableField(gameReview.GetConclusion(), "Final thoughts / conclusion...",
-                fieldX, row9 + headingHeight, fieldWidth, fieldHeight);
-        AddRow(fieldsContainer, "Conclusion", row9, conclusionField);
-
-        // fieldsContainer is a fixed width; JScrollPane would otherwise show it left-anchored
-        // rather than centered whenever the viewport is wider than the content. GridBagLayout
-        // centers a single unconstrained child by default - NORTH anchor keeps it centered
-        // horizontally while still pinning it to the top (not vertically centered) when
-        // there's little content.
-        JPanel centeringWrapper = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.anchor = GridBagConstraints.NORTH;
-        centeringWrapper.add(fieldsContainer, gbc);
-
-        scrollPane = new JScrollPane(centeringWrapper,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        fieldList.Relayout();
+        scrollPane = fieldList.GetComponent();
 
         Reflow(windowDimension);
     }
 
-    // Re-anchors the Save button to the right edge and resizes the scroll viewport
-    // against the window's current size - called on construction and again on resize
     public void Reflow(Dimension windowDimension){
         saveButton.x = windowDimension.width - saveButtonWidth - rightMargin;
 
         int scrollWidth = windowDimension.width - scrollX - rightMargin;
         int scrollHeight = windowDimension.height - scrollY - bottomMargin;
         scrollPane.setBounds(scrollX, scrollY, scrollWidth, scrollHeight);
-    }
-
-    // Adds a heading label + its field to the scrollable content, at the given row's y offset
-    private void AddRow(JPanel container, String heading, int rowY, EditableField field){
-        JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        headingLabel.setBounds(fieldX, rowY, fieldWidth, headingHeight);
-        container.add(headingLabel);
-        container.add(field);
     }
 
     public void paint(Graphics g, Point mousePos, Dimension windowDimension){
@@ -175,8 +111,12 @@ public class GameInfoScreen{
         g.drawString(title, titleX, 55);
     }
 
-    public boolean WasBackClicked(Point mousePos){
-        return backButton.contains(mousePos);
+    public void NotifyBackPressed(Point mousePos){
+        backButton.HandlePress(mousePos);
+    }
+
+    public void NotifyBackReleased(Point mousePos){
+        backButton.HandleRelease(mousePos);
     }
 
     public boolean WasSaveClicked(Point mousePos){
@@ -188,8 +128,14 @@ public class GameInfoScreen{
         gameReview.SetStory(storyField.GetValue());
         gameReview.SetSetting(settingField.GetValue());
         gameReview.SetMusic(musicField.GetValue());
-        gameReview.SetVoiceActing(voiceActingField.GetValue());
-        gameReview.SetAlternateTitles(alternateTitlesField.GetValue());
+
+        if(voiceActingField != null){
+            gameReview.SetVoiceActing(voiceActingField.GetValue());
+        }
+        if(alternateTitlesField != null){
+            gameReview.SetAlternateTitles(alternateTitlesField.GetValue());
+        }
+
         gameReview.SetAchievements(achievementsField.GetValue());
         gameReview.SetReplayability(replayabilityField.GetValue());
 
@@ -208,13 +154,7 @@ public class GameInfoScreen{
         panel.add(scrollPane);
         panel.revalidate();
         panel.repaint();
-
-        // Populating the fields during construction can leave the viewport auto-scrolled
-        // to whichever field was last touched (the bottom one) via caret-visibility
-        // behavior - force it back to the top now that the screen is actually shown.
-        // Deferred via invokeLater since revalidate() only schedules layout rather than
-        // running it immediately; setting the position before that pass completes doesn't stick.
-        SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));
+        fieldList.ScrollToTop();
     }
 
     public void RemoveComponentsFrom(JPanel panel){

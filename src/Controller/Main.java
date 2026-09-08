@@ -29,7 +29,6 @@ class Main extends JFrame{
 
         // What the current press landed on, so release only acts if it's still on the same target
         private GameCell pressedCell;
-        private boolean pressedOnBackButton;
         private boolean pressedOnSaveButton;
 
         public App() {
@@ -96,7 +95,7 @@ class Main extends JFrame{
                     pressedCell = myFrontPage.GetCellAt(mousePos);
                     break;
                 case GAME_INFO_SCREEN:
-                    pressedOnBackButton = myGameInfoScreen.WasBackClicked(mousePos);
+                    myGameInfoScreen.NotifyBackPressed(mousePos);
                     pressedOnSaveButton = myGameInfoScreen.WasSaveClicked(mousePos);
                     break;
                 default:
@@ -111,17 +110,18 @@ class Main extends JFrame{
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
                         GameReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
                         if(clickedReview != null){
-                            myGameInfoScreen = new GameInfoScreen(clickedReview, windowDimension);
+                            myGameInfoScreen = new GameInfoScreen(clickedReview, windowDimension, () -> {
+                                myGameInfoScreen.RemoveComponentsFrom(this);
+                                currentScreen = Screen.FRONT_PAGE;
+                            });
                             myGameInfoScreen.AddComponentsTo(this);
                             currentScreen = Screen.GAME_INFO_SCREEN;
                         }
                     }
                     break;
                 case GAME_INFO_SCREEN:
-                    if(pressedOnBackButton && myGameInfoScreen.WasBackClicked(mousePos)){
-                        myGameInfoScreen.RemoveComponentsFrom(this);
-                        currentScreen = Screen.FRONT_PAGE;
-                    } else if(pressedOnSaveButton && myGameInfoScreen.WasSaveClicked(mousePos)){
+                    myGameInfoScreen.NotifyBackReleased(mousePos);
+                    if(pressedOnSaveButton && myGameInfoScreen.WasSaveClicked(mousePos)){
                         myGameInfoScreen.SaveChanges();
                     }
                     break;
@@ -129,7 +129,6 @@ class Main extends JFrame{
                     break;
             }
             pressedCell = null;
-            pressedOnBackButton = false;
             pressedOnSaveButton = false;
             repaint(); // Reflect any state change immediately, don't wait for the next mouseMoved
         }

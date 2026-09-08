@@ -86,8 +86,9 @@ public class MarkdownProcessor {
             currentGameReview.SetAlternateTitles(getContent(headingsMap, "Alternate Titles"));
             currentGameReview.SetAchievements(getContent(headingsMap, "Achievements"));
             currentGameReview.SetReplayability(getContent(headingsMap, "Replay-ability out of 10"));
-            String finalRatingText = getContent(headingsMap, "Final Rating").replaceAll("<.*?>", "").trim();
-            
+            String finalRatingRaw = getContent(headingsMap, "Final Rating");
+            String finalRatingText = finalRatingRaw == null ? "" : finalRatingRaw.replaceAll("<.*?>", "").trim();
+
             try {
                 currentGameReview.SetFinalRating(Integer.parseInt(finalRatingText));
             } catch (NumberFormatException e) {
@@ -104,10 +105,14 @@ public class MarkdownProcessor {
         return currentGameReview;
     }
 
-    // Helper method to safely retrieve content for a given heading
+    // Helper method to safely retrieve content for a given heading. Returns null if the
+    // heading never appeared in this file at all (i.e. this review's template doesn't
+    // have that field), as opposed to "" for a heading that's present but left blank.
     private static String getContent(Map<String, StringBuilder> map, String key) {
-        // Safely retrieve the content for the specified heading
-        return map.getOrDefault(key, new StringBuilder()).toString().trim();
+        if (!map.containsKey(key)) {
+            return null;
+        }
+        return map.get(key).toString().trim();
     }
 
     private static String RemoveFormatingSpecifiers(String input) {
