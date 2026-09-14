@@ -35,6 +35,8 @@ public class AutoGrowFieldList {
     private final int rowGap;
     private final int contentWidth;
 
+    private static final int scrollUnitIncrement = 16; // Swing's default is very slow with a mouse wheel
+
     public AutoGrowFieldList(int fieldX, int fieldWidth, int headingHeight, int minFieldHeight, int rowGap){
         this.fieldX = fieldX;
         this.fieldWidth = fieldWidth;
@@ -54,6 +56,7 @@ public class AutoGrowFieldList {
 
         scrollPane = new JScrollPane(centeringWrapper,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(scrollUnitIncrement);
     }
 
     public EditableField AddField(String heading, String initialText, String placeholder){
