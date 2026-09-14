@@ -8,6 +8,8 @@ import Screens.FrontPage;
 import Screens.GameInfoScreen;
 import Model.GameReview;
 import Model.GameCell;
+import Model.Theme;
+import Model.ThemeLoader;
 
 
 
@@ -22,7 +24,7 @@ class Main extends JFrame{
         GAME_INFO_SCREEN
     }
 
-    class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ComponentListener {
+    class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ComponentListener, KeyListener {
         private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;
         private Screen currentScreen = Screen.FRONT_PAGE;
@@ -32,19 +34,31 @@ class Main extends JFrame{
         private boolean pressedOnEditButton;
         private boolean pressedOnSaveButton;
 
+        // TEMP: proves live theme switching actually works end to end - press T to toggle
+        private Theme defaultTheme = Theme.Current;
+        private Theme darkTheme;
+
         public App() {
             setPreferredSize(new Dimension(1024, 720));
             setLayout(null); // Absolute positioning, to match GameCell/Button's coordinate style
+            setFocusable(true); // So key events (the theme-toggle test hook) can actually reach this panel
             this.addMouseListener(this);
             this.addMouseMotionListener(this);
             this.addMouseWheelListener(this);
             this.addComponentListener(this);
+            this.addKeyListener(this);
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
             // Main's constructor once the real windowDimension is known after pack()) corrects
             // it to the actual final size.
             myFrontPage = new FrontPage(getPreferredSize());
+
+            try {
+                darkTheme = ThemeLoader.Load("Resources/Themes/dark.properties");
+            } catch (java.io.IOException e) {
+                System.err.println("Could not load dark theme for test toggle: " + e.getMessage());
+            }
 
             // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
         }
@@ -61,9 +75,11 @@ class Main extends JFrame{
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
+            g.setColor(Theme.Current.GetBackground());
+            g.fillRect(0, 0, getWidth(), getHeight());
             // This paints front page for now but will change when I have a screen manager
             //myFrontPage.paint(g, mousePos);
-            
+
             switch(currentScreen){
                 case FRONT_PAGE:
                     myFrontPage.paint(g, mousePos);
@@ -191,6 +207,27 @@ class Main extends JFrame{
         @Override
         public void componentHidden(ComponentEvent e) { }
 
+        // TEMP: proves live theme switching actually works end to end - press T to toggle.
+        // Custom-painted stuff (Button/GameCell/field backgrounds) picks up Theme.Current
+        // automatically on the next repaint; ReapplyTheme() handles the real Swing text
+        // properties that don't work that way.
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if(e.getKeyCode() == KeyEvent.VK_T && darkTheme != null){
+                Theme.Current = (Theme.Current == defaultTheme) ? darkTheme : defaultTheme;
+                if(myGameInfoScreen != null){
+                    myGameInfoScreen.ReapplyTheme();
+                }
+                repaint();
+            }
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) { }
+
+        @Override
+        public void keyTyped(KeyEvent e) { }
+
     }
 
     public static void main(String[] args) throws Exception {
@@ -215,6 +252,7 @@ class Main extends JFrame{
         // Get dimension of window to pass through and use
         windowDimension = canvas.getSize();
         canvas.ReflowAll(); // Correct the initial estimate (preferred size) to the real packed size
+        canvas.requestFocusInWindow(); // So the theme-toggle test hook (key T) works immediately
     }
 
     // Get mouse position

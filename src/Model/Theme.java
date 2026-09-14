@@ -17,13 +17,15 @@ public class Theme {
     private FieldTheme field;
     private TextStyle title;
     private TextStyle heading;
+    private Color background;
 
-    public Theme(ButtonTheme button, CellTheme cell, FieldTheme field, TextStyle title, TextStyle heading){
+    public Theme(ButtonTheme button, CellTheme cell, FieldTheme field, TextStyle title, TextStyle heading, Color background){
         this.button = button;
         this.cell = cell;
         this.field = field;
         this.title = title;
         this.heading = heading;
+        this.background = background;
     }
 
     public ButtonTheme GetButton(){ return button; }
@@ -31,6 +33,9 @@ public class Theme {
     public FieldTheme GetField(){ return field; }
     public TextStyle GetTitle(){ return title; }
     public TextStyle GetHeading(){ return heading; }
+
+    public Color GetBackground(){ return background; }
+    public void SetBackground(Color c){ background = c; }
 
     // For enumerating every colour/font at once (e.g. a future theme-editor screen)
     public List<Color> GetAllColours(){
@@ -40,6 +45,7 @@ public class Theme {
         colours.addAll(field.GetAllColours());
         colours.addAll(title.GetAllColours());
         colours.addAll(heading.GetAllColours());
+        colours.add(background);
         return colours;
     }
 

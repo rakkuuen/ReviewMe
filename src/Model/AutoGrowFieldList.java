@@ -50,17 +50,22 @@ public class AutoGrowFieldList {
 
         scroller = new Scroller(0, 0);
 
+        // These are pure layout containers with no look of their own - transparent so
+        // Main.App's theme-driven canvas background shows through underneath them
         fieldsContainer = new JPanel();
         fieldsContainer.setLayout(null);
+        fieldsContainer.setOpaque(false);
 
         // GridBagLayout centers the fixed-width fieldsContainer horizontally; NORTH keeps it top-anchored
         centeringWrapper = new JPanel(new GridBagLayout());
+        centeringWrapper.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.NORTH;
         centeringWrapper.add(fieldsContainer, gbc);
 
         viewport = new JPanel();
         viewport.setLayout(null);
+        viewport.setOpaque(false);
         viewport.add(centeringWrapper);
 
         viewport.addComponentListener(new ComponentAdapter(){
@@ -144,6 +149,18 @@ public class AutoGrowFieldList {
         for(FieldRow row : fieldRows){
             row.field.SetEditingEnabled(editable);
         }
+    }
+
+    // Re-applies Theme.Current to every existing row (font/colour changes can shift
+    // preferred heights, so this re-layouts afterward) - lets a live theme switch reach
+    // fields already on screen without losing their typed content
+    public void ReapplyTheme(){
+        for(FieldRow row : fieldRows){
+            row.field.ReapplyTheme();
+            row.headingLabel.setFont(Theme.Current.GetHeading().GetFont());
+            row.headingLabel.setForeground(Theme.Current.GetHeading().GetColour());
+        }
+        Relayout();
     }
 
     public void ScrollToTop(){

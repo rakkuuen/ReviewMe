@@ -25,18 +25,11 @@ public class EditableField extends JTextArea {
 
         this.placeholderText = initialText == null ? placeholderText : null;
 
-        FieldTheme fieldTheme = Theme.Current.GetField();
         setLineWrap(true);
         setWrapStyleWord(true);
-        // These are real Swing properties JTextArea's own rendering reads directly,
-        // so (like font) they can't be looked up lazily like the custom-painted colours below
-        setFont(fieldTheme.GetFont());
-        setForeground(fieldTheme.GetText());
-        setCaretColor(fieldTheme.GetCaret());
-        setSelectionColor(fieldTheme.GetSelection());
-        setSelectedTextColor(fieldTheme.GetSelectedText());
         setOpaque(false);
         setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+        ReapplyTheme();
 
         addFocusListener(new FocusAdapter() {
             @Override
@@ -44,6 +37,20 @@ public class EditableField extends JTextArea {
             @Override
             public void focusLost(FocusEvent e) { repaint(); }
         });
+    }
+
+    // Re-applies the real Swing properties (font, colours) JTextArea's own rendering
+    // reads directly - these can't be looked up lazily like the custom-painted colours
+    // below, so this needs calling again after Theme.Current changes for a live switch
+    // to actually reach an already-open field
+    public void ReapplyTheme(){
+        FieldTheme fieldTheme = Theme.Current.GetField();
+        setFont(fieldTheme.GetFont());
+        setForeground(fieldTheme.GetText());
+        setCaretColor(fieldTheme.GetCaret());
+        setSelectionColor(fieldTheme.GetSelection());
+        setSelectedTextColor(fieldTheme.GetSelectedText());
+        repaint();
     }
 
     @Override

@@ -25,7 +25,9 @@ public class ThemeLoader {
         TextStyle title = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 32));
         TextStyle heading = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 14));
 
-        return new Theme(button, cell, field, title, heading);
+        Color background = new Color(238, 238, 238); // Matches Swing's usual default panel grey
+
+        return new Theme(button, cell, field, title, heading, background);
     }
 
     public static Theme Load(String propertiesFilePath) throws IOException {
@@ -55,7 +57,9 @@ public class ThemeLoader {
         TextStyle title = new TextStyle(ParseColor(props, "title.text"), ParseFont(props, "title.font"));
         TextStyle heading = new TextStyle(ParseColor(props, "heading.text"), ParseFont(props, "heading.font"));
 
-        return new Theme(button, cell, field, title, heading);
+        Color background = ParseColor(props, "background");
+
+        return new Theme(button, cell, field, title, heading, background);
     }
 
     private static Color ParseColor(Properties props, String key){
