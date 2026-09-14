@@ -3,8 +3,6 @@ package Screens;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
-import java.awt.Color;
-import java.awt.Font;
 import java.awt.FontMetrics;
 
 import javax.swing.JPanel;
@@ -15,6 +13,7 @@ import Model.Button;
 import Model.BackButton;
 import Model.EditableField;
 import Model.AutoGrowFieldList;
+import Model.Theme;
 import Database.GameReviewDao;
 
 public class GameInfoScreen{
@@ -108,8 +107,8 @@ public class GameInfoScreen{
         saveButton.paint(g, mousePos);
 
         // Draw Title text
-        g.setColor(Color.BLACK);
-        g.setFont(new Font("Arial", Font.BOLD, 32));
+        g.setColor(Theme.Current.GetTitle().GetColour());
+        g.setFont(Theme.Current.GetTitle().GetFont());
 
         String title = gameReview.GetTitle();
         if (title == null || title.isEmpty()) {

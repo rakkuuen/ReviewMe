@@ -1,7 +1,6 @@
 package Model;
 
 import java.awt.Dimension;
-import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Point;
@@ -71,7 +70,8 @@ public class AutoGrowFieldList {
         });
 
         JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        headingLabel.setFont(Theme.Current.GetHeading().GetFont());
+        headingLabel.setForeground(Theme.Current.GetHeading().GetColour());
         fieldsContainer.add(headingLabel);
         fieldsContainer.add(field);
 

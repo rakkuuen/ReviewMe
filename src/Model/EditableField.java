@@ -2,7 +2,6 @@ package Model;
 
 import javax.swing.JTextArea;
 import javax.swing.BorderFactory;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -15,11 +14,6 @@ import java.awt.event.FocusEvent;
 // Swing text component that fits into my custom elements (lets not reinvent every wheel sis)
 public class EditableField extends JTextArea {
     public static final int archWAndH = 10;
-    Color mainColour;
-    Color readOnlyColour;
-    Color borderColour;
-    Color focusedBorderColour;
-    Color placeholderColour;
     String placeholderText;
 
     // initialText is the field's real starting value. If null, there's no value yet,
@@ -31,15 +25,9 @@ public class EditableField extends JTextArea {
 
         this.placeholderText = initialText == null ? placeholderText : null;
 
-        mainColour = Color.WHITE;
-        readOnlyColour = new Color(235, 235, 235);
-        borderColour = Color.BLACK;
-        focusedBorderColour = new Color(30, 120, 220);
-        placeholderColour = Color.GRAY;
-
         setLineWrap(true);
         setWrapStyleWord(true);
-        setFont(new Font("Arial", Font.PLAIN, 13));
+        setFont(Theme.Current.GetField().GetFont()); // JTextArea's own rendering reads this, so it can't be looked up lazily like colours
         setOpaque(false);
         setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 
@@ -53,9 +41,11 @@ public class EditableField extends JTextArea {
 
     @Override
     protected void paintComponent(Graphics g) {
+        FieldTheme theme = Theme.Current.GetField();
+
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(isEditable() ? mainColour : readOnlyColour);
+        g2.setColor(isEditable() ? theme.GetBackground() : theme.GetReadOnly());
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), archWAndH, archWAndH);
         g2.dispose();
         super.paintComponent(g);
@@ -63,7 +53,7 @@ public class EditableField extends JTextArea {
         if(placeholderText != null && getText().isEmpty()){
             Graphics2D placeholderG2 = (Graphics2D) g.create();
             placeholderG2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            placeholderG2.setColor(placeholderColour);
+            placeholderG2.setColor(theme.GetPlaceholder());
             placeholderG2.setFont(getFont().deriveFont(Font.ITALIC));
             Insets insets = getInsets();
             FontMetrics fm = placeholderG2.getFontMetrics();
@@ -74,9 +64,11 @@ public class EditableField extends JTextArea {
 
     @Override
     protected void paintBorder(Graphics g) {
+        FieldTheme theme = Theme.Current.GetField();
+
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(hasFocus() ? focusedBorderColour : borderColour);
+        g2.setColor(hasFocus() ? theme.GetBorderFocused() : theme.GetBorder());
         g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, archWAndH, archWAndH);
         g2.dispose();
     }

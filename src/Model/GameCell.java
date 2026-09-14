@@ -15,8 +15,6 @@ public class GameCell extends Rectangle{
     public static final int archWAndH = 10;
 
     //String text;
-    Color mainColour;
-    Color hoverColour;
     BufferedImage myPicture;
     public String gameTitle;
 
@@ -25,28 +23,27 @@ public class GameCell extends Rectangle{
         this.x = locX;
         this.y = locY;
         this.gameTitle = gameTitle;
-        mainColour = Color.WHITE;
-        hoverColour = Color.GRAY;
         LoadImage(myPicture);
     }
 
     public void paint(Graphics g, Point mousePos){
+        CellTheme theme = Theme.Current.GetCell();
 
         // Hover Colour
         if(contains(mousePos)){
-            g.setColor(hoverColour);
+            g.setColor(theme.GetHover());
         } else {
-            g.setColor(mainColour);
+            g.setColor(theme.GetMain());
         }
         g.fillRoundRect(x, y, width, height, archWAndH, archWAndH);
 
         // Button border
-        g.setColor(Color.BLACK);
+        g.setColor(theme.GetBorder());
         g.drawRoundRect(x, y, width, height, archWAndH, archWAndH);
 
         // Draw button text
-        g.setColor(Color.BLACK);
-        g.setFont(new Font("Arial", Font.BOLD, 18));
+        g.setColor(theme.GetText());
+        g.setFont(theme.GetFont());
         FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(gameTitle);
         int textHeight = fm.getAscent();
