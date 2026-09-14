@@ -7,9 +7,6 @@ public class Button extends Rectangle{
     int sizeY;
     int archWAndH;
     String text;
-    Color mainColour;
-    Color hoverColour;
-    Color disabledColour;
     boolean enabled = true;
 
     public Button(int sizeX, int sizeY, int locX, int locY, int archWAndH, String text){
@@ -20,9 +17,6 @@ public class Button extends Rectangle{
         this.sizeY = sizeY;
         this.archWAndH = archWAndH;
         this.text = text;
-        mainColour = Color.BLUE;
-        hoverColour = Color.RED;
-        disabledColour = Color.GRAY;
     }
 
     public void SetEnabled(boolean enabled){
@@ -41,24 +35,25 @@ public class Button extends Rectangle{
     }
 
     public void paint(Graphics g, Point mousePos){
+        ButtonTheme theme = Theme.Current.GetButton();
 
         // Hover Colour - uses super.contains() since our own contains() gates on enabled
         if(!enabled){
-            g.setColor(disabledColour);
+            g.setColor(theme.GetDisabled());
         } else if(super.contains(mousePos)){
-            g.setColor(hoverColour);
+            g.setColor(theme.GetHover());
         } else {
-            g.setColor(mainColour);
+            g.setColor(theme.GetMain());
         }
         g.fillRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
 
         // Button border
-        g.setColor(Color.BLACK);
+        g.setColor(theme.GetBorder());
         g.drawRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
 
          // Draw button text
-         g.setColor(Color.WHITE);
-         g.setFont(new Font("Arial", Font.BOLD, 18));
+         g.setColor(theme.GetText());
+         g.setFont(theme.GetFont());
          FontMetrics fm = g.getFontMetrics();
          int textWidth = fm.stringWidth(text);
          int textHeight = fm.getAscent();
