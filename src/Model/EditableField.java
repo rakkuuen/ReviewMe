@@ -25,9 +25,16 @@ public class EditableField extends JTextArea {
 
         this.placeholderText = initialText == null ? placeholderText : null;
 
+        FieldTheme fieldTheme = Theme.Current.GetField();
         setLineWrap(true);
         setWrapStyleWord(true);
-        setFont(Theme.Current.GetField().GetFont()); // JTextArea's own rendering reads this, so it can't be looked up lazily like colours
+        // These are real Swing properties JTextArea's own rendering reads directly,
+        // so (like font) they can't be looked up lazily like the custom-painted colours below
+        setFont(fieldTheme.GetFont());
+        setForeground(fieldTheme.GetText());
+        setCaretColor(fieldTheme.GetCaret());
+        setSelectionColor(fieldTheme.GetSelection());
+        setSelectedTextColor(fieldTheme.GetSelectedText());
         setOpaque(false);
         setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
 

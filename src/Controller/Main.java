@@ -164,8 +164,9 @@ class Main extends JFrame{
 
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
-            // GameInfoScreen scrolls itself via its own JScrollPane; only FrontPage's
-            // custom-painted cells need scrolling driven manually here
+            // GameInfoScreen's field list handles its own mouse wheel internally
+            // (see AutoGrowFieldList); only FrontPage's custom-painted cells need
+            // scrolling driven manually from here
             if(currentScreen == Screen.FRONT_PAGE){
                 myFrontPage.Scroll(e.getWheelRotation());
                 repaint();

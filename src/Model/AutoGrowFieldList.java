@@ -3,20 +3,23 @@ package Model;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.Point;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 // A scrollable, top-to-bottom list of labeled EditableFields that each grow to fit their
-// own text, reflowing everything below whenever one of them changes height.
+// own text, reflowing everything below whenever one of them changes height. No JScrollPane -
+// content is repositioned by hand via Scroller (same offset/clamp math FrontPage uses),
+// clipped for free since Swing already clips child components to their parent's bounds.
 public class AutoGrowFieldList {
     private static class FieldRow {
         JLabel headingLabel;
@@ -24,8 +27,11 @@ public class AutoGrowFieldList {
     }
     private List<FieldRow> fieldRows = new ArrayList<>();
 
+    private JPanel viewport;
+    private JPanel centeringWrapper;
     private JPanel fieldsContainer;
-    private JScrollPane scrollPane;
+    private Scroller scroller;
+    private int contentHeight = 0;
 
     private final int fieldX;
     private final int fieldWidth;
@@ -33,8 +39,6 @@ public class AutoGrowFieldList {
     private final int minFieldHeight;
     private final int rowGap;
     private final int contentWidth;
-
-    private static final int scrollUnitIncrement = 16; // Swing's default is very slow with a mouse wheel
 
     public AutoGrowFieldList(int fieldX, int fieldWidth, int headingHeight, int minFieldHeight, int rowGap){
         this.fieldX = fieldX;
@@ -44,18 +48,36 @@ public class AutoGrowFieldList {
         this.rowGap = rowGap;
         this.contentWidth = fieldX * 2 + fieldWidth;
 
+        scroller = new Scroller(0, 0);
+
         fieldsContainer = new JPanel();
         fieldsContainer.setLayout(null);
 
         // GridBagLayout centers the fixed-width fieldsContainer horizontally; NORTH keeps it top-anchored
-        JPanel centeringWrapper = new JPanel(new GridBagLayout());
+        centeringWrapper = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.NORTH;
         centeringWrapper.add(fieldsContainer, gbc);
 
-        scrollPane = new JScrollPane(centeringWrapper,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(scrollUnitIncrement);
+        viewport = new JPanel();
+        viewport.setLayout(null);
+        viewport.add(centeringWrapper);
+
+        viewport.addComponentListener(new ComponentAdapter(){
+            @Override
+            public void componentResized(ComponentEvent e){
+                scroller.SetContentHeight(contentHeight, viewport.getHeight());
+                UpdateContentPosition();
+            }
+        });
+
+        viewport.addMouseWheelListener(new MouseWheelListener(){
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e){
+                scroller.Scroll(e.getWheelRotation());
+                UpdateContentPosition();
+            }
+        });
     }
 
     public EditableField AddField(String heading, String initialText, String placeholder){
@@ -94,8 +116,18 @@ public class AutoGrowFieldList {
             y += fieldHeight + rowGap;
         }
 
-        fieldsContainer.setPreferredSize(new Dimension(contentWidth, y));
+        contentHeight = y;
+        fieldsContainer.setPreferredSize(new Dimension(contentWidth, contentHeight));
         fieldsContainer.revalidate();
+
+        scroller.SetContentHeight(contentHeight, viewport.getHeight());
+        UpdateContentPosition();
+    }
+
+    // Repositions centeringWrapper within viewport to reflect the current scroll offset;
+    // Swing clips it to viewport's own bounds automatically, so nothing else is needed
+    private void UpdateContentPosition(){
+        centeringWrapper.setBounds(0, -scroller.GetOffsetY(), viewport.getWidth(), contentHeight);
     }
 
     private int ComputePreferredHeight(EditableField field){
@@ -104,8 +136,8 @@ public class AutoGrowFieldList {
         return Math.max(minFieldHeight, preferred);
     }
 
-    public JScrollPane GetComponent(){
-        return scrollPane;
+    public JPanel GetComponent(){
+        return viewport;
     }
 
     public void SetFieldsEditable(boolean editable){
@@ -115,7 +147,7 @@ public class AutoGrowFieldList {
     }
 
     public void ScrollToTop(){
-        // Force scroll back to top; adding fields can leave it auto-scrolled to the bottom
-        SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));
+        scroller.ScrollToTop();
+        UpdateContentPosition();
     }
 }

@@ -43,6 +43,10 @@ public class Scroller {
         return offsetY;
     }
 
+    public void ScrollToTop(){
+        offsetY = 0;
+    }
+
     // Translates a real panel-space point (e.g. from a MouseEvent) into content space,
     // for hit-testing against items whose coordinates assume no scrolling
     public Point AdjustPoint(Point panelPoint){

@@ -6,7 +6,6 @@ import java.awt.Point;
 import java.awt.FontMetrics;
 
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 import Model.GameReview;
 import Model.Button;
@@ -24,7 +23,7 @@ public class GameInfoScreen{
     private boolean isEditing = false;
 
     private AutoGrowFieldList fieldList;
-    private JScrollPane scrollPane;
+    private JPanel fieldListPanel;
 
     private EditableField gameplayField;
     private EditableField storyField;
@@ -82,7 +81,7 @@ public class GameInfoScreen{
         conclusionField = fieldList.AddField("Conclusion", gameReview.GetConclusion(), "Final thoughts / conclusion...");
 
         fieldList.Relayout();
-        scrollPane = fieldList.GetComponent();
+        fieldListPanel = fieldList.GetComponent();
 
         // Start read-only - Edit must be clicked before anything's editable
         fieldList.SetFieldsEditable(false);
@@ -97,7 +96,7 @@ public class GameInfoScreen{
 
         int scrollWidth = windowDimension.width - scrollX - rightMargin;
         int scrollHeight = windowDimension.height - scrollY - bottomMargin;
-        scrollPane.setBounds(scrollX, scrollY, scrollWidth, scrollHeight);
+        fieldListPanel.setBounds(scrollX, scrollY, scrollWidth, scrollHeight);
     }
 
     public void paint(Graphics g, Point mousePos, Dimension windowDimension){
@@ -177,14 +176,14 @@ public class GameInfoScreen{
     }
 
     public void AddComponentsTo(JPanel panel){
-        panel.add(scrollPane);
+        panel.add(fieldListPanel);
         panel.revalidate();
         panel.repaint();
         fieldList.ScrollToTop();
     }
 
     public void RemoveComponentsFrom(JPanel panel){
-        panel.remove(scrollPane);
+        panel.remove(fieldListPanel);
         panel.revalidate();
         panel.repaint();
     }

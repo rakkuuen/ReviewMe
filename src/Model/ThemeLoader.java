@@ -18,7 +18,9 @@ public class ThemeLoader {
                 new Font("Arial", Font.BOLD, 18));
 
         FieldTheme field = new FieldTheme(Color.WHITE, new Color(235, 235, 235), Color.BLACK,
-                new Color(30, 120, 220), Color.GRAY, new Font("Arial", Font.PLAIN, 13));
+                new Color(30, 120, 220), Color.GRAY,
+                Color.BLACK, new Color(184, 207, 229), Color.BLACK, Color.BLACK,
+                new Font("Arial", Font.PLAIN, 13));
 
         TextStyle title = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 32));
         TextStyle heading = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 14));
@@ -45,7 +47,10 @@ public class ThemeLoader {
         FieldTheme field = new FieldTheme(
                 ParseColor(props, "field.background"), ParseColor(props, "field.readOnly"),
                 ParseColor(props, "field.border"), ParseColor(props, "field.borderFocused"),
-                ParseColor(props, "field.placeholder"), ParseFont(props, "field.font"));
+                ParseColor(props, "field.placeholder"),
+                ParseColor(props, "field.caret"), ParseColor(props, "field.selection"), ParseColor(props, "field.selectedText"),
+                ParseColor(props, "field.text"),
+                ParseFont(props, "field.font"));
 
         TextStyle title = new TextStyle(ParseColor(props, "title.text"), ParseFont(props, "title.font"));
         TextStyle heading = new TextStyle(ParseColor(props, "heading.text"), ParseFont(props, "heading.font"));
