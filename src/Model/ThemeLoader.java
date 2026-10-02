@@ -2,8 +2,12 @@ package Model;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontFormatException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 // Builds Theme instances - either the built-in default look, or parsed from a .properties file
@@ -30,21 +34,23 @@ public class ThemeLoader {
         return new Theme(button, cell, field, title, heading, background);
     }
 
-    public static Theme Load(String propertiesFilePath) throws IOException {
+    public static Theme Load(String propertiesFilePath) throws IOException, FontFormatException {
         Properties props = new Properties();
         try(FileInputStream in = new FileInputStream(propertiesFilePath)){
             props.load(in);
         }
 
+        Map<String, Font> embeddedFonts = LoadEmbeddedFonts(props);
+
         ButtonTheme button = new ButtonTheme(
                 ParseColor(props, "button.main"), ParseColor(props, "button.hover"),
                 ParseColor(props, "button.disabled"), ParseColor(props, "button.text"),
-                ParseColor(props, "button.border"), ParseFont(props, "button.font"));
+                ParseColor(props, "button.border"), ParseFont(props, "button.font", embeddedFonts));
 
         CellTheme cell = new CellTheme(
                 ParseColor(props, "cell.main"), ParseColor(props, "cell.hover"),
                 ParseColor(props, "cell.text"), ParseColor(props, "cell.border"),
-                ParseFont(props, "cell.font"));
+                ParseFont(props, "cell.font", embeddedFonts));
 
         FieldTheme field = new FieldTheme(
                 ParseColor(props, "field.background"), ParseColor(props, "field.readOnly"),
@@ -52,26 +58,53 @@ public class ThemeLoader {
                 ParseColor(props, "field.placeholder"),
                 ParseColor(props, "field.caret"), ParseColor(props, "field.selection"), ParseColor(props, "field.selectedText"),
                 ParseColor(props, "field.text"),
-                ParseFont(props, "field.font"));
+                ParseFont(props, "field.font", embeddedFonts));
 
-        TextStyle title = new TextStyle(ParseColor(props, "title.text"), ParseFont(props, "title.font"));
-        TextStyle heading = new TextStyle(ParseColor(props, "heading.text"), ParseFont(props, "heading.font"));
+        TextStyle title = new TextStyle(ParseColor(props, "title.text"), ParseFont(props, "title.font", embeddedFonts));
+        TextStyle heading = new TextStyle(ParseColor(props, "heading.text"), ParseFont(props, "heading.font", embeddedFonts));
 
         Color background = ParseColor(props, "background");
 
         return new Theme(button, cell, field, title, heading, background);
     }
 
+    // Loads any font.embed.<name> = path/to/font.(ttf|otf) entries into base Font objects,
+    // keyed by <name> - so a font-role property (button.font, title.font, ...) can reference
+    // <name> instead of a system-installed family name, and get the embedded file's glyphs
+    // regardless of what's actually installed on this machine
+    private static Map<String, Font> LoadEmbeddedFonts(Properties props) throws IOException, FontFormatException {
+        Map<String, Font> embeddedFonts = new HashMap<>();
+        String prefix = "font.embed.";
+
+        for(String key : props.stringPropertyNames()){
+            if(key.startsWith(prefix)){
+                String name = key.substring(prefix.length());
+                File fontFile = new File(props.getProperty(key));
+                Font baseFont = Font.createFont(Font.TRUETYPE_FONT, fontFile);
+                embeddedFonts.put(name, baseFont);
+            }
+        }
+
+        return embeddedFonts;
+    }
+
     private static Color ParseColor(Properties props, String key){
         return Color.decode(props.getProperty(key));
     }
 
-    // Format: family,style,size e.g. "Arial,BOLD,18"
-    private static Font ParseFont(Properties props, String key){
+    // Format: family,style,size e.g. "Arial,BOLD,18" - family can also be a name
+    // registered via font.embed.<name>, resolved against an embedded file instead
+    // of a system-installed family
+    private static Font ParseFont(Properties props, String key, Map<String, Font> embeddedFonts){
         String[] parts = props.getProperty(key).split(",");
         String family = parts[0].trim();
         int style = ParseFontStyle(parts[1].trim());
         int size = Integer.parseInt(parts[2].trim());
+
+        Font embedded = embeddedFonts.get(family);
+        if(embedded != null){
+            return embedded.deriveFont(style, (float) size);
+        }
         return new Font(family, style, size);
     }
 

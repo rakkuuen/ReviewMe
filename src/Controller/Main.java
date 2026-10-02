@@ -56,7 +56,7 @@ class Main extends JFrame{
 
             try {
                 darkTheme = ThemeLoader.Load("Resources/Themes/dark.properties");
-            } catch (java.io.IOException e) {
+            } catch (java.io.IOException | java.awt.FontFormatException e) {
                 System.err.println("Could not load dark theme for test toggle: " + e.getMessage());
             }
 
