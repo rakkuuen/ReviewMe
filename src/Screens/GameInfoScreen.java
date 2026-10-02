@@ -75,8 +75,8 @@ public class GameInfoScreen{
             title = "Unknown Game";
         }
         backButton = new BackButton(onBack);
-        editButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20, 10, "Edit"); // x corrected by Reflow below
-        saveButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20 + rightButtonHeight + rightButtonGap, 10, "Save"); // x corrected by Reflow below
+        editButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20, "Edit"); // x corrected by Reflow below
+        saveButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20 + rightButtonHeight + rightButtonGap, "Save"); // x corrected by Reflow below
 
         fieldList = new AutoGrowFieldList(fieldX, fieldWidth, headingHeight, minFieldHeight, rowGap);
 

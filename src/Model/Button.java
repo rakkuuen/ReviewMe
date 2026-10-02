@@ -7,17 +7,15 @@ import java.awt.geom.Rectangle2D;
 public class Button extends Rectangle{
     int sizeX;
     int sizeY;
-    int archWAndH;
     String text;
     boolean enabled = true;
 
-    public Button(int sizeX, int sizeY, int locX, int locY, int archWAndH, String text){
+    public Button(int sizeX, int sizeY, int locX, int locY, String text){
         super(0, 0, sizeX, sizeY);
         this.x = locX;
         this.y = locY;
         this.sizeX = sizeX;
         this.sizeY = sizeY;
-        this.archWAndH = archWAndH;
         this.text = text;
     }
 
@@ -47,11 +45,12 @@ public class Button extends Rectangle{
         } else {
             g.setColor(theme.GetMain());
         }
-        g.fillRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
+        int arc = theme.GetCornerArc();
+        g.fillRoundRect(x, y, sizeX, sizeY, arc, arc);
 
         // Button border
         g.setColor(theme.GetBorder());
-        g.drawRoundRect(x, y, sizeX, sizeY, archWAndH, archWAndH);
+        g.drawRoundRect(x, y, sizeX, sizeY, arc, arc);
 
          // Draw button text, centered on the actual glyph ink rather than the font's
          // abstract ascent/descent metrics - different fonts (e.g. Consolas vs Arial)

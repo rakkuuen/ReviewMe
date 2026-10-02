@@ -7,13 +7,15 @@ import java.util.List;
 
 public class CellTheme {
     private Color main, hover, text, border;
+    private int cornerArc;
     private Font font;
 
-    public CellTheme(Color main, Color hover, Color text, Color border, Font font){
+    public CellTheme(Color main, Color hover, Color text, Color border, int cornerArc, Font font){
         this.main = main;
         this.hover = hover;
         this.text = text;
         this.border = border;
+        this.cornerArc = cornerArc;
         this.font = font;
     }
 
@@ -28,6 +30,9 @@ public class CellTheme {
 
     public Color GetBorder(){ return border; }
     public void SetBorder(Color c){ border = c; }
+
+    public int GetCornerArc(){ return cornerArc; }
+    public void SetCornerArc(int a){ cornerArc = a; }
 
     public Font GetFont(){ return font; }
     public void SetFont(Font f){ font = f; }

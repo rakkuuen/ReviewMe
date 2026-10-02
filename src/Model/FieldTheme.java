@@ -8,10 +8,11 @@ import java.util.List;
 public class FieldTheme {
     private Color background, readOnly, border, borderFocused, placeholder;
     private Color caret, selection, selectedText, text;
+    private int cornerArc;
     private Font font;
 
     public FieldTheme(Color background, Color readOnly, Color border, Color borderFocused, Color placeholder,
-            Color caret, Color selection, Color selectedText, Color text, Font font){
+            Color caret, Color selection, Color selectedText, Color text, int cornerArc, Font font){
         this.background = background;
         this.readOnly = readOnly;
         this.border = border;
@@ -21,6 +22,7 @@ public class FieldTheme {
         this.selection = selection;
         this.selectedText = selectedText;
         this.text = text;
+        this.cornerArc = cornerArc;
         this.font = font;
     }
 
@@ -50,6 +52,9 @@ public class FieldTheme {
 
     public Color GetText(){ return text; }
     public void SetText(Color c){ text = c; }
+
+    public int GetCornerArc(){ return cornerArc; }
+    public void SetCornerArc(int a){ cornerArc = a; }
 
     public Font GetFont(){ return font; }
     public void SetFont(Font f){ font = f; }

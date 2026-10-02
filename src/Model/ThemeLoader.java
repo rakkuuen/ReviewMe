@@ -16,15 +16,15 @@ public class ThemeLoader {
     // Matches the app's original hardcoded look, so nothing changes until a theme is loaded
     public static Theme LoadDefault(){
         ButtonTheme button = new ButtonTheme(Color.BLUE, Color.RED, Color.GRAY, Color.WHITE, Color.BLACK,
-                new Font("Arial", Font.BOLD, 18));
+                10, new Font("Arial", Font.BOLD, 18));
 
         CellTheme cell = new CellTheme(Color.WHITE, Color.GRAY, Color.BLACK, Color.BLACK,
-                new Font("Arial", Font.BOLD, 18));
+                10, new Font("Arial", Font.BOLD, 18));
 
         FieldTheme field = new FieldTheme(Color.WHITE, new Color(235, 235, 235), Color.BLACK,
                 new Color(30, 120, 220), Color.GRAY,
                 Color.BLACK, new Color(184, 207, 229), Color.BLACK, Color.BLACK,
-                new Font("Arial", Font.PLAIN, 13));
+                10, new Font("Arial", Font.PLAIN, 13));
 
         TextStyle title = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 32));
         TextStyle heading = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 14));
@@ -45,19 +45,20 @@ public class ThemeLoader {
         ButtonTheme button = new ButtonTheme(
                 ParseColor(props, "button.main"), ParseColor(props, "button.hover"),
                 ParseColor(props, "button.disabled"), ParseColor(props, "button.text"),
-                ParseColor(props, "button.border"), ParseFont(props, "button.font", embeddedFonts));
+                ParseColor(props, "button.border"), ParseInt(props, "button.cornerArc"),
+                ParseFont(props, "button.font", embeddedFonts));
 
         CellTheme cell = new CellTheme(
                 ParseColor(props, "cell.main"), ParseColor(props, "cell.hover"),
                 ParseColor(props, "cell.text"), ParseColor(props, "cell.border"),
-                ParseFont(props, "cell.font", embeddedFonts));
+                ParseInt(props, "cell.cornerArc"), ParseFont(props, "cell.font", embeddedFonts));
 
         FieldTheme field = new FieldTheme(
                 ParseColor(props, "field.background"), ParseColor(props, "field.readOnly"),
                 ParseColor(props, "field.border"), ParseColor(props, "field.borderFocused"),
                 ParseColor(props, "field.placeholder"),
                 ParseColor(props, "field.caret"), ParseColor(props, "field.selection"), ParseColor(props, "field.selectedText"),
-                ParseColor(props, "field.text"),
+                ParseColor(props, "field.text"), ParseInt(props, "field.cornerArc"),
                 ParseFont(props, "field.font", embeddedFonts));
 
         TextStyle title = new TextStyle(ParseColor(props, "title.text"), ParseFont(props, "title.font", embeddedFonts));
@@ -87,6 +88,10 @@ public class ThemeLoader {
 
     private static Color ParseColor(Properties props, String key){
         return Color.decode(props.getProperty(key));
+    }
+
+    private static int ParseInt(Properties props, String key){
+        return Integer.parseInt(props.getProperty(key).trim());
     }
 
     // Format: family,style,size e.g. "Arial,BOLD,18" - family can also be a name

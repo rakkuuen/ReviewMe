@@ -12,7 +12,6 @@ import javax.imageio.ImageIO;
 public class GameCell extends Rectangle{
     public static final int width = 500;
     public static final int height = 70;
-    public static final int archWAndH = 10;
 
     //String text;
     BufferedImage myPicture;
@@ -35,11 +34,12 @@ public class GameCell extends Rectangle{
         } else {
             g.setColor(theme.GetMain());
         }
-        g.fillRoundRect(x, y, width, height, archWAndH, archWAndH);
+        int arc = theme.GetCornerArc();
+        g.fillRoundRect(x, y, width, height, arc, arc);
 
         // Button border
         g.setColor(theme.GetBorder());
-        g.drawRoundRect(x, y, width, height, archWAndH, archWAndH);
+        g.drawRoundRect(x, y, width, height, arc, arc);
 
         // Draw button text
         g.setColor(theme.GetText());

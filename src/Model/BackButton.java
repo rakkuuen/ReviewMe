@@ -10,13 +10,12 @@ public class BackButton extends Button {
     private static final int y = 20;
     private static final int width = 100;
     private static final int height = 50;
-    private static final int archWAndH = 10;
 
     private boolean pressed = false;
     private Runnable onBack;
 
     public BackButton(Runnable onBack){
-        super(width, height, x, y, archWAndH, "Back");
+        super(width, height, x, y, "Back");
         this.onBack = onBack;
     }
 

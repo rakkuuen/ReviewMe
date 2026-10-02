@@ -13,7 +13,6 @@ import java.awt.event.FocusEvent;
 
 // Swing text component that fits into my custom elements (lets not reinvent every wheel sis)
 public class EditableField extends JTextArea {
-    public static final int archWAndH = 10;
     String placeholderText;
 
     // initialText is the field's real starting value. If null, there's no value yet,
@@ -60,7 +59,7 @@ public class EditableField extends JTextArea {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(isEditable() ? theme.GetBackground() : theme.GetReadOnly());
-        g2.fillRoundRect(0, 0, getWidth(), getHeight(), archWAndH, archWAndH);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), theme.GetCornerArc(), theme.GetCornerArc());
         g2.dispose();
         super.paintComponent(g);
 
@@ -83,7 +82,7 @@ public class EditableField extends JTextArea {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(hasFocus() ? theme.GetBorderFocused() : theme.GetBorder());
-        g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, archWAndH, archWAndH);
+        g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, theme.GetCornerArc(), theme.GetCornerArc());
         g2.dispose();
     }
 
