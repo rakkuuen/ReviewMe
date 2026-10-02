@@ -68,10 +68,7 @@ public class ThemeLoader {
         return new Theme(button, cell, field, title, heading, background);
     }
 
-    // Loads any font.embed.<name> = path/to/font.(ttf|otf) entries into base Font objects,
-    // keyed by <name> - so a font-role property (button.font, title.font, ...) can reference
-    // <name> instead of a system-installed family name, and get the embedded file's glyphs
-    // regardless of what's actually installed on this machine
+    // Loads embedded fonts
     private static Map<String, Font> LoadEmbeddedFonts(Properties props) throws IOException, FontFormatException {
         Map<String, Font> embeddedFonts = new HashMap<>();
         String prefix = "font.embed.";
