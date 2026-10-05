@@ -60,6 +60,8 @@ public class GameReviewDao {
         } catch (SQLException e) {
             System.err.println("Error creating unique title index: " + e.getMessage());
         }
+        // Adding the schema table for series/templates/per review stuff
+        Schema.Upgrade(url);
     }
     
     public static void InsertGameReview(GameReview review){
