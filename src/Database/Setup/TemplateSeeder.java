@@ -1,8 +1,9 @@
-package Database;
+package Database.Setup;
 import java.io.IOException;
 
-import Model.Template;
-import Model.TemplateLoader;
+import Model.Reviews.Template;
+import Model.Reviews.TemplateLoader;
+import Database.Dao.TemplateDao;
 
 // Loads every .template file into the DB. Safe to run on every launch (existing templates are left alone)
 public class TemplateSeeder {

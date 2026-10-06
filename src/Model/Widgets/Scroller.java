@@ -1,4 +1,4 @@
-package Model;
+package Model.Widgets;
 
 import java.awt.Graphics;
 import java.awt.Point;

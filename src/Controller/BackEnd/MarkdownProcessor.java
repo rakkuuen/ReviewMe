@@ -1,12 +1,12 @@
-package Controller;
-import Model.GameReview;
+package Controller.BackEnd;
+import Model.Reviews.GameReview;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-import Database.GameReviewDao;
+import Database.Dao.GameReviewDao;
 
 import java.io.File;
 import java.io.IOException;

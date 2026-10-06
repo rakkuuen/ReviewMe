@@ -1,9 +1,8 @@
-package Model;
+package Model.Widgets;
 
 import java.util.List;
 import java.util.ArrayList;
-import Model.TextBox;
-import Model.GameReview;
+import Model.Reviews.GameReview;
 
 public class TextBlock {
     // This class will be a collection of textbox objects and how they need to be ordered or displayed

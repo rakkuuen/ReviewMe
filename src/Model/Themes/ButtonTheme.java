@@ -1,18 +1,19 @@
-package Model;
+package Model.Themes;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.util.Arrays;
 import java.util.List;
 
-public class CellTheme {
-    private Color main, hover, text, border;
-    private int cornerArc;
+public class ButtonTheme {
+    private Color main, hover, disabled, text, border;
+    private int cornerArc; // Arc diameter in px for fillRoundRect/drawRoundRect, 0 = square corners
     private Font font;
 
-    public CellTheme(Color main, Color hover, Color text, Color border, int cornerArc, Font font){
+    public ButtonTheme(Color main, Color hover, Color disabled, Color text, Color border, int cornerArc, Font font){
         this.main = main;
         this.hover = hover;
+        this.disabled = disabled;
         this.text = text;
         this.border = border;
         this.cornerArc = cornerArc;
@@ -24,6 +25,9 @@ public class CellTheme {
 
     public Color GetHover(){ return hover; }
     public void SetHover(Color c){ hover = c; }
+
+    public Color GetDisabled(){ return disabled; }
+    public void SetDisabled(Color c){ disabled = c; }
 
     public Color GetText(){ return text; }
     public void SetText(Color c){ text = c; }
@@ -38,6 +42,6 @@ public class CellTheme {
     public void SetFont(Font f){ font = f; }
 
     public List<Color> GetAllColours(){
-        return Arrays.asList(main, hover, text, border);
+        return Arrays.asList(main, hover, disabled, text, border);
     }
 }

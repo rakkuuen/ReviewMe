@@ -1,4 +1,4 @@
-package Model;
+package Model.Widgets;
 
 public class TextBox {
     // If I want to show text on the screen (Not an area to type)

@@ -2,15 +2,15 @@ package Screens;
 
 import java.util.List;
 
-import Database.GameReviewDao;
+import Database.Dao.GameReviewDao;
 import Factory.GameCellFactory;
-import Model.GameReview;
+import Model.Reviews.GameReview;
 
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Graphics;
-import Model.GameCell;
-import Model.Scroller;
+import Model.Widgets.GameCell;
+import Model.Widgets.Scroller;
 
 
 public class FrontPage {

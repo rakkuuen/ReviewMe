@@ -1,11 +1,11 @@
-package Database;
+package Database.Dao;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import Model.Template;
-import Model.TemplateField;
+import Model.Reviews.Template;
+import Model.Reviews.TemplateField;
 
 public class TemplateDao {
 

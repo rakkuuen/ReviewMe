@@ -1,4 +1,4 @@
-package Model;
+package Model.Reviews;
 
 import java.io.File;
 import java.io.IOException;

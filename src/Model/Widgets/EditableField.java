@@ -1,4 +1,4 @@
-package Model;
+package Model.Widgets;
 
 import javax.swing.JTextArea;
 import javax.swing.BorderFactory;
@@ -10,6 +10,8 @@ import java.awt.Insets;
 import java.awt.RenderingHints;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import Model.Themes.FieldTheme;
+import Model.Themes.Theme;
 
 // Swing text component that fits into my custom elements (lets not reinvent every wheel sis)
 public class EditableField extends JTextArea {

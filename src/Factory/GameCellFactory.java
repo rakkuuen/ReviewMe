@@ -1,8 +1,8 @@
 package Factory;
-import Database.GameReviewDao;
+import Database.Dao.GameReviewDao;
 
-import Model.GameReview;
-import Model.GameCell;
+import Model.Reviews.GameReview;
+import Model.Widgets.GameCell;
 import java.util.ArrayList;
 import java.util.List;
 public class GameCellFactory {

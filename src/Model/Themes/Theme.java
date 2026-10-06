@@ -1,4 +1,4 @@
-package Model;
+package Model.Themes;
 
 import java.awt.Color;
 import java.awt.Font;

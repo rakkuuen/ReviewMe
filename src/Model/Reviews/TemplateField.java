@@ -1,4 +1,4 @@
-package Model;
+package Model.Reviews;
 
 public class TemplateField {
     private String fieldKey, heading, placeholder;

@@ -12,13 +12,13 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import Model.GameReview;
-import Model.Button;
-import Model.BackButton;
-import Model.EditableField;
-import Model.AutoGrowFieldList;
-import Model.Theme;
-import Database.GameReviewDao;
+import Model.Reviews.GameReview;
+import Model.Widgets.Button;
+import Model.Widgets.BackButton;
+import Model.Widgets.EditableField;
+import Model.Widgets.AutoGrowFieldList;
+import Model.Themes.Theme;
+import Database.Dao.GameReviewDao;
 
 public class GameInfoScreen{
     private GameReview gameReview;

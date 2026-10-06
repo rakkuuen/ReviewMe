@@ -1,4 +1,4 @@
-package Model;
+package Model.Reviews;
 
 public class GameReview {
     private String gameTitle, gameplay, story, setting, achievements, replayability, music,

@@ -1,7 +1,9 @@
-package Model;
+package Model.Widgets;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
+import Model.Themes.ButtonTheme;
+import Model.Themes.Theme;
 
 
 public class Button extends Rectangle{

@@ -3,13 +3,14 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-import Database.GameReviewDao;
+import Database.Dao.GameReviewDao;
 import Screens.FrontPage;
 import Screens.GameInfoScreen;
-import Model.GameReview;
-import Model.GameCell;
-import Model.Theme;
-import Model.ThemeLoader;
+import Model.Reviews.GameReview;
+import Model.Widgets.GameCell;
+import Model.Themes.Theme;
+import Model.Themes.ThemeLoader;
+import Controller.BackEnd.MarkdownProcessor;
 
 
 

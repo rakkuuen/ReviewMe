@@ -1,4 +1,4 @@
-package Model;
+package Model.Widgets;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -15,6 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import Model.Themes.Theme;
 
 // A scrollable, top-to-bottom list of labeled EditableFields that each grow to fit their
 // own text, reflowing everything below whenever one of them changes height. No JScrollPane -
