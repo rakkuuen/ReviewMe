@@ -17,29 +17,31 @@ public class Schema {
                 CREATE TABLE IF NOT EXISTS Series (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL UNIQUE,
-                    templateId INTEGER,
+                    templateId TEXT,
                     notes TEXT
                 );
             """);
 
+            // id is a readable key, e.g. Standard or Yakuza
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS Template (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id TEXT PRIMARY KEY,
                     name TEXT NOT NULL UNIQUE
                 );
             """);
 
             // kind is TEXT, RATING (whole number only) or RATING_OR_UNKNOWN (number or ?)
+            // required means it counts as missing even when the review has no entry for it
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS TemplateField (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    templateId INTEGER NOT NULL,
+                    templateId TEXT NOT NULL,
                     fieldKey TEXT NOT NULL,
                     heading TEXT NOT NULL,
                     displayOrder INTEGER NOT NULL,
                     kind TEXT NOT NULL,
                     required INTEGER NOT NULL DEFAULT 0,
-                    UNIQUE (templateId, fieldKey)
+                    placeholder TEXT,
+                    PRIMARY KEY (templateId, fieldKey)
                 );
             """);
 
@@ -65,8 +67,11 @@ public class Schema {
             """);
 
             AddColumnIfMissing(conn, "GameReview", "seriesId", "TEXT");
-            AddColumnIfMissing(conn, "GameReview", "templateId", "INTEGER");
+            AddColumnIfMissing(conn, "GameReview", "templateId", "TEXT");
             AddColumnIfMissing(conn, "GameReview", "sourcePath", "TEXT");
+            // Filled from the Steam API later; NULL for non-Steam games or before the first sync
+            AddColumnIfMissing(conn, "GameReview", "steamAppId", "INTEGER");
+            AddColumnIfMissing(conn, "GameReview", "playtimeMinutes", "INTEGER");
             AddColumnIfMissing(conn, "GameReview", "inProgress", "INTEGER NOT NULL DEFAULT 0");
             AddColumnIfMissing(conn, "GameReview", "topPickSlot", "INTEGER CHECK (topPickSlot BETWEEN 1 AND 5)");
 

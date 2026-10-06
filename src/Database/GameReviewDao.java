@@ -62,6 +62,7 @@ public class GameReviewDao {
         }
         // Adding the schema table for series/templates/per review stuff
         Schema.Upgrade(url);
+        TemplateSeeder.Seed(url);
     }
     
     public static void InsertGameReview(GameReview review){
