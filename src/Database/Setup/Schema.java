@@ -30,7 +30,7 @@ public class Schema {
                 );
             """);
 
-            // kind is TEXT, RATING (whole number only) or RATING_OR_UNKNOWN (number or ?)
+            // kind is TEXT or RATING_OR_UNKNOWN (whole number or ?)
             // required means it counts as missing even when the review has no entry for it
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS TemplateField (

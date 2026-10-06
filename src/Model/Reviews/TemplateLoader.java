@@ -81,7 +81,6 @@ public class TemplateLoader {
         if(parts.length > 3){
             for(String flag : parts[3].split(",")){
                 switch(flag.trim().toLowerCase()){
-                    case "rating": kind = FieldKind.RATING; break;
                     case "rating-or-unknown": kind = FieldKind.RATING_OR_UNKNOWN; break;
                     case "required": required = true; break;
                     case "": break;
