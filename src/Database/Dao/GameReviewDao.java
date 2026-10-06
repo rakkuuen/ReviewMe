@@ -8,17 +8,17 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import Model.Reviews.CompletionSource;
 import Model.Reviews.GameReview;
 import Database.Setup.Schema;
 import Database.Setup.TemplateSeeder;
 
 
 public class GameReviewDao {
-    private static final String dbPath = "Resources/Databases/GameReview.db";
 
     public static void Setup(){
         // Connect to sql database (or create one if one does not exist)
-        String url = "jdbc:sqlite:" + dbPath;
+        String url = Db.url;
         try (Connection conn = DriverManager.getConnection(url)) {
             if (conn != null) {
                 System.out.println("Database created or opened successfully.");
@@ -63,12 +63,12 @@ public class GameReviewDao {
             System.err.println("Error creating unique title index: " + e.getMessage());
         }
         // Adding the schema table for series/templates/per review stuff
-        Schema.Upgrade(url);
-        TemplateSeeder.Seed(url);
+        Schema.Upgrade();
+        TemplateSeeder.Seed();
     }
-    
+
     public static void InsertGameReview(GameReview review){
-        String url = "jdbc:sqlite:" + dbPath;
+        String url = Db.url;
         String insertSQL = """
             INSERT OR IGNORE INTO GameReview (title, gameplay, story, setting, music, voiceActing, achievements,
                                     replayability, alternateTitles, finalRating, conclusion)
@@ -102,7 +102,7 @@ public class GameReviewDao {
     }
 
     public static void UpdateGameReview(GameReview review){
-        String url = "jdbc:sqlite:" + dbPath;
+        String url = Db.url;
         String updateSQL = """
             UPDATE GameReview
             SET gameplay = ?, story = ?, setting = ?, music = ?, voiceActing = ?, achievements = ?,
@@ -135,7 +135,7 @@ public class GameReviewDao {
 
     public static List<GameReview> GetAllGameReviews(){
         List<GameReview> allGameReviews = new ArrayList<>();
-        String url = "jdbc:sqlite:" + dbPath;
+        String url = Db.url;
         String query = "SELECT * FROM GameReview";
 
         try (Connection conn = DriverManager.getConnection(url);
@@ -143,20 +143,7 @@ public class GameReviewDao {
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
-                GameReview review = new GameReview();
-                review.SetTitle(rs.getString("title"));  
-                review.SetGameplay(rs.getString("gameplay"));
-                review.SetStory(rs.getString("story"));
-                review.SetSetting(rs.getString("setting"));
-                review.SetMusic(rs.getString("music"));
-                review.SetVoiceActing(rs.getString("voiceActing"));
-                review.SetAchievements(rs.getString("achievements"));
-                review.SetReplayability(rs.getString("replayability"));
-                review.SetAlternateTitles(rs.getString("alternateTitles"));
-                review.SetFinalRating(rs.getInt("finalRating"));
-                review.SetConclusion(rs.getString("conclusion"));
-
-                allGameReviews.add(review);
+                allGameReviews.add(ReadGameReview(rs));
             }
         } catch (SQLException e) {
             System.err.println("Error retrieving GameReviews: " + e.getMessage());
@@ -167,8 +154,7 @@ public class GameReviewDao {
     }
 
     public static GameReview GetGameReview(String gameTitle){
-        GameReview myGameReview = new GameReview();
-        String url = "jdbc:sqlite:" + dbPath;
+        String url = Db.url;
         String query = "SELECT * FROM GameReview WHERE title = ?";
         try (Connection conn = DriverManager.getConnection(url);
              PreparedStatement pstmt = conn.prepareStatement(query)) {
@@ -177,21 +163,7 @@ public class GameReviewDao {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                // Extract data from the result set
-                myGameReview.SetTitle(rs.getString("title"));
-                myGameReview.SetGameplay(rs.getString("gameplay"));
-                myGameReview.SetStory(rs.getString("story"));
-                myGameReview.SetSetting(rs.getString("setting"));
-                myGameReview.SetMusic(rs.getString("music"));
-                myGameReview.SetVoiceActing(rs.getString("voiceActing"));
-                myGameReview.SetAchievements(rs.getString("achievements"));
-                myGameReview.SetReplayability(rs.getString("replayability"));
-                myGameReview.SetAlternateTitles(rs.getString("alternateTitles"));
-                myGameReview.SetFinalRating(rs.getInt("finalRating"));
-                myGameReview.SetConclusion(rs.getString("conclusion"));
-
-                return myGameReview;
-                
+                return ReadGameReview(rs);
             } else {
                 System.out.println("No GameReview found with the title: " + gameTitle);
                 return null;
@@ -201,5 +173,38 @@ public class GameReviewDao {
             System.err.println("Error retrieving GameReview: " + e.getMessage());
             return null;
         }
+    }
+
+    // One row to one GameReview: the old fixed sections plus the new series/Steam/state columns
+    private static GameReview ReadGameReview(ResultSet rs) throws SQLException {
+        GameReview review = new GameReview();
+        review.SetId(rs.getInt("id"));
+        review.SetTitle(rs.getString("title"));
+        review.SetGameplay(rs.getString("gameplay"));
+        review.SetStory(rs.getString("story"));
+        review.SetSetting(rs.getString("setting"));
+        review.SetMusic(rs.getString("music"));
+        review.SetVoiceActing(rs.getString("voiceActing"));
+        review.SetAchievements(rs.getString("achievements"));
+        review.SetReplayability(rs.getString("replayability"));
+        review.SetAlternateTitles(rs.getString("alternateTitles"));
+        review.SetFinalRating(rs.getInt("finalRating"));
+        review.SetConclusion(rs.getString("conclusion"));
+
+        review.SetTemplateId(rs.getString("templateId"));
+        review.SetSeriesId(rs.getString("seriesId"));
+        review.SetSeriesPosition(Db.GetNullableInt(rs, "seriesPosition"));
+        review.SetSourcePath(rs.getString("sourcePath"));
+        review.SetSteamAppId(Db.GetNullableInt(rs, "steamAppId"));
+        review.SetInProgress(rs.getInt("inProgress") == 1);
+        review.SetCompleted(rs.getInt("completed") == 1);
+        review.SetCompletedOn(rs.getString("completedOn"));
+        String completedOnSource = rs.getString("completedOnSource");
+        review.SetCompletedOnSource(completedOnSource == null ? null : CompletionSource.valueOf(completedOnSource));
+        review.SetAchievementsAtCompletion(Db.GetNullableInt(rs, "achievementsAtCompletion"));
+        review.SetDismissedAtTotal(Db.GetNullableInt(rs, "dismissedAtTotal"));
+        review.SetManualPlaytimeMinutes(Db.GetNullableInt(rs, "manualPlaytimeMinutes"));
+        review.SetTopPickSlot(Db.GetNullableInt(rs, "topPickSlot"));
+        return review;
     }
 }

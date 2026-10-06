@@ -1,15 +1,16 @@
 package Database.Setup;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import Database.Dao.Db;
+
 // Tables for series, templates, per-review field values and Steam data, plus the extra GameReview columns.
 public class Schema {
 
-    public static void Upgrade(String url){
-        try (Connection conn = DriverManager.getConnection(url);
+    public static void Upgrade(){
+        try (Connection conn = Db.OpenConnection();
              Statement stmt = conn.createStatement()) {
 
             // id is the series tag without the #, e.g. Yakuza
@@ -51,6 +52,7 @@ public class Schema {
                     reviewId INTEGER NOT NULL,
                     fieldKey TEXT NOT NULL,
                     value TEXT,
+                    comment TEXT,
                     status TEXT NOT NULL DEFAULT 'FILLED',
                     PRIMARY KEY (reviewId, fieldKey)
                 );
@@ -95,6 +97,9 @@ public class Schema {
                     PRIMARY KEY (appId, apiName)
                 );
             """);
+
+            // comment is the note under a rating (Replay-ability); added for DBs made before it existed
+            AddColumnIfMissing(conn, "ReviewField", "comment", "TEXT");
 
             AddColumnIfMissing(conn, "GameReview", "seriesId", "TEXT");
             AddColumnIfMissing(conn, "GameReview", "templateId", "TEXT");

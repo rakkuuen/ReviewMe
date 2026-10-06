@@ -9,10 +9,10 @@ import Database.Dao.TemplateDao;
 public class TemplateSeeder {
     private static final String templateFolder = "Resources/Templates";
 
-    public static void Seed(String url){
+    public static void Seed(){
         try {
             for(Template template : TemplateLoader.LoadAll(templateFolder)){
-                TemplateDao.InsertTemplate(url, template);
+                TemplateDao.InsertTemplate(template);
             }
             System.out.println("Templates seeded successfully.");
         } catch (IOException e) {
