@@ -1,0 +1,5 @@
+# Copy this file to local.properties (which is not committed) and fill in your own values.
+# Use forward slashes in paths.
+
+# The folder your review .md files live in (it is read including sub-folders)
+vault.path = D:/path/to/your/vault/Games/Reviews

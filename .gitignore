@@ -1,3 +1,5 @@
 *.db
 Resources/Databases/*.db
 bin/
+import_dry_run.txt
+Resources/local.properties

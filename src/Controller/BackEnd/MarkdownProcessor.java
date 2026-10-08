@@ -15,8 +15,14 @@ import java.nio.file.Files;
 public class MarkdownProcessor {
     // Need to read content from md files and place them into database/json 
     public MarkdownProcessor() {
-        // Subject to change so that user can specify file location in future (not hardcoded)
-        String reviewFolderPath = "D:\\stuff\\0 Vault\\All_Encompassing\\Games\\Reviews";
+        // The vault folder comes from Resources/local.properties so the path isn't in the repo
+        String reviewFolderPath;
+        try {
+            reviewFolderPath = LocalConfig.Get("vault.path");
+        } catch (IOException e) {
+            System.err.println("Skipping md import: " + e.getMessage());
+            return;
+        }
 
         List<GameReview> gameReviews = FindMDFiles(reviewFolderPath);
 
