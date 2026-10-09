@@ -3,7 +3,7 @@ package Controller.BackEnd.Importer.Report;
 import java.util.ArrayList;
 import java.util.List;
 
-import Controller.BackEnd.Importer.ImportResult;
+import Controller.BackEnd.Importer.Results.ImportResult;
 
 // Files that were neither a review nor a series rules file. Prints nothing if there are none
 public class SkippedSection implements ReportSection {

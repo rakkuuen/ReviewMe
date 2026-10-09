@@ -1,8 +1,10 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Mapping;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import Controller.BackEnd.Importer.Parsing.ParsedMarkdown;
+import Controller.BackEnd.Importer.Results.SeriesNote;
 
 // The rules file of a series: tagged with the series and #ReviewInfo instead of #Review
 public class SeriesNoteMapper {

@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Parsing;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Results;
 
 // The rules/notes file of a series (e.g. "My rules for the Yakuza reviews"), which isn't a review itself
 public class SeriesNote {

@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Mapping;
 
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +11,9 @@ import Model.Reviews.FieldValue;
 import Model.Reviews.GameReview;
 import Model.Reviews.Template;
 import Model.Reviews.TemplateField;
+import Controller.BackEnd.Importer.Parsing.ParsedMarkdown;
+import Controller.BackEnd.Importer.Results.ImportIssue;
+import Controller.BackEnd.Importer.Results.IssueSeverity;
 
 // Fills a review's fields by matching the template's headings against the sections in the file
 public class FieldMapper {

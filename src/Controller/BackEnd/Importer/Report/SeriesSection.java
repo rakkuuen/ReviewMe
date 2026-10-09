@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import Controller.BackEnd.Importer.ImportResult;
-import Controller.BackEnd.Importer.MappedReview;
-import Controller.BackEnd.Importer.SeriesNote;
+import Controller.BackEnd.Importer.Results.ImportResult;
+import Controller.BackEnd.Importer.Results.MappedReview;
+import Controller.BackEnd.Importer.Results.SeriesNote;
 
 // Each series with its games, template and notes file
 public class SeriesSection implements ReportSection {

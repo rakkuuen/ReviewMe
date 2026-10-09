@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import Controller.BackEnd.Importer.ImportIssue;
-import Controller.BackEnd.Importer.ImportResult;
-import Controller.BackEnd.Importer.IssueSeverity;
+import Controller.BackEnd.Importer.Results.ImportIssue;
+import Controller.BackEnd.Importer.Results.ImportResult;
+import Controller.BackEnd.Importer.Results.IssueSeverity;
 
 // Problems or notes (one instance each), grouped by file
 public class IssuesSection implements ReportSection {

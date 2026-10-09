@@ -1,8 +1,8 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Mapping;
 
 import java.util.List;
 
-import Controller.BackEnd.Importer.MappedReview.TagState;
+import Controller.BackEnd.Importer.Results.MappedReview.TagState;
 
 // What the tags line says: platforms, series, and the state of the game and review
 public class TagInfo {

@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Mapping;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,7 +7,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import Controller.BackEnd.Importer.MappedReview.TagState;
+import Controller.BackEnd.Importer.Results.MappedReview.TagState;
+import Controller.BackEnd.Importer.Results.ImportIssue;
+import Controller.BackEnd.Importer.Results.IssueSeverity;
 
 // Sorts the tags line (#Review #Game #PC [#Series] #State) into platforms, series and state
 public class TagReader {

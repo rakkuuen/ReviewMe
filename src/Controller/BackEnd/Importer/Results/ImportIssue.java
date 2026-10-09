@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Results;
 
 public class ImportIssue {
     private String file, message;

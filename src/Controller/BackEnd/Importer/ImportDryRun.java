@@ -14,6 +14,7 @@ import Controller.BackEnd.LocalConfig;
 import Controller.BackEnd.Importer.Report.ReportBuilder;
 import Model.Reviews.Template;
 import Model.Reviews.TemplateLoader;
+import Controller.BackEnd.Importer.Results.ImportResult;
 
 // Reads the whole vault the way the real import will and reports what it would store. Writes nothing to the database.
 // Run:  java -cp "bin;lib/*" Controller.BackEnd.Importer.ImportDryRun [vaultFolder] [reportFile]

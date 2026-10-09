@@ -12,6 +12,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import Model.Reviews.Template;
+import Controller.BackEnd.Importer.Mapping.ReviewMapper;
+import Controller.BackEnd.Importer.Mapping.SeriesNoteMapper;
+import Controller.BackEnd.Importer.Parsing.MarkdownFileParser;
+import Controller.BackEnd.Importer.Parsing.ParsedMarkdown;
+import Controller.BackEnd.Importer.Results.ImportIssue;
+import Controller.BackEnd.Importer.Results.ImportResult;
+import Controller.BackEnd.Importer.Results.IssueSeverity;
+import Controller.BackEnd.Importer.Results.SeriesNote;
 
 // Walks the vault and runs every md file through the parser and mapper. Writes nothing
 public class VaultImporter {

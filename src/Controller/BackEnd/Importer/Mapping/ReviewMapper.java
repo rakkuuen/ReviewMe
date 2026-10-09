@@ -1,10 +1,13 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Mapping;
 
 import java.util.List;
 import java.util.Map;
 
 import Model.Reviews.GameReview;
 import Model.Reviews.Template;
+import Controller.BackEnd.Importer.Parsing.ParsedMarkdown;
+import Controller.BackEnd.Importer.Results.ImportIssue;
+import Controller.BackEnd.Importer.Results.MappedReview;
 
 // Gives a parsed md file its meaning. Each step is its own class: TagReader, FieldMapper, RatingMapper
 public class ReviewMapper {

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import Controller.BackEnd.Importer.ImportResult;
-import Controller.BackEnd.Importer.IssueSeverity;
+import Controller.BackEnd.Importer.Results.ImportResult;
+import Controller.BackEnd.Importer.Results.IssueSeverity;
 
 // Chains the report sections in the order they appear. To add a block, write a ReportSection and add it to the list
 public class ReportBuilder {

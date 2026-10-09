@@ -3,9 +3,9 @@ package Controller.BackEnd.Importer.Report;
 import java.util.ArrayList;
 import java.util.List;
 
-import Controller.BackEnd.Importer.ImportResult;
-import Controller.BackEnd.Importer.MappedReview;
-import Controller.BackEnd.Importer.MappedReview.TagState;
+import Controller.BackEnd.Importer.Results.ImportResult;
+import Controller.BackEnd.Importer.Results.MappedReview;
+import Controller.BackEnd.Importer.Results.MappedReview.TagState;
 
 // Checks each state tag against what the sections actually hold
 public class TagCheckSection implements ReportSection {

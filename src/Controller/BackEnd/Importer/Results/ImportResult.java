@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Results;
 
 import java.nio.file.Path;
 import java.util.ArrayList;

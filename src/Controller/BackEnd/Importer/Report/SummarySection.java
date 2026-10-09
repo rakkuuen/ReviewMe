@@ -6,11 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import Controller.BackEnd.Importer.ImportIssue;
-import Controller.BackEnd.Importer.ImportResult;
-import Controller.BackEnd.Importer.IssueSeverity;
-import Controller.BackEnd.Importer.MappedReview;
-import Controller.BackEnd.Importer.MappedReview.TagState;
+import Controller.BackEnd.Importer.Results.ImportIssue;
+import Controller.BackEnd.Importer.Results.ImportResult;
+import Controller.BackEnd.Importer.Results.IssueSeverity;
+import Controller.BackEnd.Importer.Results.MappedReview;
+import Controller.BackEnd.Importer.Results.MappedReview.TagState;
 
 // Counts: reviews, templates, state tags, sections, problems
 public class SummarySection implements ReportSection {

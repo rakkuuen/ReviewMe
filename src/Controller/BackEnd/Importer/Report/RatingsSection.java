@@ -3,8 +3,8 @@ package Controller.BackEnd.Importer.Report;
 import java.util.ArrayList;
 import java.util.List;
 
-import Controller.BackEnd.Importer.ImportResult;
-import Controller.BackEnd.Importer.MappedReview;
+import Controller.BackEnd.Importer.Results.ImportResult;
+import Controller.BackEnd.Importer.Results.MappedReview;
 import Model.Reviews.FieldValue;
 import Model.Reviews.GameReview;
 

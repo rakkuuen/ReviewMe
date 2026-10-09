@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Results;
 
 import Model.Reviews.GameReview;
 

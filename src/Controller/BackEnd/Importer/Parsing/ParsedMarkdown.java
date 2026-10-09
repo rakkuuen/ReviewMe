@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Parsing;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

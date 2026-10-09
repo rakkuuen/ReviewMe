@@ -1,4 +1,4 @@
-package Controller.BackEnd.Importer;
+package Controller.BackEnd.Importer.Mapping;
 
 import java.util.List;
 
@@ -7,6 +7,8 @@ import Model.Reviews.FieldValue;
 import Model.Reviews.RatingRules;
 import Model.Reviews.RatingRules.RatingState;
 import Model.Reviews.TemplateField;
+import Controller.BackEnd.Importer.Results.ImportIssue;
+import Controller.BackEnd.Importer.Results.IssueSeverity;
 
 // Turns a rating section into a FieldValue. First line is the rating, anything under it is the comment.
 // Required ratings (Final Rating) are strict and have no comment. Optional ones (Replay-ability) turn odd
