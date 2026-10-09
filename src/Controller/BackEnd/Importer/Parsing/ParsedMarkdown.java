@@ -13,8 +13,9 @@ public class ParsedMarkdown {
     private List<String> tags = new ArrayList<>();
     private List<String> genres = new ArrayList<>();
     private List<String> metadata = new ArrayList<>();
-    // Heading -> its non-blank lines, in file order
-    private Map<String, List<String>> sections = new LinkedHashMap<>();
+    // Top-level headings in file order. Lower-level headings are nested inside them. A ## or ### with no
+    // heading above it counts as top level too (Heart of the Woods opens with a ## Initial Thoughts)
+    private Map<String, Section> sections = new LinkedHashMap<>();
     // Lines that sit above the first heading (the series rules file is only this)
     private List<String> looseLines = new ArrayList<>();
 
@@ -32,6 +33,6 @@ public class ParsedMarkdown {
     public List<String> GetTags(){ return tags; }
     public List<String> GetGenres(){ return genres; }
     public List<String> GetMetadata(){ return metadata; }
-    public Map<String, List<String>> GetSections(){ return sections; }
+    public Map<String, Section> GetSections(){ return sections; }
     public List<String> GetLooseLines(){ return looseLines; }
 }

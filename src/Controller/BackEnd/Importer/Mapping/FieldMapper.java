@@ -12,6 +12,7 @@ import Model.Reviews.GameReview;
 import Model.Reviews.Template;
 import Model.Reviews.TemplateField;
 import Controller.BackEnd.Importer.Parsing.ParsedMarkdown;
+import Controller.BackEnd.Importer.Parsing.Section;
 import Controller.BackEnd.Importer.Results.ImportIssue;
 import Controller.BackEnd.Importer.Results.IssueSeverity;
 
@@ -24,8 +25,8 @@ public class FieldMapper {
         SectionCounts counts = new SectionCounts();
 
         for(TemplateField field : template.GetFields()){
-            List<String> lines = parsed.GetSections().get(field.GetHeading());
-            if(lines == null){
+            Section section = parsed.GetSections().get(field.GetHeading());
+            if(section == null){
                 // No heading means the field isn't on this review, unless it's required
                 if(field.IsRequired()){
                     counts.AddMissing();
@@ -34,11 +35,22 @@ public class FieldMapper {
                 continue;
             }
 
+            List<String> lines = section.GetLines();
             FieldValue value = field.GetKind() == FieldKind.TEXT ? MapText(lines) : RatingMapper.Map(field, lines, file, issues);
             review.SetFieldValue(field.GetFieldKey(), value);
             counts.Add(value);
+            FlagNestedHeadings(field, section, file, issues);
         }
         return counts;
+    }
+
+    // Headings nested inside a field (## Main cast under Voice Acting) have nowhere to go yet
+    private static void FlagNestedHeadings(TemplateField field, Section section, String file, List<ImportIssue> issues){
+        if(section.GetChildren().isEmpty()){
+            return;
+        }
+        issues.add(new ImportIssue(file, IssueSeverity.PROBLEM, "'" + field.GetHeading() + "' has " + section.GetChildren().size()
+                + " sub-heading(s) that would not be imported (" + section.CountLinesBelow() + " line(s) of text)"));
     }
 
     // Anything the template has no place for would be lost on import
@@ -48,10 +60,11 @@ public class FieldMapper {
             templateHeadings.add(field.GetHeading());
         }
 
-        for(Map.Entry<String, List<String>> section : parsed.GetSections().entrySet()){
-            if(!templateHeadings.contains(section.getKey()) && !section.getValue().isEmpty()){
-                issues.add(new ImportIssue(parsed.GetRelativePath(), IssueSeverity.PROBLEM, "heading '" + section.getKey() + "' isn't on the "
-                        + template.GetId() + " template (" + section.getValue().size() + " line(s) of text would not be imported)"));
+        for(Map.Entry<String, Section> entry : parsed.GetSections().entrySet()){
+            int lineCount = entry.getValue().CountAllLines();
+            if(!templateHeadings.contains(entry.getKey()) && lineCount > 0){
+                issues.add(new ImportIssue(parsed.GetRelativePath(), IssueSeverity.PROBLEM, "heading '" + entry.getKey() + "' isn't on the "
+                        + template.GetId() + " template (" + lineCount + " line(s) of text would not be imported)"));
             }
         }
     }

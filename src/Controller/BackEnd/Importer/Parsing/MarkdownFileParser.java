@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,7 +25,8 @@ public class MarkdownFileParser {
 
     private ParsedMarkdown parsed;
     private String tagBlock = null;        // which tag line we're waiting for: tags, genres or metadata
-    private String currentHeading = null;  // the section we're inside
+    private Section currentSection = null; // the section we're inside
+    private Deque<Section> openSections = new ArrayDeque<>();   // the headings above this point, deepest first
     private boolean seenContent = false;   // lets us spot an old-style tag line with no header
 
     private MarkdownFileParser(ParsedMarkdown parsed){
@@ -98,15 +100,35 @@ public class MarkdownFileParser {
         return true;
     }
 
-    // "# Gameplay" starts a new section
+    // "# Gameplay" starts a new section. More #s nest it inside the heading above
     private boolean ReadSectionHeading(String clean){
         if(!sectionHeading.matcher(clean).matches()){
             return false;
         }
-        currentHeading = clean.replaceFirst("^#+\\s*", "").trim();
-        parsed.GetSections().computeIfAbsent(currentHeading, key -> new ArrayList<>());
+        int level = 0;
+        while(clean.charAt(level) == '#'){
+            level++;
+        }
+        currentSection = OpenSection(clean.substring(level).trim(), level);
         seenContent = true;
         return true;
+    }
+
+    // A heading belongs to the nearest heading above it with fewer #s. With none, it is top level
+    private Section OpenSection(String heading, int level){
+        while(!openSections.isEmpty() && openSections.peek().GetLevel() >= level){
+            openSections.pop();
+        }
+
+        Section section;
+        if(openSections.isEmpty()){
+            section = parsed.GetSections().computeIfAbsent(heading, key -> new Section(heading, level));   // a repeated top-level heading merges
+        } else {
+            section = new Section(heading, level);
+            openSections.peek().AddChild(section);   // a repeated nested heading stays a separate entry
+        }
+        openSections.push(section);
+        return section;
     }
 
     // Text belongs to the current section, or is loose if it sits above every heading. Blank lines are dropped
@@ -115,10 +137,10 @@ public class MarkdownFileParser {
             return;
         }
         seenContent = true;
-        if(currentHeading == null){
+        if(currentSection == null){
             parsed.GetLooseLines().add(clean);
         } else {
-            parsed.GetSections().get(currentHeading).add(clean);
+            currentSection.GetLines().add(clean);
         }
     }
 

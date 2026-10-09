@@ -2,8 +2,8 @@ package Controller.BackEnd.Importer.Mapping;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import Controller.BackEnd.Importer.Parsing.ParsedMarkdown;
+import Controller.BackEnd.Importer.Parsing.Section;
 import Controller.BackEnd.Importer.Results.SeriesNote;
 
 // The rules file of a series: tagged with the series and #ReviewInfo instead of #Review
@@ -28,13 +28,20 @@ public class SeriesNoteMapper {
         return new SeriesNote(seriesId, parsed.GetRelativePath(), String.join("\n", AllText(parsed)));
     }
 
-    // Lines above any heading, then each heading followed by its lines
+    // Lines above any heading, then each heading followed by its lines and anything nested inside it
     private static List<String> AllText(ParsedMarkdown parsed){
         List<String> text = new ArrayList<>(parsed.GetLooseLines());
-        for(Map.Entry<String, List<String>> section : parsed.GetSections().entrySet()){
-            text.add(section.getKey());
-            text.addAll(section.getValue());
+        for(Section section : parsed.GetSections().values()){
+            AddSection(text, section);
         }
         return text;
+    }
+
+    private static void AddSection(List<String> text, Section section){
+        text.add(section.GetHeading());
+        text.addAll(section.GetLines());
+        for(Section child : section.GetChildren()){
+            AddSection(text, child);
+        }
     }
 }

@@ -1,15 +1,18 @@
 # One field per line: fieldKey | Heading | placeholder | flags
 # Line order is display order. The Heading is the exact md heading the importer matches.
-# flags (optional, comma separated): rating, rating-or-unknown, required
+# flags (optional, comma separated): rating-or-unknown, required
 name = Standard review
 
+initialThoughts | Initial Thoughts | First impressions, before finishing the game...
 gameplay | Gameplay | Tell me about the gameplay... is it good or shit
 story | Story | Once upon a time there was a story and it goes like this.
 setting | Setting | Whats the setting of the game
 music | Music/Audio | Thoughts on the music/audio was it poppin
 voiceActing | Voice Acting | Thoughts on the voice acting...
+acting | Acting | Thoughts on the live-action acting...
 alternateTitles | Alternate Titles | <Alternate title here>
 achievements | Achievements | Notable achievements...
 replayability | Replay-ability out of 10 | Replay-ability out of 10... | rating-or-unknown
 finalRating | Final Rating | Final rating (number or ?) | rating-or-unknown, required
 conclusion | Conclusion | Final thoughts / conclusion...
+steamReview | My Steam Review | The review I posted on Steam...
