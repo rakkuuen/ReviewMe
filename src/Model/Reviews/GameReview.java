@@ -20,6 +20,7 @@ public class GameReview {
     private CompletionSource completedOnSource;
     private List<String> genres = new ArrayList<>();
     private List<String> metadata = new ArrayList<>();
+    private List<String> platforms = new ArrayList<>();
     private Map<String, FieldValue> fieldValues = new LinkedHashMap<>();
 
     public GameReview(){
@@ -164,6 +165,9 @@ public class GameReview {
 
     public List<String> GetMetadata(){ return Collections.unmodifiableList(metadata); }
     public void SetMetadata(List<String> metadata){ this.metadata = new ArrayList<>(metadata); }
+
+    public List<String> GetPlatforms(){ return Collections.unmodifiableList(platforms); }
+    public void SetPlatforms(List<String> platforms){ this.platforms = new ArrayList<>(platforms); }
 
     // Null means the field isn't on this review at all (not on its template, or removed)
     public FieldValue GetFieldValue(String fieldKey){ return fieldValues.get(fieldKey); }
