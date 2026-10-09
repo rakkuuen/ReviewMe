@@ -77,18 +77,19 @@ public class TemplateLoader {
         String placeholder = parts.length > 2 && !parts[2].trim().isEmpty() ? parts[2].trim() : null;
 
         FieldKind kind = FieldKind.TEXT;
-        boolean required = false;
+        boolean required = false, allowsSubsections = false;
         if(parts.length > 3){
             for(String flag : parts[3].split(",")){
                 switch(flag.trim().toLowerCase()){
                     case "rating-or-unknown": kind = FieldKind.RATING_OR_UNKNOWN; break;
                     case "required": required = true; break;
+                    case "subsections": allowsSubsections = true; break;
                     case "": break;
                     default: throw new IOException(filePath + " line " + lineNumber + ": unknown flag '" + flag.trim() + "'");
                 }
             }
         }
 
-        return new TemplateField(fieldKey, heading, placeholder, kind, required, displayOrder);
+        return new TemplateField(fieldKey, heading, placeholder, kind, required, displayOrder, allowsSubsections);
     }
 }

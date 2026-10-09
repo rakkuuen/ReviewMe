@@ -14,6 +14,7 @@ public class ReportBuilder {
             new SeriesSection(),
             new TagCheckSection(),
             new RatingsSection(),
+            new SubsectionsSection(),
             new IssuesSection(IssueSeverity.PROBLEM, "== PROBLEMS (fix these in the md) =="),
             new IssuesSection(IssueSeverity.NOTE, "== NOTES (handled automatically) =="),
             new SkippedSection(),

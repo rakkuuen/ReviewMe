@@ -37,14 +37,18 @@ public class FieldMapper {
 
             List<String> lines = section.GetLines();
             FieldValue value = field.GetKind() == FieldKind.TEXT ? MapText(lines) : RatingMapper.Map(field, lines, file, issues);
+            if(field.AllowsSubsections()){
+                value.SetSubsections(SubsectionMapper.Map(section));
+            } else {
+                FlagNestedHeadings(field, section, file, issues);
+            }
             review.SetFieldValue(field.GetFieldKey(), value);
             counts.Add(value);
-            FlagNestedHeadings(field, section, file, issues);
         }
         return counts;
     }
 
-    // Headings nested inside a field (## Main cast under Voice Acting) have nowhere to go yet
+    // Headings nested inside a field that has no place for them would be lost on import
     private static void FlagNestedHeadings(TemplateField field, Section section, String file, List<ImportIssue> issues){
         if(section.GetChildren().isEmpty()){
             return;
