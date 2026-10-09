@@ -53,8 +53,7 @@ public class GameReviewDao {
             System.err.println(e.getMessage());
         }
 
-        // Enforce one row per title, so re-running MarkdownProcessor against the same
-        // .md files on every launch doesn't keep appending duplicate rows
+        // Enforce one row per title (a title is a game)
         String createUniqueIndexSQL = "CREATE UNIQUE INDEX IF NOT EXISTS idx_gamereview_title ON GameReview(title);";
         try (Connection conn = DriverManager.getConnection(url);
              Statement stmt = conn.createStatement()) {

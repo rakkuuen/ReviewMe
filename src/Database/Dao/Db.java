@@ -8,7 +8,8 @@ import java.sql.Types;
 
 // The one place that knows where the database is, plus null-safe column reads
 public class Db {
-    public static final String url = "jdbc:sqlite:Resources/Databases/GameReview.db";
+    public static final String filePath = "Resources/Databases/GameReview.db";
+    public static final String url = "jdbc:sqlite:" + filePath;
 
     public static Connection OpenConnection() throws SQLException {
         return DriverManager.getConnection(url);

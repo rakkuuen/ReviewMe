@@ -10,7 +10,6 @@ import Model.Reviews.GameReview;
 import Model.Widgets.GameCell;
 import Model.Themes.Theme;
 import Model.Themes.ThemeLoader;
-import Controller.BackEnd.MarkdownProcessor;
 
 
 
@@ -234,8 +233,6 @@ class Main extends JFrame{
     public static void main(String[] args) throws Exception {
         // Setup Dao (future have a class to do all setup features simultaniously)
         GameReviewDao.Setup();
-
-        MarkdownProcessor myMdFilesProcessed = new MarkdownProcessor();
 
         // Swing GUI work (creation, events, painting) all belongs on the EDT
         SwingUtilities.invokeLater(() -> new Main());
