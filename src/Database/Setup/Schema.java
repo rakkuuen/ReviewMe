@@ -69,6 +69,20 @@ public class Schema {
                 );
             """);
 
+            // Groups and characters inside a field (Voice Acting > Main cast > Tara). Position is the key because names can
+            // repeat. characterPosition 0 is the group itself, 1 and up are the characters inside it
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS ReviewSubsection (
+                    reviewId INTEGER NOT NULL,
+                    fieldKey TEXT NOT NULL,
+                    groupPosition INTEGER NOT NULL,
+                    characterPosition INTEGER NOT NULL DEFAULT 0,
+                    name TEXT NOT NULL,
+                    text TEXT,
+                    PRIMARY KEY (reviewId, fieldKey, groupPosition, characterPosition)
+                );
+            """);
+
             // Mirror of the Steam API, safe for a sync to overwrite. Timestamps are Steam's raw epoch seconds
             stmt.execute("""
                 CREATE TABLE IF NOT EXISTS SteamGame (
