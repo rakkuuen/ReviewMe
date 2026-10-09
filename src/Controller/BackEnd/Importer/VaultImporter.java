@@ -53,7 +53,7 @@ public class VaultImporter {
             return;
         }
 
-        SeriesNote note = ReviewMapper.MapSeriesNote(parsed);
+        SeriesNote note = SeriesNoteMapper.Map(parsed);
         if(note != null){
             result.GetSeriesNotes().add(note);
         } else {
