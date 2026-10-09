@@ -50,10 +50,10 @@ public class SteamGameDao {
                 for(SteamGame game : games){
                     pstmt.setInt(1, game.GetAppId());
                     pstmt.setString(2, game.GetName());
-                    SetNullableInt(pstmt, 3, game.GetPlaytimeMinutes());
-                    SetNullableLong(pstmt, 4, game.GetLastPlayed());
+                    Db.SetNullableInt(pstmt, 3, game.GetPlaytimeMinutes());
+                    Db.SetNullableLong(pstmt, 4, game.GetLastPlayed());
                     pstmt.setString(5, game.GetIconHash());
-                    SetNullableLong(pstmt, 6, game.GetSyncedAt());
+                    Db.SetNullableLong(pstmt, 6, game.GetSyncedAt());
                     pstmt.executeUpdate();
                 }
                 conn.commit();
@@ -74,8 +74,8 @@ public class SteamGameDao {
 
         try (Connection conn = Db.OpenConnection();
              PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
-            SetNullableInt(pstmt, 1, totalAchievements);
-            SetNullableInt(pstmt, 2, unlockedAchievements);
+            Db.SetNullableInt(pstmt, 1, totalAchievements);
+            Db.SetNullableInt(pstmt, 2, unlockedAchievements);
             pstmt.setInt(3, appId);
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -119,12 +119,12 @@ public class SteamGameDao {
     private static void BindAll(PreparedStatement pstmt, SteamGame game) throws SQLException {
         pstmt.setInt(1, game.GetAppId());
         pstmt.setString(2, game.GetName());
-        SetNullableInt(pstmt, 3, game.GetPlaytimeMinutes());
-        SetNullableLong(pstmt, 4, game.GetLastPlayed());
+        Db.SetNullableInt(pstmt, 3, game.GetPlaytimeMinutes());
+        Db.SetNullableLong(pstmt, 4, game.GetLastPlayed());
         pstmt.setString(5, game.GetIconHash());
-        SetNullableInt(pstmt, 6, game.GetTotalAchievements());
-        SetNullableInt(pstmt, 7, game.GetUnlockedAchievements());
-        SetNullableLong(pstmt, 8, game.GetSyncedAt());
+        Db.SetNullableInt(pstmt, 6, game.GetTotalAchievements());
+        Db.SetNullableInt(pstmt, 7, game.GetUnlockedAchievements());
+        Db.SetNullableLong(pstmt, 8, game.GetSyncedAt());
     }
 
     private static SteamGame ReadSteamGame(ResultSet rs) throws SQLException {
@@ -136,21 +136,5 @@ public class SteamGameDao {
         game.SetUnlockedAchievements(Db.GetNullableInt(rs, "unlockedAchievements"));
         game.SetSyncedAt(Db.GetNullableLong(rs, "syncedAt"));
         return game;
-    }
-
-    private static void SetNullableInt(PreparedStatement pstmt, int index, Integer value) throws SQLException {
-        if(value == null){
-            pstmt.setNull(index, java.sql.Types.INTEGER);
-        } else {
-            pstmt.setInt(index, value);
-        }
-    }
-
-    private static void SetNullableLong(PreparedStatement pstmt, int index, Long value) throws SQLException {
-        if(value == null){
-            pstmt.setNull(index, java.sql.Types.INTEGER);
-        } else {
-            pstmt.setLong(index, value);
-        }
     }
 }

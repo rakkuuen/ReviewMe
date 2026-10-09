@@ -175,6 +175,43 @@ public class GameReviewDao {
         }
     }
 
+    // Adds a review exactly as imported, no silent skip if the title exists (that is an error). Returns the new id, or
+    // null if the insert failed. The section text lives in ReviewField now, so the old fixed columns are left empty
+    public static Integer InsertImportedReview(GameReview review){
+        String insertSQL = """
+            INSERT INTO GameReview (title, templateId, seriesId, seriesPosition, sourcePath, steamAppId, inProgress, completed,
+                                    completedOn, completedOnSource, achievementsAtCompletion, dismissedAtTotal,
+                                    manualPlaytimeMinutes, topPickSlot)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """;
+
+        try (Connection conn = DriverManager.getConnection(Db.url);
+             PreparedStatement pstmt = conn.prepareStatement(insertSQL, Statement.RETURN_GENERATED_KEYS)) {
+            pstmt.setString(1, review.GetTitle());
+            pstmt.setString(2, review.GetTemplateId());
+            pstmt.setString(3, review.GetSeriesId());
+            Db.SetNullableInt(pstmt, 4, review.GetSeriesPosition());
+            pstmt.setString(5, review.GetSourcePath());
+            Db.SetNullableInt(pstmt, 6, review.GetSteamAppId());
+            pstmt.setInt(7, review.IsInProgress() ? 1 : 0);
+            pstmt.setInt(8, review.IsCompleted() ? 1 : 0);
+            pstmt.setString(9, review.GetCompletedOn());
+            pstmt.setString(10, review.GetCompletedOnSource() == null ? null : review.GetCompletedOnSource().name());
+            Db.SetNullableInt(pstmt, 11, review.GetAchievementsAtCompletion());
+            Db.SetNullableInt(pstmt, 12, review.GetDismissedAtTotal());
+            Db.SetNullableInt(pstmt, 13, review.GetManualPlaytimeMinutes());
+            Db.SetNullableInt(pstmt, 14, review.GetTopPickSlot());
+            pstmt.executeUpdate();
+
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                return keys.next() ? keys.getInt(1) : null;
+            }
+        } catch (SQLException e) {
+            System.err.println("Error inserting imported review " + review.GetTitle() + ": " + e.getMessage());
+            return null;
+        }
+    }
+
     // One row to one GameReview: the old fixed sections plus the new series/Steam/state columns
     private static GameReview ReadGameReview(ResultSet rs) throws SQLException {
         GameReview review = new GameReview();
