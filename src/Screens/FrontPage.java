@@ -2,9 +2,9 @@ package Screens;
 
 import java.util.List;
 
-import Database.Dao.GameReviewDao;
+import Controller.BackEnd.Reviews.LoadedReview;
+import Controller.BackEnd.Reviews.ReviewLoader;
 import Factory.GameCellFactory;
-import Model.Reviews.GameReview;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -70,15 +70,13 @@ public class FrontPage {
         return null;
     }
 
-    public GameReview CheckWhichCellWasClicked(Point mousePos){
+    // The whole review behind the clicked cell, or null if the click wasn't on one
+    public LoadedReview CheckWhichCellWasClicked(Point mousePos){
         GameCell cell = GetCellAt(mousePos);
         if(cell == null){
             return null;
         }
-        // This should take me to another screen with the games info and ability to add or edit a review
         System.out.println("You clicked: " + cell.gameTitle);
-
-        // Need to get the game review from the cell name
-        return GameReviewDao.GetGameReview(cell.gameTitle);
+        return ReviewLoader.Load(cell.gameTitle);
     }
 }

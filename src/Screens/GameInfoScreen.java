@@ -12,16 +12,16 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import Model.Reviews.GameReview;
+import Controller.BackEnd.Reviews.LoadedReview;
 import Model.Widgets.Button;
 import Model.Widgets.BackButton;
-import Model.Widgets.EditableField;
 import Model.Widgets.AutoGrowFieldList;
 import Model.Themes.Theme;
-import Database.Dao.GameReviewDao;
+import Screens.Detail.SectionBinding;
+import Screens.Detail.SectionBuilder;
 
 public class GameInfoScreen{
-    private GameReview gameReview;
+    private LoadedReview loadedReview;
     private BackButton backButton;
     private Button editButton;
     private Button saveButton;
@@ -34,16 +34,8 @@ public class GameInfoScreen{
     private List<String> titleLines = new ArrayList<>();
     private Dimension windowDimension; // Remembered so ReapplyTheme() can re-wrap for a new font
 
-    private EditableField gameplayField;
-    private EditableField storyField;
-    private EditableField settingField;
-    private EditableField musicField;
-    private EditableField voiceActingField; // null if this review's template didn't have it
-    private EditableField alternateTitlesField; // null if this review's template didn't have it
-    private EditableField achievementsField;
-    private EditableField replayabilityField;
-    private EditableField finalRatingField;
-    private EditableField conclusionField;
+    // What's on screen for each section, so 7c can read the boxes back when saving
+    private List<SectionBinding> sections;
 
     // scrollX is fixed; scrollY grows if the title wraps to more than one line, so it
     // never collides with the field list; width/height track window size via Reflow()
@@ -68,9 +60,9 @@ public class GameInfoScreen{
     private static final int rightButtonHeight = 24;
     private static final int rightButtonGap = 2;
 
-    public GameInfoScreen(GameReview gameReview, Dimension windowDimension, Runnable onBack){
-        this.gameReview = gameReview;
-        title = gameReview.GetTitle();
+    public GameInfoScreen(LoadedReview loadedReview, Dimension windowDimension, Runnable onBack){
+        this.loadedReview = loadedReview;
+        title = loadedReview.GetReview().GetTitle();
         if(title == null || title.isEmpty()){
             title = "Unknown Game";
         }
@@ -80,31 +72,15 @@ public class GameInfoScreen{
 
         fieldList = new AutoGrowFieldList(fieldX, fieldWidth, headingHeight, minFieldHeight, rowGap);
 
-        gameplayField = fieldList.AddField("Gameplay", gameReview.GetGameplay(), "Tell me about the gameplay... is it good or shit");
-        storyField = fieldList.AddField("Story", gameReview.GetStory(), "Once upon a time there was a story and it goes like this.");
-        settingField = fieldList.AddField("Setting", gameReview.GetSetting(), "Whats the setting of the game");
-        musicField = fieldList.AddField("Music/Audio", gameReview.GetMusic(), "Thoughts on the music/audio was it poppin");
-
-        if(gameReview.GetVoiceActing() != null){
-            voiceActingField = fieldList.AddField("Voice Acting", gameReview.GetVoiceActing(), "Thoughts on the voice acting...");
-        }
-
-        if(gameReview.GetAlternateTitles() != null){
-            alternateTitlesField = fieldList.AddField("Alternate Titles", gameReview.GetAlternateTitles(), "<Alternate title here>");
-        }
-
-        achievementsField = fieldList.AddField("Achievements", gameReview.GetAchievements(), "Notable achievements...");
-        replayabilityField = fieldList.AddField("Replay-ability out of 10", gameReview.GetReplayability(), "Replay-ability out of 10...");
-        finalRatingField = fieldList.AddField("Final Rating",
-                gameReview.GetFinalRating() == 0 ? null : String.valueOf(gameReview.GetFinalRating()),
-                "Final rating (number)");
-        conclusionField = fieldList.AddField("Conclusion", gameReview.GetConclusion(), "Final thoughts / conclusion...");
+        // One section per field of this review's template, in template order
+        sections = SectionBuilder.Build(loadedReview, fieldList);
 
         fieldList.Relayout();
         fieldListPanel = fieldList.GetComponent();
 
-        // Start read-only - Edit must be clicked before anything's editable
+        // Read-only for now. Edit and Save come on in 7c
         fieldList.SetFieldsEditable(false);
+        editButton.SetEnabled(false);
         saveButton.SetEnabled(false);
 
         Reflow(windowDimension);
@@ -213,32 +189,8 @@ public class GameInfoScreen{
         saveButton.SetEnabled(true);
     }
 
+    // Collects the boxes back into the review and saves it through ReviewSaver. Written in 7c; the Save button is off until then
     public void SaveChanges(){
-        gameReview.SetGameplay(gameplayField.GetValue());
-        gameReview.SetStory(storyField.GetValue());
-        gameReview.SetSetting(settingField.GetValue());
-        gameReview.SetMusic(musicField.GetValue());
-
-        if(voiceActingField != null){
-            gameReview.SetVoiceActing(voiceActingField.GetValue());
-        }
-        if(alternateTitlesField != null){
-            gameReview.SetAlternateTitles(alternateTitlesField.GetValue());
-        }
-
-        gameReview.SetAchievements(achievementsField.GetValue());
-        gameReview.SetReplayability(replayabilityField.GetValue());
-
-        try {
-            gameReview.SetFinalRating(Integer.parseInt(finalRatingField.GetValue().trim()));
-        } catch (NumberFormatException e) {
-            gameReview.SetFinalRating(0);
-        }
-
-        gameReview.SetConclusion(conclusionField.GetValue());
-
-        GameReviewDao.UpdateGameReview(gameReview);
-
         isEditing = false;
         fieldList.SetFieldsEditable(false);
         editButton.SetEnabled(true);

@@ -6,7 +6,7 @@ import javax.swing.*;
 import Database.Dao.GameReviewDao;
 import Screens.FrontPage;
 import Screens.GameInfoScreen;
-import Model.Reviews.GameReview;
+import Controller.BackEnd.Reviews.LoadedReview;
 import Model.Widgets.GameCell;
 import Model.Themes.Theme;
 import Model.Themes.ThemeLoader;
@@ -126,7 +126,7 @@ class Main extends JFrame{
             switch (currentScreen) {
                 case FRONT_PAGE:
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
-                        GameReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
+                        LoadedReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
                         if(clickedReview != null){
                             myGameInfoScreen = new GameInfoScreen(clickedReview, windowDimension, () -> {
                                 myGameInfoScreen.RemoveComponentsFrom(this);

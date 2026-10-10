@@ -25,6 +25,8 @@ public class AutoGrowFieldList {
     private static class FieldRow {
         JLabel headingLabel;
         EditableField field;
+        boolean hasHeading;
+        int minHeight;
     }
     private List<FieldRow> fieldRows = new ArrayList<>();
 
@@ -87,7 +89,13 @@ public class AutoGrowFieldList {
     }
 
     public EditableField AddField(String heading, String initialText, String placeholder){
-        EditableField field = new EditableField(initialText, placeholder, fieldX, 0, fieldWidth, minFieldHeight);
+        return AddField(heading, initialText, placeholder, minFieldHeight);
+    }
+
+    // minHeight is this row's floor (a rating box is shorter than a paragraph). An empty heading adds no heading space,
+    // so a row can sit directly under the one above it
+    public EditableField AddField(String heading, String initialText, String placeholder, int minHeight){
+        EditableField field = new EditableField(initialText, placeholder, fieldX, 0, fieldWidth, minHeight);
         field.getDocument().addDocumentListener(new DocumentListener(){
             @Override
             public void insertUpdate(DocumentEvent e){ Relayout(); }
@@ -106,6 +114,9 @@ public class AutoGrowFieldList {
         FieldRow row = new FieldRow();
         row.headingLabel = headingLabel;
         row.field = field;
+        row.hasHeading = heading != null && !heading.isEmpty();
+        row.minHeight = minHeight;
+        headingLabel.setVisible(row.hasHeading);
         fieldRows.add(row);
 
         return field;
@@ -114,10 +125,12 @@ public class AutoGrowFieldList {
     public void Relayout(){
         int y = 0;
         for(FieldRow row : fieldRows){
-            row.headingLabel.setBounds(fieldX, y, fieldWidth, headingHeight);
-            y += headingHeight;
+            if(row.hasHeading){
+                row.headingLabel.setBounds(fieldX, y, fieldWidth, headingHeight);
+                y += headingHeight;
+            }
 
-            int fieldHeight = ComputePreferredHeight(row.field);
+            int fieldHeight = ComputePreferredHeight(row);
             row.field.setBounds(fieldX, y, fieldWidth, fieldHeight);
             y += fieldHeight + rowGap;
         }
@@ -136,10 +149,10 @@ public class AutoGrowFieldList {
         centeringWrapper.setBounds(0, -scroller.GetOffsetY(), viewport.getWidth(), contentHeight);
     }
 
-    private int ComputePreferredHeight(EditableField field){
-        field.setSize(fieldWidth, Short.MAX_VALUE);
-        int preferred = field.getPreferredSize().height;
-        return Math.max(minFieldHeight, preferred);
+    private int ComputePreferredHeight(FieldRow row){
+        row.field.setSize(fieldWidth, Short.MAX_VALUE);
+        int preferred = row.field.getPreferredSize().height;
+        return Math.max(row.minHeight, preferred);
     }
 
     public JPanel GetComponent(){
