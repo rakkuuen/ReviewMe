@@ -211,6 +211,41 @@ public class GameReviewDao {
         }
     }
 
+    // Saves the review's own columns (series, Steam link, state, completion, top pick). Not its title, template or source file,
+    // and not its sections, which live in ReviewField. False if it has no id, no such row, or the top-pick slot is taken
+    public static boolean UpdateReviewDetails(GameReview review){
+        if(review.GetId() == null){
+            System.err.println("Error updating review details: " + review.GetTitle() + " has no id");
+            return false;
+        }
+
+        String updateSQL = """
+            UPDATE GameReview
+            SET seriesId = ?, seriesPosition = ?, steamAppId = ?, inProgress = ?, completed = ?, completedOn = ?,
+                completedOnSource = ?, achievementsAtCompletion = ?, dismissedAtTotal = ?, manualPlaytimeMinutes = ?, topPickSlot = ?
+            WHERE id = ?;
+        """;
+        try (Connection conn = DriverManager.getConnection(Db.url);
+             PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
+            pstmt.setString(1, review.GetSeriesId());
+            Db.SetNullableInt(pstmt, 2, review.GetSeriesPosition());
+            Db.SetNullableInt(pstmt, 3, review.GetSteamAppId());
+            pstmt.setInt(4, review.IsInProgress() ? 1 : 0);
+            pstmt.setInt(5, review.IsCompleted() ? 1 : 0);
+            pstmt.setString(6, review.GetCompletedOn());
+            pstmt.setString(7, review.GetCompletedOnSource() == null ? null : review.GetCompletedOnSource().name());
+            Db.SetNullableInt(pstmt, 8, review.GetAchievementsAtCompletion());
+            Db.SetNullableInt(pstmt, 9, review.GetDismissedAtTotal());
+            Db.SetNullableInt(pstmt, 10, review.GetManualPlaytimeMinutes());
+            Db.SetNullableInt(pstmt, 11, review.GetTopPickSlot());
+            pstmt.setInt(12, review.GetId());
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating review details for " + review.GetTitle() + ": " + e.getMessage());
+            return false;
+        }
+    }
+
     // One row to one GameReview: the old fixed sections plus the new series/Steam/state columns
     private static GameReview ReadGameReview(ResultSet rs) throws SQLException {
         GameReview review = new GameReview();
