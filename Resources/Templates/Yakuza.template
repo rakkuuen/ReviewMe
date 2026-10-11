@@ -1,6 +1,7 @@
 # One field per line: fieldKey | Heading | placeholder | flags
 # Line order is display order. The Heading is the exact md heading the importer matches.
-# flags (optional, comma separated): rating, rating-or-unknown, required
+# flags (optional, comma separated): rating-or-unknown, required
+# Every text field can hold groups (##) with characters (###) inside
 name = Yakuza review
 
 summary | Summary | Summary of the game...

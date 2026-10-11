@@ -19,8 +19,8 @@ public class TemplateDao {
     public static void InsertTemplate(Template template){
         String insertTemplateSQL = "INSERT OR IGNORE INTO Template (id, name) VALUES (?, ?);";
         String insertFieldSQL = """
-            INSERT INTO TemplateField (templateId, fieldKey, heading, displayOrder, kind, required, placeholder, subsections)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+            INSERT INTO TemplateField (templateId, fieldKey, heading, displayOrder, kind, required, placeholder)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
         """;
 
         try (Connection conn = Db.OpenConnection()) {
@@ -41,7 +41,6 @@ public class TemplateDao {
                         fieldStmt.setString(5, field.GetKind().name());
                         fieldStmt.setInt(6, field.IsRequired() ? 1 : 0);
                         fieldStmt.setString(7, field.GetPlaceholder());
-                        fieldStmt.setInt(8, field.AllowsSubsections() ? 1 : 0);
                         fieldStmt.executeUpdate();
                     }
                 }
@@ -69,7 +68,7 @@ public class TemplateDao {
     private static List<Template> QueryTemplates(String id){
         String query = """
             SELECT t.id AS templateId, t.name AS templateName,
-                   f.fieldKey, f.heading, f.displayOrder, f.kind, f.required, f.placeholder, f.subsections
+                   f.fieldKey, f.heading, f.displayOrder, f.kind, f.required, f.placeholder
             FROM Template t
             LEFT JOIN TemplateField f ON f.templateId = t.id
         """ + (id == null ? "" : " WHERE t.id = ?") + " ORDER BY t.id, f.displayOrder;";
@@ -93,8 +92,7 @@ public class TemplateDao {
                     String fieldKey = rs.getString("fieldKey");
                     if(fieldKey != null){
                         template.AddField(new TemplateField(fieldKey, rs.getString("heading"), rs.getString("placeholder"),
-                                FieldKind.valueOf(rs.getString("kind")), rs.getInt("required") == 1, rs.getInt("displayOrder"),
-                                rs.getInt("subsections") == 1));
+                                FieldKind.valueOf(rs.getString("kind")), rs.getInt("required") == 1, rs.getInt("displayOrder")));
                     }
                 }
             }

@@ -1,6 +1,7 @@
 package Model.Widgets;
 
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ComponentAdapter;
@@ -27,8 +28,15 @@ public class AutoGrowFieldList {
         EditableField field;
         boolean hasHeading;
         int minHeight;
+        int level;   // 0 = a normal field, 1 = group, 2 = character inside a group
+        int x;
+        int width;
     }
     private List<FieldRow> fieldRows = new ArrayList<>();
+
+    private static final int indentStep = 28;
+    private static final int subRowGap = 10;           // Sub-boxes sit closer than top-level fields so a group reads as one unit
+    private static final float subHeadingScale = 0.85f;
 
     private JPanel viewport;
     private JPanel centeringWrapper;
@@ -95,7 +103,14 @@ public class AutoGrowFieldList {
     // minHeight is this row's floor (a rating box is shorter than a paragraph). An empty heading adds no heading space,
     // so a row can sit directly under the one above it
     public EditableField AddField(String heading, String initialText, String placeholder, int minHeight){
-        EditableField field = new EditableField(initialText, placeholder, fieldX, 0, fieldWidth, minHeight);
+        return AddField(heading, initialText, placeholder, minHeight, 0);
+    }
+
+    // level indents the row from the left edge (the right edge stays put)
+    public EditableField AddField(String heading, String initialText, String placeholder, int minHeight, int level){
+        int rowX = fieldX + level * indentStep;
+        int rowWidth = fieldWidth - level * indentStep;
+        EditableField field = new EditableField(initialText, placeholder, rowX, 0, rowWidth, minHeight);
         field.getDocument().addDocumentListener(new DocumentListener(){
             @Override
             public void insertUpdate(DocumentEvent e){ Relayout(); }
@@ -106,8 +121,6 @@ public class AutoGrowFieldList {
         });
 
         JLabel headingLabel = new JLabel(heading);
-        headingLabel.setFont(Theme.Current.GetHeading().GetFont());
-        headingLabel.setForeground(Theme.Current.GetHeading().GetColour());
         fieldsContainer.add(headingLabel);
         fieldsContainer.add(field);
 
@@ -116,24 +129,42 @@ public class AutoGrowFieldList {
         row.field = field;
         row.hasHeading = heading != null && !heading.isEmpty();
         row.minHeight = minHeight;
+        row.level = level;
+        row.x = rowX;
+        row.width = rowWidth;
+        StyleHeading(row);
         headingLabel.setVisible(row.hasHeading);
         fieldRows.add(row);
 
         return field;
     }
 
+    // Sub-level headings use the theme heading font, a touch smaller
+    private void StyleHeading(FieldRow row){
+        Font font = Theme.Current.GetHeading().GetFont();
+        row.headingLabel.setFont(row.level == 0 ? font : font.deriveFont(font.getSize2D() * subHeadingScale));
+        row.headingLabel.setForeground(Theme.Current.GetHeading().GetColour());
+    }
+
     public void Relayout(){
         int y = 0;
+        boolean first = true;
         for(FieldRow row : fieldRows){
+            if(!first){
+                y += row.level > 0 ? subRowGap : rowGap;
+            }
+            first = false;
+
             if(row.hasHeading){
-                row.headingLabel.setBounds(fieldX, y, fieldWidth, headingHeight);
+                row.headingLabel.setBounds(row.x, y, row.width, headingHeight);
                 y += headingHeight;
             }
 
             int fieldHeight = ComputePreferredHeight(row);
-            row.field.setBounds(fieldX, y, fieldWidth, fieldHeight);
-            y += fieldHeight + rowGap;
+            row.field.setBounds(row.x, y, row.width, fieldHeight);
+            y += fieldHeight;
         }
+        y += rowGap; // Breathing room under the last row
 
         contentHeight = y;
         fieldsContainer.setPreferredSize(new Dimension(contentWidth, contentHeight));
@@ -150,7 +181,7 @@ public class AutoGrowFieldList {
     }
 
     private int ComputePreferredHeight(FieldRow row){
-        row.field.setSize(fieldWidth, Short.MAX_VALUE);
+        row.field.setSize(row.width, Short.MAX_VALUE);
         int preferred = row.field.getPreferredSize().height;
         return Math.max(row.minHeight, preferred);
     }
@@ -171,8 +202,7 @@ public class AutoGrowFieldList {
     public void ReapplyTheme(){
         for(FieldRow row : fieldRows){
             row.field.ReapplyTheme();
-            row.headingLabel.setFont(Theme.Current.GetHeading().GetFont());
-            row.headingLabel.setForeground(Theme.Current.GetHeading().GetColour());
+            StyleHeading(row);
         }
         Relayout();
     }

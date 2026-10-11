@@ -15,6 +15,9 @@ import Model.Widgets.EditableField;
 public class SectionBuilder {
     private static final String commentPlaceholder = "Add a comment (optional)";
     private static final int ratingBoxHeight = 36;
+    private static final int subBoxHeight = 44;
+    private static final int groupLevel = 1;
+    private static final int characterLevel = 2;
 
     public static List<SectionBinding> Build(LoadedReview loaded, AutoGrowFieldList list){
         List<SectionBinding> bindings = new ArrayList<>();
@@ -59,16 +62,17 @@ public class SectionBuilder {
         return binding;
     }
 
-    // Each group is a row, with a row for each character inside it
+    // Each group is a row indented one step, with a row for each character inside it indented two
     private static void AddGroups(SectionBinding binding, FieldValue value, AutoGrowFieldList list){
         for(Subsection group : value.GetSubsections()){
-            EditableField groupBox = list.AddField(group.GetName(), Shown(group.GetText()), "Notes on " + group.GetName() + "...");
+            EditableField groupBox = list.AddField(group.GetName(), Shown(group.GetText()), "Notes on " + group.GetName() + "...",
+                    subBoxHeight, groupLevel);
             SubsectionBinding groupBinding = new SubsectionBinding(group, groupBox);
             binding.GetGroups().add(groupBinding);
 
             for(Subsection character : group.GetChildren()){
-                EditableField characterBox = list.AddField(group.GetName() + " > " + character.GetName(), Shown(character.GetText()),
-                        "Notes on " + character.GetName() + "...");
+                EditableField characterBox = list.AddField(character.GetName(), Shown(character.GetText()),
+                        "Notes on " + character.GetName() + "...", subBoxHeight, characterLevel);
                 groupBinding.GetChildren().add(new SubsectionBinding(character, characterBox));
             }
         }

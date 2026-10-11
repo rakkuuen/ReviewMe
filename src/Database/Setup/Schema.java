@@ -42,7 +42,6 @@ public class Schema {
                     kind TEXT NOT NULL,
                     required INTEGER NOT NULL DEFAULT 0,
                     placeholder TEXT,
-                    subsections INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY (templateId, fieldKey)
                 );
             """);
@@ -115,8 +114,6 @@ public class Schema {
 
             // comment is the note under a rating (Replay-ability); added for DBs made before it existed
             AddColumnIfMissing(conn, "ReviewField", "comment", "TEXT");
-            // subsections is 1 for a field that can hold groups and characters (Voice Acting); same reason
-            AddColumnIfMissing(conn, "TemplateField", "subsections", "INTEGER NOT NULL DEFAULT 0");
 
             AddColumnIfMissing(conn, "GameReview", "seriesId", "TEXT");
             AddColumnIfMissing(conn, "GameReview", "templateId", "TEXT");
