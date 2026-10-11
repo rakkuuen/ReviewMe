@@ -14,7 +14,7 @@ import Model.Themes.FieldTheme;
 import Model.Themes.Theme;
 
 // Swing text component that fits into my custom elements (lets not reinvent every wheel sis)
-public class EditableField extends JTextArea {
+public class EditableField extends JTextArea implements ValueBox {
     String placeholderText;
 
     // initialText is the field's real starting value. If null, there's no value yet,
@@ -88,10 +88,12 @@ public class EditableField extends JTextArea {
         g2.dispose();
     }
 
+    @Override
     public String GetValue(){
         return getText();
     }
 
+    @Override
     public void SetValue(String value){
         setText(value == null ? "" : value);
     }

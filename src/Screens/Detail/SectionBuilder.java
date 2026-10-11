@@ -14,7 +14,7 @@ import Model.Widgets.EditableField;
 // Lays a review out as rows, one section per template field in template order
 public class SectionBuilder {
     private static final String commentPlaceholder = "Add a comment (optional)";
-    private static final int ratingBoxHeight = 36;
+    private static final int commentBoxHeight = 36;
     private static final int subBoxHeight = 44;
     private static final int groupLevel = 1;
     private static final int characterLevel = 2;
@@ -51,13 +51,13 @@ public class SectionBuilder {
         return binding;
     }
 
-    // A short box for the number, and under it a comment box if this rating has one (Final Rating doesn't)
+    // A rating stepper for the number, and under it a comment box if this rating has one (Final Rating doesn't)
     private static SectionBinding BuildRating(TemplateField field, FieldValue value, AutoGrowFieldList list){
         String text = value == null ? null : value.GetText();
-        SectionBinding binding = new SectionBinding(field, list.AddField(field.GetHeading(), Shown(text), field.GetPlaceholder(), ratingBoxHeight));
+        SectionBinding binding = new SectionBinding(field, list.AddRating(field.GetHeading(), text));
         if(!field.IsRequired()){
             String comment = value == null ? null : value.GetComment();
-            binding.SetCommentBox(list.AddField("", Shown(comment), commentPlaceholder, ratingBoxHeight));
+            binding.SetCommentBox(list.AddField("", Shown(comment), commentPlaceholder, commentBoxHeight));
         }
         return binding;
     }

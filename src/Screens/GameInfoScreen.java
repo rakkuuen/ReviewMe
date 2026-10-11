@@ -1,5 +1,6 @@
 package Screens;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
@@ -13,6 +14,9 @@ import java.util.List;
 import javax.swing.JPanel;
 
 import Controller.BackEnd.Reviews.LoadedReview;
+import Controller.BackEnd.Reviews.ReviewLoader;
+import Controller.BackEnd.Reviews.ReviewSaver;
+import Controller.BackEnd.Reviews.SaveResult;
 import Model.Widgets.Button;
 import Model.Widgets.BackButton;
 import Model.Widgets.AutoGrowFieldList;
@@ -25,7 +29,13 @@ public class GameInfoScreen{
     private BackButton backButton;
     private Button editButton;
     private Button saveButton;
+    private Button cancelButton;
     private boolean isEditing = false;
+
+    // One line under the title: "Saved", or why a save was refused
+    private String statusMessage;
+    private boolean statusIsError;
+    private static final Color errorColour = new Color(0xD04040); // The themes have no error colour yet
 
     private AutoGrowFieldList fieldList;
     private JPanel fieldListPanel;
@@ -40,8 +50,9 @@ public class GameInfoScreen{
     // scrollX is fixed; scrollY grows if the title wraps to more than one line, so it
     // never collides with the field list; width/height track window size via Reflow()
     private static final int scrollX = 40;
-    private static final int minScrollY = 90;
+    private static final int minScrollY = 102; // Clears the three stacked buttons on the right
     private static final int rightMargin = 20;
+    private static final int statusLineGap = 10; // Status line sits this far above the field list
     private static final int bottomMargin = 30;
 
     private static final int titleFirstLineBaselineY = 55;
@@ -54,8 +65,8 @@ public class GameInfoScreen{
     private static final int minFieldHeight = 60; // Floor for empty/short fields
     private static final int rowGap = 20;
 
-    // Edit/Save stack in one column (Edit on top, Save below) rather than sitting side
-    // by side, freeing up horizontal room for the title
+    // Edit/Save/Cancel stack in one column rather than sitting side by side, freeing up
+    // horizontal room for the title
     private static final int rightButtonWidth = 120;
     private static final int rightButtonHeight = 24;
     private static final int rightButtonGap = 2;
@@ -69,6 +80,7 @@ public class GameInfoScreen{
         backButton = new BackButton(onBack);
         editButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20, "Edit"); // x corrected by Reflow below
         saveButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20 + rightButtonHeight + rightButtonGap, "Save"); // x corrected by Reflow below
+        cancelButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20 + 2 * (rightButtonHeight + rightButtonGap), "Cancel"); // x corrected by Reflow below
 
         fieldList = new AutoGrowFieldList(fieldX, fieldWidth, headingHeight, minFieldHeight, rowGap);
 
@@ -78,10 +90,8 @@ public class GameInfoScreen{
         fieldList.Relayout();
         fieldListPanel = fieldList.GetComponent();
 
-        // Read-only for now. Edit and Save come on in 7c
-        fieldList.SetFieldsEditable(false);
-        editButton.SetEnabled(false);
-        saveButton.SetEnabled(false);
+        // Read-only until Edit is pressed
+        LeaveEditMode();
 
         Reflow(windowDimension);
     }
@@ -90,6 +100,7 @@ public class GameInfoScreen{
         this.windowDimension = windowDimension;
         saveButton.x = windowDimension.width - rightButtonWidth - rightMargin;
         editButton.x = saveButton.x; // Same column, stacked above Save
+        cancelButton.x = saveButton.x;
 
         FontMetrics titleMetrics = GetFontMetrics(Theme.Current.GetTitle().GetFont());
 
@@ -147,10 +158,11 @@ public class GameInfoScreen{
     }
 
     public void paint(Graphics g, Point mousePos, Dimension windowDimension){
-        // Back / Edit / Save buttons
+        // Back / Edit / Save / Cancel buttons
         backButton.paint(g, mousePos);
         editButton.paint(g, mousePos);
         saveButton.paint(g, mousePos);
+        cancelButton.paint(g, mousePos);
 
         // Draw Title text, one or more centered lines
         g.setColor(Theme.Current.GetTitle().GetColour());
@@ -164,6 +176,25 @@ public class GameInfoScreen{
             g.drawString(line, lineX, lineY);
             lineY += titleMetrics.getHeight();
         }
+
+        PaintStatusLine(g, windowDimension);
+    }
+
+    // Centred just above the field list, cut short with ... if it's wider than the list
+    private void PaintStatusLine(Graphics g, Dimension windowDimension){
+        if(statusMessage == null){
+            return;
+        }
+        g.setFont(Theme.Current.GetField().GetFont());
+        g.setColor(statusIsError ? errorColour : Theme.Current.GetHeading().GetColour());
+        FontMetrics metrics = g.getFontMetrics();
+
+        int maxWidth = 2 * (cancelButton.x - titleMargin - windowDimension.width / 2); // Stays clear of the buttons, like the title
+        String shown = statusMessage;
+        while(shown.length() > 1 && metrics.stringWidth(shown) > maxWidth){
+            shown = shown.substring(0, shown.length() - 2) + "…";
+        }
+        g.drawString(shown, (windowDimension.width - metrics.stringWidth(shown)) / 2, fieldListPanel.getY() - statusLineGap);
     }
 
     public void NotifyBackPressed(Point mousePos){
@@ -182,19 +213,64 @@ public class GameInfoScreen{
         return saveButton.contains(mousePos);
     }
 
+    public boolean WasCancelClicked(Point mousePos){
+        return cancelButton.contains(mousePos);
+    }
+
     public void EnterEditMode(){
         isEditing = true;
+        statusMessage = null;
         fieldList.SetFieldsEditable(true);
         editButton.SetEnabled(false);
         saveButton.SetEnabled(true);
+        cancelButton.SetEnabled(true);
     }
 
-    // Collects the boxes back into the review and saves it through ReviewSaver. Written in 7c; the Save button is off until then
+    // Reads the boxes back into the review and saves it. If the save is refused the boxes stay as they are, in edit mode
     public void SaveChanges(){
+        if(!isEditing){
+            return;
+        }
+        for(SectionBinding section : sections){
+            section.ReadInto(loadedReview.GetReview());
+        }
+
+        SaveResult result = ReviewSaver.Save(loadedReview);
+        if(!result.Succeeded()){
+            ShowStatus("Not saved: " + String.join("; ", result.GetErrors()), true);
+            return;
+        }
+        LeaveEditMode();
+        ShowStatus("Saved", false);
+    }
+
+    // Throws away what was typed: the boxes go back to what is stored
+    public void CancelChanges(){
+        if(!isEditing){
+            return;
+        }
+        LoadedReview stored = ReviewLoader.Load(loadedReview.GetReview().GetTitle());
+        if(stored != null){
+            loadedReview = stored;
+            for(SectionBinding section : sections){
+                section.ShowFrom(stored.GetReview());
+            }
+        }
+        LeaveEditMode();
+        statusMessage = null;
+    }
+
+    private void LeaveEditMode(){
         isEditing = false;
         fieldList.SetFieldsEditable(false);
         editButton.SetEnabled(true);
         saveButton.SetEnabled(false);
+        cancelButton.SetEnabled(false);
+    }
+
+    private void ShowStatus(String message, boolean isError){
+        statusMessage = message;
+        statusIsError = isError;
     }
 
     public void AddComponentsTo(JPanel panel){
