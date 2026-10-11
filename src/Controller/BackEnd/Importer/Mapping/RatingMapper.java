@@ -35,6 +35,10 @@ public class RatingMapper {
 
         RatingState state = RatingRules.Classify(token);
         if(state == RatingState.NUMBER || state == RatingState.UNKNOWN){
+            if(RatingRules.CountsAsDifferentNumber(token)){
+                issues.add(new ImportIssue(file, IssueSeverity.NOTE, "'" + heading + "' is '" + token + "', kept as typed (it counts as "
+                        + RatingRules.ToNumber(token) + " when sorting)"));
+            }
             return new FieldValue(token, comment, FieldStatus.FILLED);
         }
         return MapInvalid(strict, heading, token, comment, file, issues);
@@ -52,7 +56,7 @@ public class RatingMapper {
     // Not a number and not ?. Strict ratings are a problem, lenient ones become ? with the wording kept
     private static FieldValue MapInvalid(boolean strict, String heading, String token, String comment, String file, List<ImportIssue> issues){
         if(strict){
-            issues.add(new ImportIssue(file, IssueSeverity.PROBLEM, "invalid '" + heading + "' value '" + token + "' (use a whole number from -1 to 11, or ?)"));
+            issues.add(new ImportIssue(file, IssueSeverity.PROBLEM, "invalid '" + heading + "' value '" + token + "' (use a whole number of up to " + RatingRules.maxLength + " characters, or ?)"));
             return new FieldValue("", comment, FieldStatus.FILLED);
         }
         issues.add(new ImportIssue(file, IssueSeverity.NOTE, "'" + heading + "' was '" + token + "', imported as ? with that wording kept as the comment"));
