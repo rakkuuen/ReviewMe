@@ -13,6 +13,7 @@ public class ReportBuilder {
             new SummarySection(),
             new SeriesSection(),
             new TagCheckSection(),
+            new StatusSection(),
             new RatingsSection(),
             new SubsectionsSection(),
             new IssuesSection(IssueSeverity.PROBLEM, "== PROBLEMS (fix these in the md) =="),

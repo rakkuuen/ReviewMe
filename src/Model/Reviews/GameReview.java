@@ -13,7 +13,7 @@ public class GameReview {
     private Integer id, seriesPosition, steamAppId, achievementsAtCompletion, dismissedAtTotal,
             manualPlaytimeMinutes, topPickSlot;
     private String templateId, seriesId, sourcePath, completedOn;
-    private boolean inProgress, completed;
+    private boolean inProgress, completed, reviewIncompleteFlagged;
     private CompletionSource completedOnSource;
     private List<String> genres = new ArrayList<>();
     private List<String> metadata = new ArrayList<>();
@@ -52,6 +52,10 @@ public class GameReview {
 
     public boolean IsCompleted(){ return completed; }
     public void SetCompleted(boolean completed){ this.completed = completed; }
+
+    // Set by hand when a review is unfinished even though nothing is blank (Dave the Diver)
+    public boolean IsReviewIncompleteFlagged(){ return reviewIncompleteFlagged; }
+    public void SetReviewIncompleteFlagged(boolean reviewIncompleteFlagged){ this.reviewIncompleteFlagged = reviewIncompleteFlagged; }
 
     public String GetCompletedOn(){ return completedOn; }
     public void SetCompletedOn(String completedOn){ this.completedOn = completedOn; }
