@@ -8,6 +8,8 @@ import Database.Dao.Db;
 
 // Tables for series, templates, per-review field values and Steam data, plus the extra GameReview columns.
 public class Schema {
+    private static final String[] legacySectionColumns = {"gameplay", "story", "setting", "music", "voiceActing", "achievements",
+            "replayability", "alternateTitles", "finalRating", "conclusion"};
 
     public static void Upgrade(){
         try (Connection conn = Db.OpenConnection();
@@ -136,9 +138,26 @@ public class Schema {
             // One game per Top Picks slot
             stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_gamereview_toppick ON GameReview(topPickSlot) WHERE topPickSlot IS NOT NULL;");
 
+            // The sections used to be fixed columns on GameReview. They live in ReviewField now, so databases made before that lose them
+            for(String column : legacySectionColumns){
+                DropColumnIfPresent(conn, "GameReview", column);
+            }
+
             System.out.println("Schema upgraded successfully.");
         } catch (SQLException e) {
             System.err.println("Error upgrading schema: " + e.getMessage());
+        }
+    }
+
+    private static void DropColumnIfPresent(Connection conn, String table, String column) throws SQLException {
+        boolean present;
+        try (ResultSet rs = conn.getMetaData().getColumns(null, null, table, column)) {
+            present = rs.next();
+        }
+        if(present){
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE " + table + " DROP COLUMN " + column);
+            }
         }
     }
 

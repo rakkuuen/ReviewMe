@@ -27,21 +27,12 @@ public class GameReviewDao {
             System.err.println(e.getMessage());
         }
 
-        // Create table in database if one does not already exist
+        // Create table in database if one does not already exist. Everything else about a review (sections, series, Steam
+        // link, state) is added by Schema.Upgrade
         String createTableSQL = """
             CREATE TABLE IF NOT EXISTS GameReview (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT,
-                gameplay TEXT,
-                story TEXT,
-                setting TEXT,
-                music TEXT,
-                voiceActing TEXT,
-                achievements TEXT,
-                replayability TEXT,
-                alternateTitles TEXT,
-                finalRating INTEGER,
-                conclusion TEXT
+                title TEXT
             );
         """;
 
@@ -64,72 +55,6 @@ public class GameReviewDao {
         // Adding the schema table for series/templates/per review stuff
         Schema.Upgrade();
         TemplateSeeder.Seed();
-    }
-
-    public static void InsertGameReview(GameReview review){
-        String url = Db.url;
-        String insertSQL = """
-            INSERT OR IGNORE INTO GameReview (title, gameplay, story, setting, music, voiceActing, achievements,
-                                    replayability, alternateTitles, finalRating, conclusion)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        """;
-
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
-            pstmt.setString(1, review.GetTitle());
-            pstmt.setString(2, review.GetGameplay());
-            pstmt.setString(3, review.GetStory());
-            pstmt.setString(4, review.GetSetting());
-            pstmt.setString(5, review.GetMusic());
-            pstmt.setString(6, review.GetVoiceActing());
-            pstmt.setString(7, review.GetAchievements());
-            pstmt.setString(8, review.GetReplayability());
-            pstmt.setString(9, review.GetAlternateTitles());
-            pstmt.setInt(10, review.GetFinalRating());
-            pstmt.setString(11, review.GetConclusion());
-
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error inserting GameReview: " + e.getMessage());
-        }
-    }
-
-    public static void InsertGameReviews(List<GameReview> reviews) {
-        for (GameReview review : reviews) {
-            InsertGameReview(review);
-        }
-    }
-
-    public static void UpdateGameReview(GameReview review){
-        String url = Db.url;
-        String updateSQL = """
-            UPDATE GameReview
-            SET gameplay = ?, story = ?, setting = ?, music = ?, voiceActing = ?, achievements = ?,
-                replayability = ?, alternateTitles = ?, finalRating = ?, conclusion = ?
-            WHERE title = ?;
-        """;
-
-        try (Connection conn = DriverManager.getConnection(url);
-             PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
-            pstmt.setString(1, review.GetGameplay());
-            pstmt.setString(2, review.GetStory());
-            pstmt.setString(3, review.GetSetting());
-            pstmt.setString(4, review.GetMusic());
-            pstmt.setString(5, review.GetVoiceActing());
-            pstmt.setString(6, review.GetAchievements());
-            pstmt.setString(7, review.GetReplayability());
-            pstmt.setString(8, review.GetAlternateTitles());
-            pstmt.setInt(9, review.GetFinalRating());
-            pstmt.setString(10, review.GetConclusion());
-            pstmt.setString(11, review.GetTitle());
-
-            int rowsAffected = pstmt.executeUpdate();
-            if (rowsAffected == 0) {
-                System.err.println("No GameReview found with the title: " + review.GetTitle());
-            }
-        } catch (SQLException e) {
-            System.err.println("Error updating GameReview: " + e.getMessage());
-        }
     }
 
     public static List<GameReview> GetAllGameReviews(){
@@ -175,7 +100,7 @@ public class GameReviewDao {
     }
 
     // Adds a review exactly as imported, no silent skip if the title exists (that is an error). Returns the new id, or
-    // null if the insert failed. The section text lives in ReviewField now, so the old fixed columns are left empty
+    // null if the insert failed. The sections live in ReviewField, not here
     public static Integer InsertImportedReview(GameReview review){
         String insertSQL = """
             INSERT INTO GameReview (title, templateId, seriesId, seriesPosition, sourcePath, steamAppId, inProgress, completed,
@@ -246,22 +171,11 @@ public class GameReviewDao {
         }
     }
 
-    // One row to one GameReview: the old fixed sections plus the new series/Steam/state columns
+    // One row to one GameReview: its own columns only. Sections, groups and tags are attached by ReviewLoader
     private static GameReview ReadGameReview(ResultSet rs) throws SQLException {
         GameReview review = new GameReview();
         review.SetId(rs.getInt("id"));
         review.SetTitle(rs.getString("title"));
-        review.SetGameplay(rs.getString("gameplay"));
-        review.SetStory(rs.getString("story"));
-        review.SetSetting(rs.getString("setting"));
-        review.SetMusic(rs.getString("music"));
-        review.SetVoiceActing(rs.getString("voiceActing"));
-        review.SetAchievements(rs.getString("achievements"));
-        review.SetReplayability(rs.getString("replayability"));
-        review.SetAlternateTitles(rs.getString("alternateTitles"));
-        review.SetFinalRating(rs.getInt("finalRating"));
-        review.SetConclusion(rs.getString("conclusion"));
-
         review.SetTemplateId(rs.getString("templateId"));
         review.SetSeriesId(rs.getString("seriesId"));
         review.SetSeriesPosition(Db.GetNullableInt(rs, "seriesPosition"));
