@@ -24,6 +24,7 @@ public class StatusSection implements ReportSection {
         List<String> muted = new ArrayList<>();
         List<String> completedTagButIncomplete = new ArrayList<>();
         List<String> incompleteTagButReviewed = new ArrayList<>();
+        List<String> flaggedByHand = new ArrayList<>();
 
         for(MappedReview mapped : result.GetReviews()){
             String title = mapped.GetReview().GetTitle();
@@ -38,6 +39,9 @@ public class StatusSection implements ReportSection {
                 muted.add(title + " (" + Label(status.GetGameState()) + "): " + gaps);
             }
 
+            if(mapped.GetReview().IsReviewIncompleteFlagged()){
+                flaggedByHand.add(title);
+            }
             if(mapped.GetTagState() == TagState.COMPLETED && status.GetReviewState() == ReviewState.REVIEW_INCOMPLETE){
                 completedTagButIncomplete.add(title + " (" + gaps + ")");
             } else if(mapped.GetTagState() == TagState.REVIEW_INCOMPLETE && status.GetReviewState() == ReviewState.REVIEWED){
@@ -59,7 +63,8 @@ public class StatusSection implements ReportSection {
             out.add("    " + ReportFormat.Shorten(line, 150));
         }
         out.add("tagged #Completed but the content says incomplete: " + Describe(completedTagButIncomplete));
-        out.add("tagged #REVIEWINCOMPLETE but the content says reviewed (these need the manual flag): " + Describe(incompleteTagButReviewed));
+        out.add("tagged #REVIEWINCOMPLETE with nothing blank, stored as the manual flag: " + Describe(flaggedByHand));
+        out.add("tagged #REVIEWINCOMPLETE but the content says reviewed (should always be none): " + Describe(incompleteTagButReviewed));
         out.add("");
         return out;
     }

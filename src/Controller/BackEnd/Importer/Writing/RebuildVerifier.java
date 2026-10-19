@@ -56,6 +56,7 @@ public class RebuildVerifier {
         Same(title, "source path", expected.GetSourcePath(), actual.GetSourcePath(), differences);
         Same(title, "in progress", expected.IsInProgress(), actual.IsInProgress(), differences);
         Same(title, "completed", expected.IsCompleted(), actual.IsCompleted(), differences);
+        Same(title, "review incomplete flag", expected.IsReviewIncompleteFlagged(), actual.IsReviewIncompleteFlagged(), differences);
 
         int id = actual.GetId();
         Same(title, "genres", expected.GetGenres(), ReviewTagDao.GetTags(id, TagKind.GENRE), differences);

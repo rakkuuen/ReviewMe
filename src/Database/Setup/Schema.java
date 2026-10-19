@@ -133,6 +133,8 @@ public class Schema {
             AddColumnIfMissing(conn, "GameReview", "achievementsAtCompletion", "INTEGER");
             AddColumnIfMissing(conn, "GameReview", "dismissedAtTotal", "INTEGER");
             AddColumnIfMissing(conn, "GameReview", "manualPlaytimeMinutes", "INTEGER");
+            // Set by hand when a review is unfinished though nothing is blank (the game's own state is worked out, not stored)
+            AddColumnIfMissing(conn, "GameReview", "reviewIncomplete", "INTEGER NOT NULL DEFAULT 0");
             AddColumnIfMissing(conn, "GameReview", "topPickSlot", "INTEGER CHECK (topPickSlot BETWEEN 1 AND 5)");
 
             // One game per Top Picks slot

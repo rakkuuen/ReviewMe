@@ -8,6 +8,8 @@ import Model.Reviews.Template;
 import Controller.BackEnd.Importer.Parsing.ParsedMarkdown;
 import Controller.BackEnd.Importer.Results.ImportIssue;
 import Controller.BackEnd.Importer.Results.MappedReview;
+import Controller.BackEnd.Importer.Results.MappedReview.TagState;
+import Controller.BackEnd.Reviews.ReviewGapFinder;
 
 // Gives a parsed md file its meaning. Each step is its own class: TagReader, FieldMapper, RatingMapper
 public class ReviewMapper {
@@ -41,8 +43,15 @@ public class ReviewMapper {
 
         SectionCounts counts = FieldMapper.MapFields(template, parsed, review, issues);
         FieldMapper.FlagUnmappedHeadings(template, parsed, issues);
+        review.SetReviewIncompleteFlagged(IsFlaggedByHand(tags, review, template));
 
         return new MappedReview(review, tags.GetTagState(), counts.GetFilled(), counts.GetMissing(), counts.GetNotApplicable());
+    }
+
+    // #REVIEWINCOMPLETE on a review with nothing blank can only be a decision by hand (Dave the Diver), so it becomes the flag.
+    // Where the content has gaps the tag is just describing them, and filling those in must clear it, so no flag is stored
+    private static boolean IsFlaggedByHand(TagInfo tags, GameReview review, Template template){
+        return tags.GetTagState() == TagState.REVIEW_INCOMPLETE && ReviewGapFinder.Find(review, template).isEmpty();
     }
 
     // A template with the same id as the series (Yakuza -> Yakuza.template), otherwise Standard

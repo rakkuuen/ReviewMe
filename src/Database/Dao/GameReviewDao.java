@@ -105,8 +105,8 @@ public class GameReviewDao {
         String insertSQL = """
             INSERT INTO GameReview (title, templateId, seriesId, seriesPosition, sourcePath, steamAppId, inProgress, completed,
                                     completedOn, completedOnSource, achievementsAtCompletion, dismissedAtTotal,
-                                    manualPlaytimeMinutes, topPickSlot)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                                    manualPlaytimeMinutes, topPickSlot, reviewIncomplete)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """;
 
         try (Connection conn = DriverManager.getConnection(Db.url);
@@ -125,6 +125,7 @@ public class GameReviewDao {
             Db.SetNullableInt(pstmt, 12, review.GetDismissedAtTotal());
             Db.SetNullableInt(pstmt, 13, review.GetManualPlaytimeMinutes());
             Db.SetNullableInt(pstmt, 14, review.GetTopPickSlot());
+            pstmt.setInt(15, review.IsReviewIncompleteFlagged() ? 1 : 0);
             pstmt.executeUpdate();
 
             try (ResultSet keys = pstmt.getGeneratedKeys()) {
@@ -136,7 +137,7 @@ public class GameReviewDao {
         }
     }
 
-    // Saves the review's own columns (series, Steam link, state, completion, top pick). Not its title, template or source file,
+    // Saves the review's own columns (series, Steam link, state, completion, top pick, manual flag). Not its title, template or source file,
     // and not its sections, which live in ReviewField. False if it has no id, no such row, or the top-pick slot is taken
     public static boolean UpdateReviewDetails(GameReview review){
         if(review.GetId() == null){
@@ -147,7 +148,8 @@ public class GameReviewDao {
         String updateSQL = """
             UPDATE GameReview
             SET seriesId = ?, seriesPosition = ?, steamAppId = ?, inProgress = ?, completed = ?, completedOn = ?,
-                completedOnSource = ?, achievementsAtCompletion = ?, dismissedAtTotal = ?, manualPlaytimeMinutes = ?, topPickSlot = ?
+                completedOnSource = ?, achievementsAtCompletion = ?, dismissedAtTotal = ?, manualPlaytimeMinutes = ?, topPickSlot = ?,
+                reviewIncomplete = ?
             WHERE id = ?;
         """;
         try (Connection conn = DriverManager.getConnection(Db.url);
@@ -163,7 +165,8 @@ public class GameReviewDao {
             Db.SetNullableInt(pstmt, 9, review.GetDismissedAtTotal());
             Db.SetNullableInt(pstmt, 10, review.GetManualPlaytimeMinutes());
             Db.SetNullableInt(pstmt, 11, review.GetTopPickSlot());
-            pstmt.setInt(12, review.GetId());
+            pstmt.setInt(12, review.IsReviewIncompleteFlagged() ? 1 : 0);
+            pstmt.setInt(13, review.GetId());
             return pstmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Error updating review details for " + review.GetTitle() + ": " + e.getMessage());
@@ -190,6 +193,7 @@ public class GameReviewDao {
         review.SetDismissedAtTotal(Db.GetNullableInt(rs, "dismissedAtTotal"));
         review.SetManualPlaytimeMinutes(Db.GetNullableInt(rs, "manualPlaytimeMinutes"));
         review.SetTopPickSlot(Db.GetNullableInt(rs, "topPickSlot"));
+        review.SetReviewIncompleteFlagged(rs.getInt("reviewIncomplete") == 1);
         return review;
     }
 }

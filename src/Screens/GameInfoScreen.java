@@ -53,6 +53,7 @@ public class GameInfoScreen{
     private static final int minScrollY = 102; // Clears the three stacked buttons on the right
     private static final int rightMargin = 20;
     private static final int statusLineGap = 10; // Status line sits this far above the field list
+    private static final String ellipsis = String.valueOf((char) 0x2026); // By code point so the source stays plain ASCII
     private static final int bottomMargin = 30;
 
     private static final int titleFirstLineBaselineY = 55;
@@ -192,7 +193,7 @@ public class GameInfoScreen{
         int maxWidth = 2 * (cancelButton.x - titleMargin - windowDimension.width / 2); // Stays clear of the buttons, like the title
         String shown = statusMessage;
         while(shown.length() > 1 && metrics.stringWidth(shown) > maxWidth){
-            shown = shown.substring(0, shown.length() - 2) + "…";
+            shown = shown.substring(0, shown.length() - 2) + ellipsis;
         }
         g.drawString(shown, (windowDimension.width - metrics.stringWidth(shown)) / 2, fieldListPanel.getY() - statusLineGap);
     }
