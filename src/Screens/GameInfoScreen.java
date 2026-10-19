@@ -4,9 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
-import java.awt.Font;
 import java.awt.FontMetrics;
-import java.awt.image.BufferedImage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,13 +14,16 @@ import javax.swing.JPanel;
 import Controller.BackEnd.Reviews.LoadedReview;
 import Controller.BackEnd.Reviews.ReviewLoader;
 import Controller.BackEnd.Reviews.ReviewSaver;
+import Controller.BackEnd.Reviews.ReviewStatusCalculator;
 import Controller.BackEnd.Reviews.SaveResult;
 import Model.Widgets.Button;
 import Model.Widgets.BackButton;
 import Model.Widgets.AutoGrowFieldList;
+import Model.Widgets.TextWrap;
 import Model.Themes.Theme;
 import Screens.Detail.SectionBinding;
 import Screens.Detail.SectionBuilder;
+import Screens.Detail.StateLine;
 
 public class GameInfoScreen{
     private LoadedReview loadedReview;
@@ -36,6 +37,9 @@ public class GameInfoScreen{
     private String statusMessage;
     private boolean statusIsError;
     private static final Color errorColour = new Color(0xD04040); // The themes have no error colour yet
+
+    // Game state and review state as plain text under the title, until the themed badges replace it
+    private StateLine stateLine = new StateLine();
 
     private AutoGrowFieldList fieldList;
     private JPanel fieldListPanel;
@@ -53,7 +57,7 @@ public class GameInfoScreen{
     private static final int minScrollY = 102; // Clears the three stacked buttons on the right
     private static final int rightMargin = 20;
     private static final int statusLineGap = 10; // Status line sits this far above the field list
-    private static final String ellipsis = String.valueOf((char) 0x2026); // By code point so the source stays plain ASCII
+    private static final int statusLineSpace = 28; // Room left under the state line for that status line
     private static final int bottomMargin = 30;
 
     private static final int titleFirstLineBaselineY = 55;
@@ -94,6 +98,7 @@ public class GameInfoScreen{
         // Read-only until Edit is pressed
         LeaveEditMode();
 
+        stateLine.Show(ReviewStatusCalculator.Calculate(loadedReview, null));
         Reflow(windowDimension);
     }
 
@@ -103,7 +108,7 @@ public class GameInfoScreen{
         editButton.x = saveButton.x; // Same column, stacked above Save
         cancelButton.x = saveButton.x;
 
-        FontMetrics titleMetrics = GetFontMetrics(Theme.Current.GetTitle().GetFont());
+        FontMetrics titleMetrics = TextWrap.MetricsFor(Theme.Current.GetTitle().GetFont());
 
         // Title is centered on the FULL window width, not on the gap between the two
         // buttons - Back sits much closer to the left edge than Edit/Save sit to the
@@ -114,48 +119,18 @@ public class GameInfoScreen{
         int rightHalfAvailable = (editButton.x - titleMargin) - windowCenter;
         int titleAvailableWidth = 2 * Math.min(leftHalfAvailable, rightHalfAvailable);
 
-        titleLines = WrapText(title, titleMetrics, titleAvailableWidth);
+        titleLines = TextWrap.Wrap(title, titleMetrics, titleAvailableWidth);
 
-        // scrollY stays at its usual spot for a single-line title (the common case); a
-        // wrapped title just pushes the field list down however far it actually needs
+        // The state line wraps under the title in the same width, and the field list goes below both. A wrapped
+        // title or a longer state line just pushes the list down however far it actually needs
         int titleBlockBottom = titleFirstLineBaselineY + titleMetrics.getDescent()
                 + (titleLines.size() - 1) * titleMetrics.getHeight();
-        int scrollY = Math.max(minScrollY, titleBlockBottom + titleMargin);
+        int stateBottom = stateLine.Layout(titleBlockBottom, titleAvailableWidth);
+        int scrollY = Math.max(minScrollY, stateBottom + statusLineSpace);
 
         int scrollWidth = windowDimension.width - scrollX - rightMargin;
         int scrollHeight = windowDimension.height - scrollY - bottomMargin;
         fieldListPanel.setBounds(scrollX, scrollY, scrollWidth, scrollHeight);
-    }
-
-    // FontMetrics normally needs a live Graphics context; this gets one without needing
-    // an actual on-screen paint, so Reflow() can wrap the title independent of painting
-    private FontMetrics GetFontMetrics(Font font){
-        BufferedImage scratch = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-        Graphics scratchG = scratch.getGraphics();
-        scratchG.setFont(font);
-        FontMetrics fm = scratchG.getFontMetrics();
-        scratchG.dispose();
-        return fm;
-    }
-
-    // Greedy word-wrap: packs words onto a line until the next one would exceed maxWidth
-    private List<String> WrapText(String text, FontMetrics fm, int maxWidth){
-        List<String> lines = new ArrayList<>();
-        StringBuilder currentLine = new StringBuilder();
-
-        for(String word : text.split(" ")){
-            String candidate = currentLine.length() == 0 ? word : currentLine + " " + word;
-            if(currentLine.length() == 0 || fm.stringWidth(candidate) <= maxWidth){
-                currentLine = new StringBuilder(candidate);
-            } else {
-                lines.add(currentLine.toString());
-                currentLine = new StringBuilder(word);
-            }
-        }
-        if(currentLine.length() > 0){
-            lines.add(currentLine.toString());
-        }
-        return lines;
     }
 
     public void paint(Graphics g, Point mousePos, Dimension windowDimension){
@@ -178,10 +153,11 @@ public class GameInfoScreen{
             lineY += titleMetrics.getHeight();
         }
 
+        stateLine.Paint(g, windowDimension.width);
         PaintStatusLine(g, windowDimension);
     }
 
-    // Centred just above the field list, cut short with ... if it's wider than the list
+    // Centred just above the field list, cut short with an ellipsis if it's wider than the list
     private void PaintStatusLine(Graphics g, Dimension windowDimension){
         if(statusMessage == null){
             return;
@@ -191,10 +167,7 @@ public class GameInfoScreen{
         FontMetrics metrics = g.getFontMetrics();
 
         int maxWidth = 2 * (cancelButton.x - titleMargin - windowDimension.width / 2); // Stays clear of the buttons, like the title
-        String shown = statusMessage;
-        while(shown.length() > 1 && metrics.stringWidth(shown) > maxWidth){
-            shown = shown.substring(0, shown.length() - 2) + ellipsis;
-        }
+        String shown = TextWrap.Fit(statusMessage, metrics, maxWidth);
         g.drawString(shown, (windowDimension.width - metrics.stringWidth(shown)) / 2, fieldListPanel.getY() - statusLineGap);
     }
 
@@ -243,6 +216,7 @@ public class GameInfoScreen{
         }
         LeaveEditMode();
         ShowStatus("Saved", false);
+        RefreshState();
     }
 
     // Throws away what was typed: the boxes go back to what is stored
@@ -259,7 +233,16 @@ public class GameInfoScreen{
         }
         LeaveEditMode();
         statusMessage = null;
+        RefreshState();
     }
+
+    // The state line follows the review, so it's worked out again whenever the stored review changes
+    private void RefreshState(){
+        stateLine.Show(ReviewStatusCalculator.Calculate(loadedReview, null));
+        Reflow(windowDimension);
+    }
+
+    public StateLine GetStateLine(){ return stateLine; }
 
     private void LeaveEditMode(){
         isEditing = false;
