@@ -30,7 +30,7 @@ public class StatusText {
         switch(state){
             case COMPLETED: return "Completed";
             case IN_PROGRESS: return "In progress";
-            case NOT_COMPLETED: return "Not completed";
+            case SHELVED: return "Shelved";
             default: return "Not started";
         }
     }

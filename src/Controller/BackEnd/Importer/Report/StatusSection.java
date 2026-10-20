@@ -1,6 +1,7 @@
 package Controller.BackEnd.Importer.Report;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import Controller.BackEnd.Importer.Results.MappedReview;
 import Controller.BackEnd.Importer.Results.MappedReview.TagState;
 import Controller.BackEnd.Reviews.ReviewStatusCalculator;
 import Model.Reviews.GameState;
+import Model.Reviews.GameTab;
 import Model.Reviews.ReviewState;
 import Model.Reviews.ReviewStatus;
 import Model.Reviews.Template;
@@ -25,6 +27,7 @@ public class StatusSection implements ReportSection {
         List<String> completedTagButIncomplete = new ArrayList<>();
         List<String> incompleteTagButReviewed = new ArrayList<>();
         List<String> flaggedByHand = new ArrayList<>();
+        Map<GameTab, Integer> tabCounts = new EnumMap<>(GameTab.class);
 
         for(MappedReview mapped : result.GetReviews()){
             String title = mapped.GetReview().GetTitle();
@@ -33,6 +36,9 @@ public class StatusSection implements ReportSection {
             String gaps = mapped.GetFilled() == 0 ? "all sections blank" : status.DescribeGaps();
 
             combinations.merge(Label(status.GetGameState()) + " + " + Label(status.GetReviewState()), 1, Integer::sum);
+            for(GameTab tab : status.Tabs()){
+                tabCounts.merge(tab, 1, Integer::sum);
+            }
             if(status.CountsAsIncomplete()){
                 warnings.add(title + ": " + gaps);
             } else if(!status.GetGaps().isEmpty()){
@@ -53,6 +59,10 @@ public class StatusSection implements ReportSection {
         out.add("== STATE (worked out from the content) ==");
         for(Map.Entry<String, Integer> entry : combinations.entrySet()){
             out.add("    " + entry.getKey() + ": " + entry.getValue());
+        }
+        out.add("main view tabs (a game can be in more than one; no Steam data yet, so no More achievements or unsynced states):");
+        for(GameTab tab : GameTab.values()){
+            out.add("    " + Label(tab) + ": " + tabCounts.getOrDefault(tab, 0));
         }
         out.add("counts as an Incomplete warning (completed game, unfinished review): " + warnings.size());
         for(String warning : warnings){
@@ -75,6 +85,10 @@ public class StatusSection implements ReportSection {
 
     private String Label(ReviewState state){
         return state.name().replace('_', ' ').toLowerCase();
+    }
+
+    private String Label(GameTab tab){
+        return tab.name().replace('_', ' ').toLowerCase();
     }
 
     private String Describe(List<String> items){

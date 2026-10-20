@@ -12,8 +12,8 @@ public class GameReview {
     // id is null until the review is saved
     private Integer id, seriesPosition, steamAppId, achievementsAtCompletion, dismissedAtTotal,
             manualPlaytimeMinutes, topPickSlot;
-    private String templateId, seriesId, sourcePath, completedOn;
-    private boolean inProgress, completed, reviewIncompleteFlagged;
+    private String templateId, seriesId, sourcePath, completedOn, shelvedReason, addedToLibraryOn;
+    private boolean inProgress, completed, reviewIncompleteFlagged, shelved;
     private CompletionSource completedOnSource;
     private List<String> genres = new ArrayList<>();
     private List<String> metadata = new ArrayList<>();
@@ -52,6 +52,17 @@ public class GameReview {
 
     public boolean IsCompleted(){ return completed; }
     public void SetCompleted(boolean completed){ this.completed = completed; }
+
+    // Set by hand when a game is dropped or parked. Overrides every other game state. The reason is optional
+    public boolean IsShelved(){ return shelved; }
+    public void SetShelved(boolean shelved){ this.shelved = shelved; }
+
+    public String GetShelvedReason(){ return shelvedReason; }
+    public void SetShelvedReason(String shelvedReason){ this.shelvedReason = shelvedReason; }
+
+    // A date typed in by hand (like 2025-03-02), because Steam doesn't say when a game was added. Null means not set
+    public String GetAddedToLibraryOn(){ return addedToLibraryOn; }
+    public void SetAddedToLibraryOn(String addedToLibraryOn){ this.addedToLibraryOn = addedToLibraryOn; }
 
     // Set by hand when a review is unfinished even though nothing is blank (Dave the Diver)
     public boolean IsReviewIncompleteFlagged(){ return reviewIncompleteFlagged; }
