@@ -13,18 +13,19 @@ import Model.Library.SteamGame;
 public class SteamGameDao {
 
     private static final String saveSQL = """
-        INSERT INTO SteamGame (appId, name, playtimeMinutes, lastPlayed, iconHash, totalAchievements, unlockedAchievements, syncedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO SteamGame (appId, name, playtimeMinutes, lastPlayed, iconHash, totalAchievements, unlockedAchievements, syncedAt, firstSeenAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (appId) DO UPDATE SET
             name = excluded.name, playtimeMinutes = excluded.playtimeMinutes, lastPlayed = excluded.lastPlayed,
             iconHash = excluded.iconHash, totalAchievements = excluded.totalAchievements,
-            unlockedAchievements = excluded.unlockedAchievements, syncedAt = excluded.syncedAt;
+            unlockedAchievements = excluded.unlockedAchievements, syncedAt = excluded.syncedAt, firstSeenAt = excluded.firstSeenAt;
     """;
 
-    // Only what the owned-games call returns. Achievement totals already stored are kept
+    // Only what the owned-games call returns. Achievement totals already stored are kept, and so is firstSeenAt: it's set when the
+    // game is first stored and a later sync never moves it
     private static final String saveOwnedSQL = """
-        INSERT INTO SteamGame (appId, name, playtimeMinutes, lastPlayed, iconHash, syncedAt)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO SteamGame (appId, name, playtimeMinutes, lastPlayed, iconHash, syncedAt, firstSeenAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (appId) DO UPDATE SET
             name = excluded.name, playtimeMinutes = excluded.playtimeMinutes, lastPlayed = excluded.lastPlayed,
             iconHash = excluded.iconHash, syncedAt = excluded.syncedAt;
@@ -54,6 +55,7 @@ public class SteamGameDao {
                     Db.SetNullableLong(pstmt, 4, game.GetLastPlayed());
                     pstmt.setString(5, game.GetIconHash());
                     Db.SetNullableLong(pstmt, 6, game.GetSyncedAt());
+                    Db.SetNullableLong(pstmt, 7, game.GetFirstSeenAt() != null ? game.GetFirstSeenAt() : game.GetSyncedAt());
                     pstmt.executeUpdate();
                 }
                 conn.commit();
@@ -125,6 +127,7 @@ public class SteamGameDao {
         Db.SetNullableInt(pstmt, 6, game.GetTotalAchievements());
         Db.SetNullableInt(pstmt, 7, game.GetUnlockedAchievements());
         Db.SetNullableLong(pstmt, 8, game.GetSyncedAt());
+        Db.SetNullableLong(pstmt, 9, game.GetFirstSeenAt());
     }
 
     private static SteamGame ReadSteamGame(ResultSet rs) throws SQLException {
@@ -135,6 +138,7 @@ public class SteamGameDao {
         game.SetTotalAchievements(Db.GetNullableInt(rs, "totalAchievements"));
         game.SetUnlockedAchievements(Db.GetNullableInt(rs, "unlockedAchievements"));
         game.SetSyncedAt(Db.GetNullableLong(rs, "syncedAt"));
+        game.SetFirstSeenAt(Db.GetNullableLong(rs, "firstSeenAt"));
         return game;
     }
 }

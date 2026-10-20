@@ -8,8 +8,9 @@ import Database.Dao.Db;
 
 // Tables for series, templates, per-review field values and Steam data, plus the extra GameReview columns.
 public class Schema {
-    private static final String[] legacySectionColumns = {"gameplay", "story", "setting", "music", "voiceActing", "achievements",
-            "replayability", "alternateTitles", "finalRating", "conclusion"};
+    // The sections used to be fixed columns on GameReview (they live in ReviewField now). dismissedAtTotal went when Dismiss was dropped
+    private static final String[] retiredColumns = {"gameplay", "story", "setting", "music", "voiceActing", "achievements",
+            "replayability", "alternateTitles", "finalRating", "conclusion", "dismissedAtTotal"};
 
     public static void Upgrade(){
         try (Connection conn = Db.OpenConnection();
@@ -94,7 +95,8 @@ public class Schema {
                     iconHash TEXT,
                     totalAchievements INTEGER,
                     unlockedAchievements INTEGER,
-                    syncedAt INTEGER
+                    syncedAt INTEGER,
+                    firstSeenAt INTEGER
                 );
             """);
 
@@ -129,10 +131,14 @@ public class Schema {
             // completedOn is a date like 2025-03-02; completedOnSource is STEAM or MANUAL
             AddColumnIfMissing(conn, "GameReview", "completedOn", "TEXT");
             AddColumnIfMissing(conn, "GameReview", "completedOnSource", "TEXT");
-            // Achievement totals when completed / when a not-100% suggestion was dismissed
+            // The game's achievement total when it was completed, so later additions can be noticed
             AddColumnIfMissing(conn, "GameReview", "achievementsAtCompletion", "INTEGER");
-            AddColumnIfMissing(conn, "GameReview", "dismissedAtTotal", "INTEGER");
             AddColumnIfMissing(conn, "GameReview", "manualPlaytimeMinutes", "INTEGER");
+            // Shelving is set by hand, overrides every other game state, and has an optional reason
+            AddColumnIfMissing(conn, "GameReview", "shelved", "INTEGER NOT NULL DEFAULT 0");
+            AddColumnIfMissing(conn, "GameReview", "shelvedReason", "TEXT");
+            // Steam doesn't say when a game was added, so this is a date typed in by hand (like 2025-03-02); otherwise SteamGame.firstSeenAt is used
+            AddColumnIfMissing(conn, "GameReview", "addedToLibraryOn", "TEXT");
             // Set by hand when a review is unfinished though nothing is blank (the game's own state is worked out, not stored)
             AddColumnIfMissing(conn, "GameReview", "reviewIncomplete", "INTEGER NOT NULL DEFAULT 0");
             AddColumnIfMissing(conn, "GameReview", "topPickSlot", "INTEGER CHECK (topPickSlot BETWEEN 1 AND 5)");
@@ -140,8 +146,11 @@ public class Schema {
             // One game per Top Picks slot
             stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_gamereview_toppick ON GameReview(topPickSlot) WHERE topPickSlot IS NOT NULL;");
 
-            // The sections used to be fixed columns on GameReview. They live in ReviewField now, so databases made before that lose them
-            for(String column : legacySectionColumns){
+            // The day ReviewMe first saw a game in a sync, set once and never overwritten (epoch seconds, like the other Steam times)
+            AddColumnIfMissing(conn, "SteamGame", "firstSeenAt", "INTEGER");
+
+            // Columns that no longer exist, so databases made before lose them
+            for(String column : retiredColumns){
                 DropColumnIfPresent(conn, "GameReview", column);
             }
 

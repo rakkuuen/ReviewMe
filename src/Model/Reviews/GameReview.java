@@ -10,8 +10,7 @@ public class GameReview {
     private String gameTitle;
 
     // id is null until the review is saved
-    private Integer id, seriesPosition, steamAppId, achievementsAtCompletion, dismissedAtTotal,
-            manualPlaytimeMinutes, topPickSlot;
+    private Integer id, seriesPosition, steamAppId, achievementsAtCompletion, manualPlaytimeMinutes, topPickSlot;
     private String templateId, seriesId, sourcePath, completedOn, shelvedReason, addedToLibraryOn;
     private boolean inProgress, completed, reviewIncompleteFlagged, shelved;
     private CompletionSource completedOnSource;
@@ -76,9 +75,6 @@ public class GameReview {
 
     public Integer GetAchievementsAtCompletion(){ return achievementsAtCompletion; }
     public void SetAchievementsAtCompletion(Integer achievementsAtCompletion){ this.achievementsAtCompletion = achievementsAtCompletion; }
-
-    public Integer GetDismissedAtTotal(){ return dismissedAtTotal; }
-    public void SetDismissedAtTotal(Integer dismissedAtTotal){ this.dismissedAtTotal = dismissedAtTotal; }
 
     public Integer GetManualPlaytimeMinutes(){ return manualPlaytimeMinutes; }
     public void SetManualPlaytimeMinutes(Integer manualPlaytimeMinutes){ this.manualPlaytimeMinutes = manualPlaytimeMinutes; }

@@ -5,7 +5,7 @@ public class SteamGame {
     private int appId;
     private String name, iconHash;
     private Integer playtimeMinutes, totalAchievements, unlockedAchievements;
-    private Long lastPlayed, syncedAt;
+    private Long lastPlayed, syncedAt, firstSeenAt;
 
     public SteamGame(int appId, String name){
         this.appId = appId;
@@ -34,6 +34,10 @@ public class SteamGame {
 
     public Long GetSyncedAt(){ return syncedAt; }
     public void SetSyncedAt(Long syncedAt){ this.syncedAt = syncedAt; }
+
+    // The first sync that saw this game. Steam doesn't say when a game was added, so this stands in for it
+    public Long GetFirstSeenAt(){ return firstSeenAt; }
+    public void SetFirstSeenAt(Long firstSeenAt){ this.firstSeenAt = firstSeenAt; }
 
     public boolean HasAchievements(){
         return totalAchievements != null && totalAchievements > 0;
