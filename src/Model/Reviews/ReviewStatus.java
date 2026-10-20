@@ -12,12 +12,14 @@ public class ReviewStatus {
     private ReviewState reviewState;
     private List<ReviewGap> gaps;
     private int newAchievements;   // Zero means no tag
+    private String shelvedReason;  // Only set for a shelved game that has a reason
 
-    public ReviewStatus(GameState gameState, ReviewState reviewState, List<ReviewGap> gaps, int newAchievements){
+    public ReviewStatus(GameState gameState, ReviewState reviewState, List<ReviewGap> gaps, int newAchievements, String shelvedReason){
         this.gameState = gameState;
         this.reviewState = reviewState;
         this.gaps = Collections.unmodifiableList(new ArrayList<>(gaps));
         this.newAchievements = newAchievements;
+        this.shelvedReason = shelvedReason;
     }
 
     public GameState GetGameState(){ return gameState; }
@@ -29,6 +31,9 @@ public class ReviewStatus {
     // A completed game that Steam now says has more achievements than when it was finished. It stays completed
     public boolean HasMoreAchievements(){ return newAchievements > 0; }
     public int GetNewAchievements(){ return newAchievements; }
+
+    // Why the game was shelved, as typed. Null unless it's shelved with a reason
+    public String GetShelvedReason(){ return shelvedReason; }
 
     // Only a finished game with an unfinished review is a warning. Shelved, in progress and not started games are exempt
     public boolean CountsAsIncomplete(){

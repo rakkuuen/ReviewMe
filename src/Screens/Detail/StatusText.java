@@ -15,15 +15,29 @@ public class StatusText {
     private static final String between = " " + (char) 0x00B7 + " ";   // A middle dot, by code point so the source stays plain ASCII
     private static final String pathSeparator = " > ";
 
+    // "Shelved (Too hard right now) - Review incomplete: Gameplay (not counted) - More achievements added +3"
     public static String Describe(ReviewStatus status){
-        StringBuilder text = new StringBuilder(Label(status.GetGameState()) + between + Label(status.GetReviewState()));
+        StringBuilder text = new StringBuilder(Label(status.GetGameState()));
+        String reason = OneLine(status.GetShelvedReason());
+        if(!reason.isEmpty()){
+            text.append(" (").append(reason).append(")");
+        }
+        text.append(between).append(Label(status.GetReviewState()));
         if(!status.GetGaps().isEmpty()){
             text.append(": ").append(Gaps(status.GetGaps()));
             if(!status.CountsAsIncomplete()){
                 text.append(" (not counted)");
             }
         }
+        if(status.HasMoreAchievements()){
+            text.append(between).append("More achievements added +").append(status.GetNewAchievements());
+        }
         return text.toString();
+    }
+
+    // A reason is typed free text, so line breaks and runs of spaces are folded into single spaces
+    private static String OneLine(String text){
+        return text == null ? "" : text.trim().replaceAll("\\s+", " ");
     }
 
     public static String Label(GameState state){

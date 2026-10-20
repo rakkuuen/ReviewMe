@@ -14,7 +14,7 @@ import javax.swing.JPanel;
 import Controller.BackEnd.Reviews.LoadedReview;
 import Controller.BackEnd.Reviews.ReviewLoader;
 import Controller.BackEnd.Reviews.ReviewSaver;
-import Controller.BackEnd.Reviews.ReviewStatusCalculator;
+import Controller.BackEnd.Reviews.ReviewStatusLoader;
 import Controller.BackEnd.Reviews.SaveResult;
 import Model.Widgets.Button;
 import Model.Widgets.BackButton;
@@ -98,7 +98,7 @@ public class GameInfoScreen{
         // Read-only until Edit is pressed
         LeaveEditMode();
 
-        stateLine.Show(ReviewStatusCalculator.Calculate(loadedReview, null));
+        stateLine.Show(ReviewStatusLoader.Load(loadedReview));
         Reflow(windowDimension);
     }
 
@@ -238,7 +238,7 @@ public class GameInfoScreen{
 
     // The state line follows the review, so it's worked out again whenever the stored review changes
     private void RefreshState(){
-        stateLine.Show(ReviewStatusCalculator.Calculate(loadedReview, null));
+        stateLine.Show(ReviewStatusLoader.Load(loadedReview));
         Reflow(windowDimension);
     }
 

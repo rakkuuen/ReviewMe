@@ -20,7 +20,8 @@ public class ReviewStatusCalculator {
         SteamGame data = HasData(steam) ? steam : null;
         List<ReviewGap> gaps = ReviewGapFinder.Find(review, template);
         GameState gameState = GameStateOf(review, data);
-        return new ReviewStatus(gameState, ReviewStateOf(gameState, review, template, gaps), gaps, NewAchievements(review, gameState, data));
+        String shelvedReason = gameState == GameState.SHELVED ? review.GetShelvedReason() : null;
+        return new ReviewStatus(gameState, ReviewStateOf(gameState, review, template, gaps), gaps, NewAchievements(review, gameState, data), shelvedReason);
     }
 
     public static ReviewStatus Calculate(LoadedReview loaded, SteamGame steam){
