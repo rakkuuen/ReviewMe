@@ -11,6 +11,10 @@ public class Series {
         this.notes = notes;
     }
 
+    public Series Copy(){
+        return new Series(id, name, templateId, notes);
+    }
+
     public String GetId(){ return id; }
 
     public String GetName(){ return name; }
