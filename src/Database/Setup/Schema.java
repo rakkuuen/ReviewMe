@@ -149,6 +149,10 @@ public class Schema {
             // The day ReviewMe first saw a game in a sync, set once and never overwritten (epoch seconds, like the other Steam times)
             AddColumnIfMissing(conn, "SteamGame", "firstSeenAt", "INTEGER");
 
+            // When the achievements were last synced, and the game's playtime then. Playtime that has moved since means it was played, so the unlocks may be out of date
+            AddColumnIfMissing(conn, "SteamGame", "achievementsSyncedAt", "INTEGER");
+            AddColumnIfMissing(conn, "SteamGame", "playtimeAtAchievementSync", "INTEGER");
+
             // Columns that no longer exist, so databases made before lose them
             for(String column : retiredColumns){
                 DropColumnIfPresent(conn, "GameReview", column);

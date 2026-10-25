@@ -5,7 +5,8 @@ public class SteamGame {
     private int appId;
     private String name, iconHash;
     private Integer playtimeMinutes, totalAchievements, unlockedAchievements;
-    private Long lastPlayed, syncedAt, firstSeenAt;
+    private Long lastPlayed, syncedAt, firstSeenAt, achievementsSyncedAt;
+    private Integer playtimeAtAchievementSync;
 
     public SteamGame(int appId, String name){
         this.appId = appId;
@@ -38,6 +39,22 @@ public class SteamGame {
     // The first sync that saw this game. Steam doesn't say when a game was added, so this stands in for it
     public Long GetFirstSeenAt(){ return firstSeenAt; }
     public void SetFirstSeenAt(Long firstSeenAt){ this.firstSeenAt = firstSeenAt; }
+
+    // When the achievements were last synced (null if never), and the playtime the game had then
+    public Long GetAchievementsSyncedAt(){ return achievementsSyncedAt; }
+    public void SetAchievementsSyncedAt(Long achievementsSyncedAt){ this.achievementsSyncedAt = achievementsSyncedAt; }
+
+    public Integer GetPlaytimeAtAchievementSync(){ return playtimeAtAchievementSync; }
+    public void SetPlaytimeAtAchievementSync(Integer playtimeAtAchievementSync){ this.playtimeAtAchievementSync = playtimeAtAchievementSync; }
+
+    // A played game whose achievements were never synced, or whose playtime has changed since they were. Never-played games have
+    // nothing to unlock, so they never need it
+    public boolean NeedsAchievementSync(){
+        if(playtimeMinutes == null || playtimeMinutes == 0){
+            return false;
+        }
+        return achievementsSyncedAt == null || !playtimeMinutes.equals(playtimeAtAchievementSync);
+    }
 
     public boolean HasAchievements(){
         return totalAchievements != null && totalAchievements > 0;

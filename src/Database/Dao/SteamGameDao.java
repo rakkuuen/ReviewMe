@@ -13,12 +13,14 @@ import Model.Library.SteamGame;
 public class SteamGameDao {
 
     private static final String saveSQL = """
-        INSERT INTO SteamGame (appId, name, playtimeMinutes, lastPlayed, iconHash, totalAchievements, unlockedAchievements, syncedAt, firstSeenAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO SteamGame (appId, name, playtimeMinutes, lastPlayed, iconHash, totalAchievements, unlockedAchievements, syncedAt, firstSeenAt,
+                               achievementsSyncedAt, playtimeAtAchievementSync)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (appId) DO UPDATE SET
             name = excluded.name, playtimeMinutes = excluded.playtimeMinutes, lastPlayed = excluded.lastPlayed,
             iconHash = excluded.iconHash, totalAchievements = excluded.totalAchievements,
-            unlockedAchievements = excluded.unlockedAchievements, syncedAt = excluded.syncedAt, firstSeenAt = excluded.firstSeenAt;
+            unlockedAchievements = excluded.unlockedAchievements, syncedAt = excluded.syncedAt, firstSeenAt = excluded.firstSeenAt,
+            achievementsSyncedAt = excluded.achievementsSyncedAt, playtimeAtAchievementSync = excluded.playtimeAtAchievementSync;
     """;
 
     // Only what the owned-games call returns. Achievement totals already stored are kept, and so is firstSeenAt: it's set when the
@@ -70,7 +72,26 @@ public class SteamGameDao {
         }
     }
 
-    // Only updates a game that's already stored (false otherwise)
+    // What an achievement sync learned about one game: its counts, when it was synced, and the playtime at that moment. The
+    // owned-games columns are left alone. Only updates a game that's already stored (false otherwise)
+    public static boolean SaveAchievementSync(int appId, Integer totalAchievements, Integer unlockedAchievements, long syncedAt, Integer playtimeAtSync){
+        String updateSQL = "UPDATE SteamGame SET totalAchievements = ?, unlockedAchievements = ?, achievementsSyncedAt = ?, playtimeAtAchievementSync = ? WHERE appId = ?;";
+
+        try (Connection conn = Db.OpenConnection();
+             PreparedStatement pstmt = conn.prepareStatement(updateSQL)) {
+            Db.SetNullableInt(pstmt, 1, totalAchievements);
+            Db.SetNullableInt(pstmt, 2, unlockedAchievements);
+            pstmt.setLong(3, syncedAt);
+            Db.SetNullableInt(pstmt, 4, playtimeAtSync);
+            pstmt.setInt(5, appId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error saving achievement sync for " + appId + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    // Only the counts, for a game that's already stored (false otherwise). Sync time and playtime stay as they were
     public static boolean SaveAchievementTotals(int appId, Integer totalAchievements, Integer unlockedAchievements){
         String updateSQL = "UPDATE SteamGame SET totalAchievements = ?, unlockedAchievements = ? WHERE appId = ?;";
 
@@ -128,6 +149,8 @@ public class SteamGameDao {
         Db.SetNullableInt(pstmt, 7, game.GetUnlockedAchievements());
         Db.SetNullableLong(pstmt, 8, game.GetSyncedAt());
         Db.SetNullableLong(pstmt, 9, game.GetFirstSeenAt());
+        Db.SetNullableLong(pstmt, 10, game.GetAchievementsSyncedAt());
+        Db.SetNullableInt(pstmt, 11, game.GetPlaytimeAtAchievementSync());
     }
 
     private static SteamGame ReadSteamGame(ResultSet rs) throws SQLException {
@@ -139,6 +162,8 @@ public class SteamGameDao {
         game.SetUnlockedAchievements(Db.GetNullableInt(rs, "unlockedAchievements"));
         game.SetSyncedAt(Db.GetNullableLong(rs, "syncedAt"));
         game.SetFirstSeenAt(Db.GetNullableLong(rs, "firstSeenAt"));
+        game.SetAchievementsSyncedAt(Db.GetNullableLong(rs, "achievementsSyncedAt"));
+        game.SetPlaytimeAtAchievementSync(Db.GetNullableInt(rs, "playtimeAtAchievementSync"));
         return game;
     }
 }
