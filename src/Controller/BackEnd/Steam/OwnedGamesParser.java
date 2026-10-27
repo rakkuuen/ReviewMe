@@ -27,13 +27,17 @@ public class OwnedGamesParser {
 
         List<SteamGame> games = new ArrayList<>();
         JSONArray array = response.optJSONArray("games");
-        for(int i = 0; array != null && i < array.length(); i++){
-            JSONObject entry = array.getJSONObject(i);
-            SteamGame game = new SteamGame(entry.getInt("appid"), entry.optString("name", ""));
-            game.SetPlaytimeMinutes(entry.has("playtime_forever") ? entry.getInt("playtime_forever") : null);
-            game.SetLastPlayed(entry.has("rtime_last_played") ? entry.getLong("rtime_last_played") : null);
-            game.SetIconHash(entry.has("img_icon_url") ? entry.getString("img_icon_url") : null);
-            games.add(game);
+        try {
+            for(int i = 0; array != null && i < array.length(); i++){
+                JSONObject entry = array.getJSONObject(i);
+                SteamGame game = new SteamGame(entry.getInt("appid"), entry.optString("name", ""));
+                game.SetPlaytimeMinutes(entry.has("playtime_forever") ? entry.getInt("playtime_forever") : null);
+                game.SetLastPlayed(entry.has("rtime_last_played") ? entry.getLong("rtime_last_played") : null);
+                game.SetIconHash(entry.has("img_icon_url") ? entry.getString("img_icon_url") : null);
+                games.add(game);
+            }
+        } catch (JSONException e) {
+            throw new SteamException("GetOwnedGames had a game entry that couldn't be read");
         }
         return new OwnedGamesResult(games, false);
     }

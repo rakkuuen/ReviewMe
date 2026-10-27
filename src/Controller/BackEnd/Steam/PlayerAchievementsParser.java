@@ -25,11 +25,15 @@ public class PlayerAchievementsParser {
 
         List<PlayerAchievement> achievements = new ArrayList<>();
         JSONArray array = stats.optJSONArray("achievements");
-        for(int i = 0; array != null && i < array.length(); i++){
-            JSONObject entry = array.getJSONObject(i);
-            boolean unlocked = entry.optInt("achieved", 0) == 1;
-            long unlockTime = entry.optLong("unlocktime", 0);
-            achievements.add(new PlayerAchievement(entry.getString("apiname"), unlocked, unlocked && unlockTime > 0 ? unlockTime : null));
+        try {
+            for(int i = 0; array != null && i < array.length(); i++){
+                JSONObject entry = array.getJSONObject(i);
+                boolean unlocked = entry.optInt("achieved", 0) == 1;
+                long unlockTime = entry.optLong("unlocktime", 0);
+                achievements.add(new PlayerAchievement(entry.getString("apiname"), unlocked, unlocked && unlockTime > 0 ? unlockTime : null));
+            }
+        } catch (JSONException e) {
+            return new PlayerAchievements(PlayerAchievements.Outcome.UNAVAILABLE, "an achievement entry couldn't be read", new ArrayList<>());
         }
         return new PlayerAchievements(PlayerAchievements.Outcome.OK, null, achievements);
     }

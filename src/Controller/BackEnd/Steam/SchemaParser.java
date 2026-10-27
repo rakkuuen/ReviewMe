@@ -24,15 +24,19 @@ public class SchemaParser {
             return achievements;
         }
 
-        for(int i = 0; i < array.length(); i++){
-            JSONObject entry = array.getJSONObject(i);
-            Achievement achievement = new Achievement(appId, entry.getString("name"));
-            achievement.SetTitle(entry.optString("displayName", null));
-            achievement.SetDescription(entry.has("description") ? entry.getString("description") : null);
-            achievement.SetHidden(entry.optInt("hidden", 0) == 1);
-            achievement.SetIconUrl(IconUrl(appId, entry.optString("icon", null)));
-            achievement.SetIconGrayUrl(IconUrl(appId, entry.optString("icongray", null)));
-            achievements.add(achievement);
+        try {
+            for(int i = 0; i < array.length(); i++){
+                JSONObject entry = array.getJSONObject(i);
+                Achievement achievement = new Achievement(appId, entry.getString("name"));
+                achievement.SetTitle(entry.optString("displayName", null));
+                achievement.SetDescription(entry.has("description") ? entry.getString("description") : null);
+                achievement.SetHidden(entry.optInt("hidden", 0) == 1);
+                achievement.SetIconUrl(IconUrl(appId, entry.optString("icon", null)));
+                achievement.SetIconGrayUrl(IconUrl(appId, entry.optString("icongray", null)));
+                achievements.add(achievement);
+            }
+        } catch (JSONException e) {
+            return new ArrayList<>();   // one unreadable entry makes the whole list unreliable, so it counts as no list
         }
         return achievements;
     }
