@@ -116,6 +116,21 @@ public class Schema {
                 );
             """);
 
+            // Achievements typed in by hand (itch.io, Switch, or extras on a Steam game). They belong to a review, not to a Steam app, so
+            // non-Steam games work too, and a Steam sync never touches them. unlockedOn is a typed date like 2025-03-02
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS ManualAchievement (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    reviewId INTEGER NOT NULL,
+                    title TEXT NOT NULL,
+                    description TEXT,
+                    unlocked INTEGER NOT NULL DEFAULT 0,
+                    unlockedOn TEXT,
+                    position INTEGER NOT NULL
+                );
+            """);
+            stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_manualachievement_title ON ManualAchievement(reviewId, title COLLATE NOCASE);");
+
             // comment is the note under a rating (Replay-ability); added for DBs made before it existed
             AddColumnIfMissing(conn, "ReviewField", "comment", "TEXT");
 
