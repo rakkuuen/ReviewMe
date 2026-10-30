@@ -41,9 +41,11 @@ public class SteamClient {
         return new SteamClient(LocalConfig.Get("steam.apiKey"), LocalConfig.Get("steam.id"), minGapMillis);
     }
 
+    // skip_unvetted_apps=0 matters: by default Steam leaves out games whose store page hasn't been vetted (small or new ones), so a
+    // library read without it silently misses some owned games
     public SteamResponse GetOwnedGames() throws SteamException {
         return Send("GetOwnedGames", "IPlayerService/GetOwnedGames/v0001/",
-                "key=" + Encode(apiKey) + "&steamid=" + Encode(steamId) + "&include_appinfo=1&include_played_free_games=1&format=json");
+                "key=" + Encode(apiKey) + "&steamid=" + Encode(steamId) + "&include_appinfo=1&include_played_free_games=1&skip_unvetted_apps=0&format=json");
     }
 
     public SteamResponse GetPlayerAchievements(int appId) throws SteamException {
