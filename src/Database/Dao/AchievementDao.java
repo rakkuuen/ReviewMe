@@ -4,7 +4,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import Model.Library.Achievement;
 
@@ -119,6 +121,23 @@ public class AchievementDao {
             System.err.println("Error retrieving achievements: " + e.getMessage());
         }
         return achievements;
+    }
+
+    // For each game with an unlocked achievement that has a time: the most recent unlock time (Steam's epoch seconds)
+    public static Map<Integer, Long> GetLastUnlockTimes(){
+        Map<Integer, Long> latest = new HashMap<>();
+        String query = "SELECT appId, MAX(unlockedAt) AS latest FROM Achievement WHERE unlocked = 1 AND unlockedAt IS NOT NULL GROUP BY appId;";
+
+        try (Connection conn = Db.OpenConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+            while(rs.next()){
+                latest.put(rs.getInt("appId"), rs.getLong("latest"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving last unlock times: " + e.getMessage());
+        }
+        return latest;
     }
 
     public static boolean DeleteAchievements(int appId){
