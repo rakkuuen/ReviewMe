@@ -35,9 +35,9 @@ public class ReviewStatus {
     // Why the game was shelved, as typed. Null unless it's shelved with a reason
     public String GetShelvedReason(){ return shelvedReason; }
 
-    // Only a finished game with an unfinished review is a warning. Shelved, in progress and not started games are exempt
+    // Only a finished game without a complete review (partial or none) is a warning. Every other game state is exempt
     public boolean CountsAsIncomplete(){
-        return gameState == GameState.COMPLETED && reviewState == ReviewState.REVIEW_INCOMPLETE;
+        return gameState == GameState.COMPLETED && reviewState != ReviewState.COMPLETE;
     }
 
     // Every state-based tab this game appears in. Most games are in one; a completed game with an unfinished review and new
@@ -49,12 +49,12 @@ public class ReviewStatus {
             case IN_PROGRESS: tabs.add(GameTab.IN_PROGRESS); break;
             case NOT_STARTED: tabs.add(GameTab.NOT_STARTED); break;
             default:
-                if(reviewState == ReviewState.REVIEW_INCOMPLETE){
+                if(CountsAsIncomplete()){
                     tabs.add(GameTab.INCOMPLETE);
                 }
                 if(HasMoreAchievements()){
                     tabs.add(GameTab.MORE_ACHIEVEMENTS);
-                } else if(reviewState == ReviewState.REVIEWED){
+                } else if(reviewState == ReviewState.COMPLETE){
                     tabs.add(GameTab.COMPLETED);
                 }
         }

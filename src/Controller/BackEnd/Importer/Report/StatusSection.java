@@ -48,9 +48,9 @@ public class StatusSection implements ReportSection {
             if(mapped.GetReview().IsReviewIncompleteFlagged()){
                 flaggedByHand.add(title);
             }
-            if(mapped.GetTagState() == TagState.COMPLETED && status.GetReviewState() == ReviewState.REVIEW_INCOMPLETE){
+            if(mapped.GetTagState() == TagState.COMPLETED && status.GetReviewState() != ReviewState.COMPLETE){
                 completedTagButIncomplete.add(title + " (" + gaps + ")");
-            } else if(mapped.GetTagState() == TagState.REVIEW_INCOMPLETE && status.GetReviewState() == ReviewState.REVIEWED){
+            } else if(mapped.GetTagState() == TagState.REVIEW_INCOMPLETE && status.GetReviewState() == ReviewState.COMPLETE){
                 incompleteTagButReviewed.add(title);
             }
         }

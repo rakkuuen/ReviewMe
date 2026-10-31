@@ -22,12 +22,9 @@ public class StatusText {
         if(!reason.isEmpty()){
             text.append(" (").append(reason).append(")");
         }
-        text.append(between).append(Label(status.GetReviewState()));
-        if(!status.GetGaps().isEmpty()){
+        text.append(between).append(ReviewLabel(status));
+        if(status.GetReviewState() == ReviewState.PARTIAL && !status.GetGaps().isEmpty()){
             text.append(": ").append(Gaps(status.GetGaps()));
-            if(!status.CountsAsIncomplete()){
-                text.append(" (not counted)");
-            }
         }
         if(status.HasMoreAchievements()){
             text.append(between).append("More achievements added +").append(status.GetNewAchievements());
@@ -49,11 +46,12 @@ public class StatusText {
         }
     }
 
-    public static String Label(ReviewState state){
-        switch(state){
-            case REVIEWED: return "Reviewed";
-            case REVIEW_INCOMPLETE: return "Review incomplete";
-            default: return "Not reviewed";
+    // A partial review is a warning only on a completed game, so that's the only place it reads "Review incomplete"
+    public static String ReviewLabel(ReviewStatus status){
+        switch(status.GetReviewState()){
+            case COMPLETE: return "Reviewed";
+            case PARTIAL: return status.CountsAsIncomplete() ? "Review incomplete" : "Partial review";
+            default: return "No review yet";
         }
     }
 

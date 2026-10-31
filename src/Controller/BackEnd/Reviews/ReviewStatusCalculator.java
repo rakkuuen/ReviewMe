@@ -1,5 +1,6 @@
 package Controller.BackEnd.Reviews;
 
+import java.util.Collections;
 import java.util.List;
 
 import Model.Library.SteamGame;
@@ -28,6 +29,12 @@ public class ReviewStatusCalculator {
         return Calculate(loaded.GetReview(), loaded.GetTemplate(), steam);
     }
 
+    // A Steam game with no review. Nothing of the user's is stored for it yet, so its state comes from Steam alone
+    public static ReviewStatus CalculateUnreviewed(SteamGame steam){
+        GameState gameState = GameStateOf(false, false, false, HasData(steam) ? steam : null);
+        return new ReviewStatus(gameState, ReviewState.NONE, Collections.<ReviewGap>emptyList(), 0, null);
+    }
+
     private static boolean HasData(SteamGame steam){
         return steam != null && steam.GetPlaytimeMinutes() != null;
     }
@@ -37,14 +44,18 @@ public class ReviewStatusCalculator {
     // played with none to track, until it's marked completed or shelved). With no Steam data the stored flags are all there is,
     // which is the case for games that aren't on Steam
     private static GameState GameStateOf(GameReview review, SteamGame steam){
-        if(review.IsShelved()){
+        return GameStateOf(review.IsShelved(), review.IsCompleted(), review.IsInProgress(), steam);
+    }
+
+    private static GameState GameStateOf(boolean shelved, boolean completed, boolean inProgressFlag, SteamGame steam){
+        if(shelved){
             return GameState.SHELVED;
         }
-        if(review.IsCompleted()){
+        if(completed){
             return GameState.COMPLETED;
         }
         if(steam == null){
-            return review.IsInProgress() ? GameState.IN_PROGRESS : GameState.NOT_STARTED;
+            return inProgressFlag ? GameState.IN_PROGRESS : GameState.NOT_STARTED;
         }
         if(steam.IsHundredPercent()){
             return GameState.COMPLETED;
@@ -65,13 +76,13 @@ public class ReviewStatusCalculator {
         return steam.GetTotalAchievements() - atCompletion;
     }
 
-    // Any gap means incomplete. A blank review is only "not reviewed" for a game that hasn't been started, where no review is
-    // expected yet. For a game that's been played (a completed game with all-blank sections is the extreme case) it's incomplete
+    // Nothing written is none. Otherwise only a completed game with no gaps is complete: a review written while the game is
+    // still going (or shelved, or not started) can't be finished, however much of it is filled in
     private static ReviewState ReviewStateOf(GameState gameState, GameReview review, Template template, List<ReviewGap> gaps){
-        if(gameState == GameState.NOT_STARTED && !AnythingWritten(review, template)){
-            return ReviewState.NOT_REVIEWED;
+        if(!AnythingWritten(review, template)){
+            return ReviewState.NONE;
         }
-        return gaps.isEmpty() ? ReviewState.REVIEWED : ReviewState.REVIEW_INCOMPLETE;
+        return gameState == GameState.COMPLETED && gaps.isEmpty() ? ReviewState.COMPLETE : ReviewState.PARTIAL;
     }
 
     private static boolean AnythingWritten(GameReview review, Template template){
