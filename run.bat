@@ -6,7 +6,7 @@ set BIN_PATH=bin
 set LIB_PATH=lib
 
 :: Add the sqlite-jdbc.jar file to the classpath
-set CLASSPATH=%LIB_PATH%\sqlite-jdbc-3.45.2.0.jar;%LIB_PATH%\slf4j-api-2.0.16.jar;%LIB_PATH%\slf4j-simple-2.0.16.jar
+set CLASSPATH=%LIB_PATH%\sqlite-jdbc-3.45.2.0.jar;%LIB_PATH%\slf4j-api-2.0.16.jar;%LIB_PATH%\slf4j-simple-2.0.16.jar;%LIB_PATH%\json-20230227.jar
 
 :: Run the program
 java -cp %BIN_PATH%;%CLASSPATH% Controller.Main
