@@ -10,28 +10,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-// Builds Theme instances - either the built-in default look, or parsed from a .properties file
+// Builds Theme instances parsed from a .properties file
 public class ThemeLoader {
+    private static final String defaultThemePath = "Resources/Themes/default.properties";
 
-    // Matches the app's original hardcoded look, so nothing changes until a theme is loaded
+    // The theme the app starts with, read from the default theme file (the look lives in that file, not duplicated in code).
+    // Fails loudly if the file is missing or broken
     public static Theme LoadDefault(){
-        ButtonTheme button = new ButtonTheme(Color.BLUE, Color.RED, Color.GRAY, Color.WHITE, Color.BLACK,
-                10, new Font("Arial", Font.BOLD, 18));
-
-        CellTheme cell = new CellTheme(Color.WHITE, Color.GRAY, Color.BLACK, Color.BLACK,
-                10, new Font("Arial", Font.BOLD, 18));
-
-        FieldTheme field = new FieldTheme(Color.WHITE, new Color(235, 235, 235), Color.BLACK,
-                new Color(30, 120, 220), Color.GRAY,
-                Color.BLACK, new Color(184, 207, 229), Color.BLACK, Color.BLACK,
-                10, new Font("Arial", Font.PLAIN, 13));
-
-        TextStyle title = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 32));
-        TextStyle heading = new TextStyle(Color.BLACK, new Font("Arial", Font.BOLD, 14));
-
-        Color background = new Color(238, 238, 238); // Matches Swing's usual default panel grey
-
-        return new Theme(button, cell, field, title, heading, background);
+        try {
+            return Load(defaultThemePath);
+        } catch (IOException | FontFormatException e) {
+            throw new IllegalStateException("Can't load the default theme " + defaultThemePath + ": " + e.getMessage(), e);
+        }
     }
 
     public static Theme Load(String propertiesFilePath) throws IOException, FontFormatException {
@@ -61,12 +51,18 @@ public class ThemeLoader {
                 ParseColor(props, "field.text"), ParseInt(props, "field.cornerArc"),
                 ParseFont(props, "field.font", embeddedFonts));
 
+        NavTheme nav = new NavTheme(
+                ParseColor(props, "nav.main"), ParseColor(props, "nav.hover"), ParseColor(props, "nav.selected"),
+                ParseColor(props, "nav.text"), ParseColor(props, "nav.selectedText"), ParseColor(props, "nav.disabledText"),
+                ParseColor(props, "nav.border"), ParseColor(props, "nav.countBackground"), ParseColor(props, "nav.countText"),
+                ParseInt(props, "nav.cornerArc"), ParseFont(props, "nav.font", embeddedFonts));
+
         TextStyle title = new TextStyle(ParseColor(props, "title.text"), ParseFont(props, "title.font", embeddedFonts));
         TextStyle heading = new TextStyle(ParseColor(props, "heading.text"), ParseFont(props, "heading.font", embeddedFonts));
 
         Color background = ParseColor(props, "background");
 
-        return new Theme(button, cell, field, title, heading, background);
+        return new Theme(button, cell, field, nav, title, heading, background);
     }
 
     // Loads embedded fonts

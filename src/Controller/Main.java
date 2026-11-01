@@ -6,7 +6,14 @@ import javax.swing.*;
 import Database.Dao.GameReviewDao;
 import Screens.FrontPage;
 import Screens.GameInfoScreen;
+import Screens.MainView.MainViewScreen;
+import Controller.BackEnd.MainView.MainViewData;
+import Controller.BackEnd.MainView.MainViewLoader;
 import Controller.BackEnd.Reviews.LoadedReview;
+import Model.Layout.Layout;
+import Model.Layout.LayoutException;
+import Model.Layout.LayoutLoader;
+import Model.Layout.WindowLayout;
 import Model.Widgets.GameCell;
 import Model.Themes.Theme;
 import Model.Themes.ThemeLoader;
@@ -14,20 +21,26 @@ import Model.Themes.ThemeLoader;
 
 
 class Main extends JFrame{
+    private static final String layoutPath = "Resources/Themes/layout.properties";
+    private static final String startTheme = "Resources/Themes/default.properties";   // Its layout.* lines (if any) are laid over the layout file
+    private static final String darkThemePath = "Resources/Themes/dark.properties";
+
     App canvas;
     Dimension windowDimension;
     Point mousePos;
 
     // This will track my screens to switch through
     enum Screen{
-        FRONT_PAGE,
+        MAIN_VIEW,
+        FRONT_PAGE,   // TEMP: the old flat list of every review, reached from the header's Library button until the Library screen is built
         GAME_INFO_SCREEN
     }
 
     class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ComponentListener, KeyListener {
+        private MainViewScreen myMainView;
         private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;
-        private Screen currentScreen = Screen.FRONT_PAGE;
+        private Screen currentScreen = Screen.MAIN_VIEW;
 
         // What the current press landed on, so release only acts if it's still on the same target
         private GameCell pressedCell;
@@ -39,8 +52,9 @@ class Main extends JFrame{
         private Theme defaultTheme = Theme.Current;
         private Theme darkTheme;
 
-        public App() {
-            setPreferredSize(new Dimension(1024, 720));
+        public App(Layout layout, MainViewData data) {
+            WindowLayout window = layout.GetWindow();
+            setPreferredSize(new Dimension(window.GetStartWidth(), window.GetStartHeight()));
             setLayout(null); // Absolute positioning, to match GameCell/Button's coordinate style
             setFocusable(true); // So key events (the theme-toggle test hook) can actually reach this panel
             this.addMouseListener(this);
@@ -49,6 +63,8 @@ class Main extends JFrame{
             this.addComponentListener(this);
             this.addKeyListener(this);
 
+            myMainView = new MainViewScreen(data, layout, () -> currentScreen = Screen.FRONT_PAGE);
+
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
             // Main's constructor once the real windowDimension is known after pack()) corrects
@@ -56,32 +72,31 @@ class Main extends JFrame{
             myFrontPage = new FrontPage(getPreferredSize());
 
             try {
-                darkTheme = ThemeLoader.Load("Resources/Themes/dark.properties");
+                darkTheme = ThemeLoader.Load(darkThemePath);
             } catch (java.io.IOException | java.awt.FontFormatException e) {
                 System.err.println("Could not load dark theme for test toggle: " + e.getMessage());
             }
-
-            // fallout = new GameCell("fallout", 500, 300, "Resources/Images/fallout-4-icon-6.png");
         }
 
         // Re-lays out every screen against the current windowDimension - called once after
-        // the window is packed to its real size, and again on every resize
+        // the window is packed to its real size, and again on every resize. The main view lays itself out each time it paints
         public void ReflowAll(){
             myFrontPage.Reflow(windowDimension);
             if(myGameInfoScreen != null){
                 myGameInfoScreen.Reflow(windowDimension);
             }
         }
-        
+
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
             g.setColor(Theme.Current.GetBackground());
             g.fillRect(0, 0, getWidth(), getHeight());
-            // This paints front page for now but will change when I have a screen manager
-            //myFrontPage.paint(g, mousePos);
 
             switch(currentScreen){
+                case MAIN_VIEW:
+                    myMainView.Paint(g, mousePos, getSize());
+                    break;
                 case FRONT_PAGE:
                     myFrontPage.paint(g, mousePos);
                     break;
@@ -109,6 +124,9 @@ class Main extends JFrame{
             // Just note what the press landed on; the actual action only fires on release,
             // and only if the release is still on the same target (see mouseReleased)
             switch (currentScreen) {
+                case MAIN_VIEW:
+                    myMainView.Press(mousePos);
+                    break;
                 case FRONT_PAGE:
                     pressedCell = myFrontPage.GetCellAt(mousePos);
                     break;
@@ -126,6 +144,9 @@ class Main extends JFrame{
         @Override
         public void mouseReleased(MouseEvent e) {
             switch (currentScreen) {
+                case MAIN_VIEW:
+                    myMainView.Release(mousePos);
+                    break;
                 case FRONT_PAGE:
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
                         LoadedReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
@@ -158,17 +179,13 @@ class Main extends JFrame{
             pressedOnCancelButton = false;
             repaint(); // Reflect any state change immediately, don't wait for the next mouseMoved
         }
-    
+
         @Override
         public void mouseEntered(MouseEvent e) {
-            System.out.println("You Entered!!!!");
-
         }
-    
+
         @Override
         public void mouseExited(MouseEvent e) {
-            System.out.println("You Exited!!!!");
-
         }
 
         @Override
@@ -215,7 +232,7 @@ class Main extends JFrame{
         // TEMP: proves live theme switching actually works end to end - press T to toggle.
         // Custom-painted stuff (Button/GameCell/field backgrounds) picks up Theme.Current
         // automatically on the next repaint; ReapplyTheme() handles the real Swing text
-        // properties that don't work that way.
+        // properties that don't work that way. Escape goes from the old list back to the main view
         @Override
         public void keyPressed(KeyEvent e) {
             if(e.getKeyCode() == KeyEvent.VK_T && darkTheme != null){
@@ -223,6 +240,9 @@ class Main extends JFrame{
                 if(myGameInfoScreen != null){
                     myGameInfoScreen.ReapplyTheme();
                 }
+                repaint();
+            } else if(e.getKeyCode() == KeyEvent.VK_ESCAPE && currentScreen == Screen.FRONT_PAGE){
+                currentScreen = Screen.MAIN_VIEW;
                 repaint();
             }
         }
@@ -239,17 +259,28 @@ class Main extends JFrame{
         // Setup Dao (future have a class to do all setup features simultaniously)
         GameReviewDao.Setup();
 
+        // The layout settings have to be right before anything is drawn; say exactly what is wrong if they are not
+        Layout layout;
+        try {
+            layout = LayoutLoader.Load(layoutPath, startTheme);
+        } catch (LayoutException e) {
+            JOptionPane.showMessageDialog(null, String.join("\n", e.GetProblems()), "ReviewMe: layout settings", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        MainViewData data = MainViewLoader.Load(layout.GetOverview().GetRowsPerSection(), layout.GetOverview().GetTopPickSlots());
+
         // Swing GUI work (creation, events, painting) all belongs on the EDT
-        SwingUtilities.invokeLater(() -> new Main());
+        SwingUtilities.invokeLater(() -> new Main(layout, data));
     }
 
-    private Main() {
+    private Main(Layout layout, MainViewData data) {
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mousePos = new Point(-1, -1); // Off-screen default so contains(mousePos) doesn't NPE before the first mouseMoved
-        canvas = new App();
+        canvas = new App(layout, data);
         this.setContentPane(canvas);
         this.pack();
-        this.setMinimumSize(this.getSize()); // Window can grow freely but not shrink below the initial 1024x720 layout
+        this.setMinimumSize(new Dimension(layout.GetWindow().GetMinWidth(), layout.GetWindow().GetMinHeight()));
 
         this.setVisible(true);
         // Get dimension of window to pass through and use

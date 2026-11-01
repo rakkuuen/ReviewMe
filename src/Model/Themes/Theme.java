@@ -15,14 +15,16 @@ public class Theme {
     private ButtonTheme button;
     private CellTheme cell;
     private FieldTheme field;
+    private NavTheme nav;
     private TextStyle title;
     private TextStyle heading;
     private Color background;
 
-    public Theme(ButtonTheme button, CellTheme cell, FieldTheme field, TextStyle title, TextStyle heading, Color background){
+    public Theme(ButtonTheme button, CellTheme cell, FieldTheme field, NavTheme nav, TextStyle title, TextStyle heading, Color background){
         this.button = button;
         this.cell = cell;
         this.field = field;
+        this.nav = nav;
         this.title = title;
         this.heading = heading;
         this.background = background;
@@ -31,6 +33,7 @@ public class Theme {
     public ButtonTheme GetButton(){ return button; }
     public CellTheme GetCell(){ return cell; }
     public FieldTheme GetField(){ return field; }
+    public NavTheme GetNav(){ return nav; }
     public TextStyle GetTitle(){ return title; }
     public TextStyle GetHeading(){ return heading; }
 
@@ -43,6 +46,7 @@ public class Theme {
         colours.addAll(button.GetAllColours());
         colours.addAll(cell.GetAllColours());
         colours.addAll(field.GetAllColours());
+        colours.addAll(nav.GetAllColours());
         colours.addAll(title.GetAllColours());
         colours.addAll(heading.GetAllColours());
         colours.add(background);
@@ -50,6 +54,6 @@ public class Theme {
     }
 
     public List<Font> GetAllFonts(){
-        return Arrays.asList(button.GetFont(), cell.GetFont(), field.GetFont(), title.GetFont(), heading.GetFont());
+        return Arrays.asList(button.GetFont(), cell.GetFont(), field.GetFont(), nav.GetFont(), title.GetFont(), heading.GetFont());
     }
 }
