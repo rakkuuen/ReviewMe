@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import Model.Library.SteamGame;
+import Model.Library.SteamGameStatus;
 import Model.Reviews.FieldValue;
 import Model.Reviews.GameReview;
 import Model.Reviews.GameState;
@@ -29,10 +30,18 @@ public class ReviewStatusCalculator {
         return Calculate(loaded.GetReview(), loaded.GetTemplate(), steam);
     }
 
-    // A Steam game with no review. Nothing of the user's is stored for it yet, so its state comes from Steam alone
+    // A Steam game with no review and nothing said about it: its state comes from Steam alone
     public static ReviewStatus CalculateUnreviewed(SteamGame steam){
-        GameState gameState = GameStateOf(false, false, false, HasData(steam) ? steam : null);
-        return new ReviewStatus(gameState, ReviewState.NONE, Collections.<ReviewGap>emptyList(), 0, null);
+        return CalculateUnreviewed(steam, null);
+    }
+
+    // A Steam game with no review. flags is what the user has said about it (shelved, completed by hand), or null for nothing
+    public static ReviewStatus CalculateUnreviewed(SteamGame steam, SteamGameStatus flags){
+        boolean shelved = flags != null && flags.IsShelved();
+        boolean completed = flags != null && flags.IsCompleted();
+        GameState gameState = GameStateOf(shelved, completed, false, HasData(steam) ? steam : null);
+        String shelvedReason = gameState == GameState.SHELVED ? flags.GetShelvedReason() : null;
+        return new ReviewStatus(gameState, ReviewState.NONE, Collections.<ReviewGap>emptyList(), 0, shelvedReason);
     }
 
     private static boolean HasData(SteamGame steam){

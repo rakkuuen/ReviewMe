@@ -7,6 +7,7 @@ import Controller.BackEnd.Reviews.LoadedReview;
 import Controller.BackEnd.Reviews.ReviewLoader;
 import Database.Dao.GameReviewDao;
 import Database.Dao.SteamGameDao;
+import Database.Dao.SteamGameStatusDao;
 import Model.Library.LibraryGame;
 import Model.Reviews.GameReview;
 
@@ -21,6 +22,6 @@ public class LibraryGameLoader {
                 reviews.add(loaded);
             }
         }
-        return LibraryGameBuilder.Build(reviews, SteamGameDao.GetAllSteamGames());
+        return LibraryGameBuilder.Build(reviews, SteamGameDao.GetAllSteamGames(), SteamGameStatusDao.GetAll());
     }
 }

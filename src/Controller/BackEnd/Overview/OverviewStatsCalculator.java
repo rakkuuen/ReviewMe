@@ -63,9 +63,9 @@ public class OverviewStatsCalculator {
         return new OverviewStats(games.size(), reviewed, completed, completedByYear, undated, unlocked, minutes, average, rated, newAchievements, lastSynced);
     }
 
-    // The year of the review's completed-on date (yyyy-MM-dd). Null when there is no review or no usable date
+    // The year of the game's completed-on date (yyyy-MM-dd). Null when it has none or it isn't usable
     private static Integer CompletedYear(LibraryGame game){
-        String date = game.HasReview() ? game.GetReview().GetCompletedOn() : null;
+        String date = game.GetCompletedOn();
         if(date == null || !isoDate.matcher(date).matches()){
             return null;
         }

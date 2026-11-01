@@ -131,6 +131,19 @@ public class Schema {
             """);
             stmt.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_manualachievement_title ON ManualAchievement(reviewId, title COLLATE NOCASE);");
 
+            // What the user says about a Steam game with no review: shelved (with a reason) or completed by hand. A row only exists while
+            // something is set, and it moves onto the review when one is written. Its own table so a Steam sync never touches it
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS SteamGameStatus (
+                    appId INTEGER PRIMARY KEY,
+                    shelved INTEGER NOT NULL DEFAULT 0,
+                    shelvedReason TEXT,
+                    completed INTEGER NOT NULL DEFAULT 0,
+                    completedOn TEXT,
+                    completedOnSource TEXT
+                );
+            """);
+
             // comment is the note under a rating (Replay-ability); added for DBs made before it existed
             AddColumnIfMissing(conn, "ReviewField", "comment", "TEXT");
 
