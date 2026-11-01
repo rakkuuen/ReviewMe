@@ -4,7 +4,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import Model.Reviews.ManualAchievement;
 
@@ -54,6 +56,22 @@ public class ManualAchievementDao {
             System.err.println("Error retrieving manual achievements: " + e.getMessage());
         }
         return found;
+    }
+
+    // How many manual achievements are unlocked in each review that has any (reviews with none are left out)
+    public static Map<Integer, Integer> GetUnlockedCounts(){
+        Map<Integer, Integer> counts = new HashMap<>();
+        String query = "SELECT reviewId, COUNT(*) AS unlockedCount FROM ManualAchievement WHERE unlocked = 1 GROUP BY reviewId;";
+        try (Connection conn = Db.OpenConnection();
+             PreparedStatement pstmt = conn.prepareStatement(query);
+             ResultSet rs = pstmt.executeQuery()) {
+            while(rs.next()){
+                counts.put(rs.getInt("reviewId"), rs.getInt("unlockedCount"));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error counting unlocked manual achievements: " + e.getMessage());
+        }
+        return counts;
     }
 
     // Goes to the end of the review's list. Returns the new id, or null if it failed (a title already used in that review fails)
