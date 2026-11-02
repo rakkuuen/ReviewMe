@@ -81,7 +81,8 @@ public class ListBuilder {
         return new ListResult(rows, matching.size(), inTab.size(), reviewChips, reasonChips);
     }
 
-    private static OverviewSectionKind KindOf(MainTab tab, StateSelection selection){
+    // The Overview list a tab's rows are worded like
+    public static OverviewSectionKind KindOf(MainTab tab, StateSelection selection){
         switch(tab){
             case COMPLETED: return OverviewSectionKind.COMPLETED;
             case INCOMPLETE: return OverviewSectionKind.INCOMPLETE;

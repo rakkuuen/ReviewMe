@@ -23,6 +23,13 @@ public class ListRules {
         }
     }
 
+    // The order after the current one in the tab's list, going round. The current one again if the tab has no choice
+    public static ListSort NextSort(MainTab tab, ListSort current){
+        List<ListSort> choices = SortsFor(tab);
+        int at = choices.indexOf(current);
+        return choices.isEmpty() ? current : choices.get((at + 1) % choices.size());
+    }
+
     // The order a tab opens in
     public static ListSort DefaultSort(MainTab tab){
         List<ListSort> choices = SortsFor(tab);
