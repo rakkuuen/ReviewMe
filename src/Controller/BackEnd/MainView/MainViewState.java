@@ -15,6 +15,12 @@ public class MainViewState {
         selection = next;
     }
 
+    // Goes to a state and a tab together (a tab the state doesn't have opens the state's first one)
+    public void Open(ViewTarget target){
+        SelectState(target.GetSelection());
+        SelectTab(target.GetTab());
+    }
+
     // A tab the current state doesn't have is ignored
     public void SelectTab(MainTab next){
         if(ViewRules.TabsFor(selection).contains(next)){

@@ -35,7 +35,8 @@ public enum LayoutKey {
     OVERVIEW_CHART_YEARS("overview.chartYears", 1, 12),             // Bars in the completed-per-year chart (a count)
     OVERVIEW_CHART_BAR_WIDTH("overview.chartBarWidth", 1),
     OVERVIEW_CHART_BAR_GAP("overview.chartBarGap", 0),
-    OVERVIEW_CHART_HEIGHT("overview.chartHeight", 1);
+    OVERVIEW_CHART_HEIGHT("overview.chartHeight", 1),
+    OVERVIEW_SERIES_INDENT("overview.seriesIndent", 0);          // How far a series' games sit in under its heading
 
     private final String propertyName;
     private final int min;

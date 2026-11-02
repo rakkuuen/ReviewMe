@@ -3,7 +3,7 @@ package Model.Layout;
 // The Overview: how many rows each short list shows, how many Top picks slots there are, and the sizes of its pieces
 public class OverviewLayout {
     private final int rowsPerSection, topPickSlots, statCardHeight, statCardMinWidth, cardPadding, sectionGap, columnGap, sectionHeaderHeight;
-    private final int sidePanelWidth, topPickRowHeight, chartYears, chartBarWidth, chartBarGap, chartHeight;
+    private final int sidePanelWidth, topPickRowHeight, chartYears, chartBarWidth, chartBarGap, chartHeight, seriesIndent;
 
     public OverviewLayout(LayoutValues values){
         rowsPerSection = values.Get(LayoutKey.OVERVIEW_ROWS_PER_SECTION);
@@ -20,6 +20,7 @@ public class OverviewLayout {
         chartBarWidth = values.Get(LayoutKey.OVERVIEW_CHART_BAR_WIDTH);
         chartBarGap = values.Get(LayoutKey.OVERVIEW_CHART_BAR_GAP);
         chartHeight = values.Get(LayoutKey.OVERVIEW_CHART_HEIGHT);
+        seriesIndent = values.Get(LayoutKey.OVERVIEW_SERIES_INDENT);
     }
 
     public int GetRowsPerSection(){ return rowsPerSection; }
@@ -36,4 +37,5 @@ public class OverviewLayout {
     public int GetChartBarWidth(){ return chartBarWidth; }
     public int GetChartBarGap(){ return chartBarGap; }
     public int GetChartHeight(){ return chartHeight; }
+    public int GetSeriesIndent(){ return seriesIndent; }
 }

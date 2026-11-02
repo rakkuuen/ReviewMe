@@ -11,7 +11,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
+import Controller.BackEnd.MainView.ViewTarget;
 import Controller.BackEnd.MainView.HeaderText;
 import Controller.BackEnd.MainView.MainViewData;
 import Controller.BackEnd.MainView.MainViewLabels;
@@ -24,6 +26,7 @@ import Controller.BackEnd.Overview.OverviewStats;
 import Model.Layout.Layout;
 import Model.Layout.LayoutMath;
 import Model.Layout.ShellLayout;
+import Model.Library.LibraryGame;
 import Model.Themes.TextStyle;
 import Model.Themes.Theme;
 
@@ -50,11 +53,22 @@ public class MainViewScreen {
 
     // onLibrary is what the header's Library button does
     public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary){
+        this(data, layout, onLibrary, game -> { });
+    }
+
+    // onOpenGame is what clicking a game's row does
+    public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary, Consumer<LibraryGame> onOpenGame){
         this.data = data;
         this.layout = layout;
         this.onLibrary = onLibrary;
         this.strip = new NavStrip(layout.GetShell());
-        this.overviewBody = new OverviewBody(data.GetOverview(), layout);
+        this.overviewBody = new OverviewBody(data.GetOverview(), layout, this::OpenTarget, onOpenGame);
+        Refresh();
+    }
+
+    // Goes to a state and tab ("View all" on the Overview)
+    private void OpenTarget(ViewTarget target){
+        state.Open(target);
         Refresh();
     }
 

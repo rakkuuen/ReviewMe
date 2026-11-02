@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import Controller.BackEnd.Reviews.ReviewLabels;
 import Model.Reviews.GameState;
 import Model.Reviews.ReviewGap;
 import Model.Reviews.ReviewState;
@@ -46,13 +47,8 @@ public class StatusText {
         }
     }
 
-    // A partial review is a warning only on a completed game, so that's the only place it reads "Review incomplete"
     public static String ReviewLabel(ReviewStatus status){
-        switch(status.GetReviewState()){
-            case COMPLETE: return "Reviewed";
-            case PARTIAL: return status.CountsAsIncomplete() ? "Review incomplete" : "Partial review";
-            default: return "No review yet";
-        }
+        return ReviewLabels.Label(status);
     }
 
     // A missing section by its heading, the empty sub-headings of one field together, and the manual flag as it is:
