@@ -24,7 +24,7 @@ import Model.Reviews.Template;
 import Model.Reviews.TemplateField;
 
 // Works out a game's page from its review, template, status, Steam record and series. The sections come from the template (fields it
-// doesn't have stay saved but are not shown). No drawing and no database in here
+// doesn't have stay saved but are not shown, and neither is an optional section the review hasn't ticked). No drawing and no database in here
 public class GameDetailBuilder {
     private static final String dot = " " + (char) 0x00B7 + " ";   // A middle dot, by code point so the source stays plain ASCII
 
@@ -90,7 +90,11 @@ public class GameDetailBuilder {
     private static List<DetailSection> Sections(GameReview review, Template template, ReviewStatus status){
         List<DetailSection> sections = new ArrayList<>();
         for(TemplateField field : template.GetFields()){
-            sections.add(Section(field, review.GetFieldValue(field.GetFieldKey()), status));
+            FieldValue value = review.GetFieldValue(field.GetFieldKey());
+            if(value == null && !field.IsRequired()){
+                continue;   // An optional section that isn't ticked for this review is hidden
+            }
+            sections.add(Section(field, value, status));
         }
         return sections;
     }

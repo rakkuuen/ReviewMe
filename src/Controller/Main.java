@@ -63,6 +63,7 @@ class Main extends JFrame{
         private boolean pressedOnEditButton;
         private boolean pressedOnSaveButton;
         private boolean pressedOnCancelButton;
+        private boolean pressedOnSectionsButton;
 
         // TEMP: proves live theme switching actually works end to end - press T to toggle
         private Theme defaultTheme = Theme.Current;
@@ -352,6 +353,7 @@ class Main extends JFrame{
                     pressedOnEditButton = myGameInfoScreen.WasEditClicked(mousePos);
                     pressedOnSaveButton = myGameInfoScreen.WasSaveClicked(mousePos);
                     pressedOnCancelButton = myGameInfoScreen.WasCancelClicked(mousePos);
+                    pressedOnSectionsButton = myGameInfoScreen.WasSectionsClicked(mousePos);
                     break;
                 default:
                     break;
@@ -393,6 +395,8 @@ class Main extends JFrame{
                         myGameInfoScreen.SaveChanges();
                     } else if(pressedOnCancelButton && myGameInfoScreen.WasCancelClicked(mousePos)){
                         myGameInfoScreen.CancelChanges();
+                    } else if(pressedOnSectionsButton && myGameInfoScreen.WasSectionsClicked(mousePos)){
+                        myGameInfoScreen.ChooseSections();
                     }
                     break;
                 default:
@@ -402,6 +406,7 @@ class Main extends JFrame{
             pressedOnEditButton = false;
             pressedOnSaveButton = false;
             pressedOnCancelButton = false;
+            pressedOnSectionsButton = false;
             repaint(); // Reflect any state change immediately, don't wait for the next mouseMoved
         }
 

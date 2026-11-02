@@ -7,15 +7,23 @@ import java.awt.Point;
 import java.awt.FontMetrics;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import Controller.BackEnd.Reviews.LoadedReview;
+import Controller.BackEnd.Reviews.OptionalSections;
 import Controller.BackEnd.Reviews.ReviewLoader;
 import Controller.BackEnd.Reviews.ReviewSaver;
 import Controller.BackEnd.Reviews.ReviewStatusLoader;
 import Controller.BackEnd.Reviews.SaveResult;
+import Model.Reviews.TemplateField;
 import Model.Widgets.Button;
 import Model.Widgets.BackButton;
 import Model.Widgets.AutoGrowFieldList;
@@ -31,6 +39,8 @@ public class GameInfoScreen{
     private Button editButton;
     private Button saveButton;
     private Button cancelButton;
+    private Button sectionsButton;
+    private JPanel parentPanel;   // Where the field list was added, so it can be swapped when sections are ticked
     private boolean isEditing = false;
     private boolean savedWhileOpen = false;
 
@@ -55,7 +65,7 @@ public class GameInfoScreen{
     // scrollX is fixed; scrollY grows if the title wraps to more than one line, so it
     // never collides with the field list; width/height track window size via Reflow()
     private static final int scrollX = 40;
-    private static final int minScrollY = 102; // Clears the three stacked buttons on the right
+    private static final int minScrollY = 130; // Clears the four stacked buttons on the right
     private static final int rightMargin = 20;
     private static final int statusLineGap = 10; // Status line sits this far above the field list
     private static final int statusLineSpace = 28; // Room left under the state line for that status line
@@ -87,6 +97,7 @@ public class GameInfoScreen{
         editButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20, "Edit"); // x corrected by Reflow below
         saveButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20 + rightButtonHeight + rightButtonGap, "Save"); // x corrected by Reflow below
         cancelButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20 + 2 * (rightButtonHeight + rightButtonGap), "Cancel"); // x corrected by Reflow below
+        sectionsButton = new Button(rightButtonWidth, rightButtonHeight, 0, 20 + 3 * (rightButtonHeight + rightButtonGap), "Sections"); // x corrected by Reflow below
 
         fieldList = new AutoGrowFieldList(fieldX, fieldWidth, headingHeight, minFieldHeight, rowGap);
 
@@ -108,6 +119,7 @@ public class GameInfoScreen{
         saveButton.x = windowDimension.width - rightButtonWidth - rightMargin;
         editButton.x = saveButton.x; // Same column, stacked above Save
         cancelButton.x = saveButton.x;
+        sectionsButton.x = saveButton.x;
 
         FontMetrics titleMetrics = TextWrap.MetricsFor(Theme.Current.GetTitle().GetFont());
 
@@ -140,6 +152,7 @@ public class GameInfoScreen{
         editButton.paint(g, mousePos);
         saveButton.paint(g, mousePos);
         cancelButton.paint(g, mousePos);
+        sectionsButton.paint(g, mousePos);
 
         // Draw Title text, one or more centered lines
         g.setColor(Theme.Current.GetTitle().GetColour());
@@ -192,6 +205,10 @@ public class GameInfoScreen{
         return cancelButton.contains(mousePos);
     }
 
+    public boolean WasSectionsClicked(Point mousePos){
+        return sectionsButton.contains(mousePos);
+    }
+
     public void EnterEditMode(){
         isEditing = true;
         statusMessage = null;
@@ -199,6 +216,7 @@ public class GameInfoScreen{
         editButton.SetEnabled(false);
         saveButton.SetEnabled(true);
         cancelButton.SetEnabled(true);
+        sectionsButton.SetEnabled(true);
     }
 
     // Reads the boxes back into the review and saves it. If the save is refused the boxes stay as they are, in edit mode
@@ -237,9 +255,7 @@ public class GameInfoScreen{
         LoadedReview stored = ReviewLoader.Load(loadedReview.GetReview().GetTitle());
         if(stored != null){
             loadedReview = stored;
-            for(SectionBinding section : sections){
-                section.ShowFrom(stored.GetReview());
-            }
+            RebuildSections();   // The ticked sections may have changed too, so the boxes are built again from what is stored
         }
         LeaveEditMode();
         statusMessage = null;
@@ -260,6 +276,66 @@ public class GameInfoScreen{
         editButton.SetEnabled(true);
         saveButton.SetEnabled(false);
         cancelButton.SetEnabled(false);
+        sectionsButton.SetEnabled(false);
+    }
+
+    // Lets the optional sections be ticked or unticked. What is typed is kept. Unticking a section that has writing in it asks first,
+    // since its row (and the writing) is removed. The boxes are built again to match
+    public void ChooseSections(){
+        if(!isEditing){
+            return;
+        }
+        for(SectionBinding section : sections){
+            section.ReadInto(loadedReview.GetReview());
+        }
+        List<TemplateField> optional = OptionalSections.OptionalFields(loadedReview.GetTemplate());
+        if(optional.isEmpty()){
+            ShowStatus("This template has no optional sections", false);
+            return;
+        }
+        JPanel list = new JPanel();
+        list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
+        List<JCheckBox> boxes = new ArrayList<>();
+        for(TemplateField field : optional){
+            JCheckBox box = new JCheckBox(field.GetHeading(), OptionalSections.IsTicked(loadedReview.GetReview(), field));
+            boxes.add(box);
+            list.add(box);
+        }
+        Object[] message = {"Ticked sections are shown and count towards a complete review. Unticked ones are hidden.", new JScrollPane(list)};
+        if(JOptionPane.showConfirmDialog(null, message, "Optional sections", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION){
+            return;
+        }
+        Set<String> ticked = new HashSet<>();
+        for(int i = 0; i < optional.size(); i++){
+            if(boxes.get(i).isSelected()){
+                ticked.add(optional.get(i).GetFieldKey());
+            }
+        }
+        List<String> losing = OptionalSections.WouldDelete(loadedReview.GetReview(), loadedReview.GetTemplate(), ticked);
+        if(!losing.isEmpty() && JOptionPane.showConfirmDialog(null, "Unticking deletes what you wrote in: " + String.join(", ", losing) + ".\nUntick anyway?", "Optional sections",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE) != JOptionPane.OK_OPTION){
+            return;
+        }
+        OptionalSections.Apply(loadedReview.GetReview(), loadedReview.GetTemplate(), ticked);
+        RebuildSections();
+    }
+
+    // Builds the boxes again from the review as it is in memory (used when sections are ticked, and after a cancel)
+    private void RebuildSections(){
+        if(parentPanel != null){
+            parentPanel.remove(fieldListPanel);
+        }
+        fieldList = new AutoGrowFieldList(fieldX, fieldWidth, headingHeight, minFieldHeight, rowGap);
+        sections = SectionBuilder.Build(loadedReview, fieldList);
+        fieldList.Relayout();
+        fieldListPanel = fieldList.GetComponent();
+        fieldList.SetFieldsEditable(isEditing);
+        if(parentPanel != null){
+            parentPanel.add(fieldListPanel);
+            parentPanel.revalidate();
+            parentPanel.repaint();
+        }
+        Reflow(windowDimension);
     }
 
     private void ShowStatus(String message, boolean isError){
@@ -268,6 +344,7 @@ public class GameInfoScreen{
     }
 
     public void AddComponentsTo(JPanel panel){
+        parentPanel = panel;
         panel.add(fieldListPanel);
         panel.revalidate();
         panel.repaint();
@@ -275,6 +352,7 @@ public class GameInfoScreen{
     }
 
     public void RemoveComponentsFrom(JPanel panel){
+        parentPanel = null;
         panel.remove(fieldListPanel);
         panel.revalidate();
         panel.repaint();
