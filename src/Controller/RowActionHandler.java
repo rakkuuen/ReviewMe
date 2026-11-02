@@ -3,6 +3,7 @@ package Controller;
 import java.awt.Component;
 import java.awt.Point;
 import java.util.List;
+import java.util.function.Consumer;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -17,14 +18,16 @@ import Model.Library.LibraryGame;
 class RowActionHandler {
     private static final String shelveTitle = "Shelve";
     private static final String completeTitle = "Mark completed";
-    private static final String writeReviewNote = "Writing a review from the list comes with the new review screen.";
 
     private final Component parent;
     private final Runnable onChanged;
+    private final Consumer<String> openGame;
 
-    RowActionHandler(Component parent, Runnable onChanged){
+    // openGame opens a game's page by its title (used once a review has been written for it)
+    RowActionHandler(Component parent, Runnable onChanged, Consumer<String> openGame){
         this.parent = parent;
         this.onChanged = onChanged;
+        this.openGame = openGame;
     }
 
     void Run(RowAction action, LibraryGame game){
@@ -34,7 +37,10 @@ class RowActionHandler {
         int appId = game.GetSteam().GetAppId();
         switch(action){
             case WRITE_REVIEW:
-                JOptionPane.showMessageDialog(parent, writeReviewNote, action.GetLabel(), JOptionPane.INFORMATION_MESSAGE);
+                NewReviewDialog.Show(parent, game, title -> {
+                    onChanged.run();
+                    openGame.accept(title);
+                });
                 break;
             case SHELVE:
                 AskForReason(appId, game, "Why are you shelving " + game.GetTitle() + "? (optional)", "");

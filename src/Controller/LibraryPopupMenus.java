@@ -21,11 +21,18 @@ class LibraryPopupMenus implements LibraryPopups {
     private final Component parent;
     private final Supplier<Point> mouse;
     private final Runnable afterwards;
+    private final Runnable addGame;
 
-    LibraryPopupMenus(Component parent, Supplier<Point> mouse, Runnable afterwards){
+    LibraryPopupMenus(Component parent, Supplier<Point> mouse, Runnable afterwards, Runnable addGame){
         this.parent = parent;
         this.mouse = mouse;
         this.afterwards = afterwards;
+        this.addGame = addGame;
+    }
+
+    @Override
+    public void ShowAddGame(){
+        addGame.run();
     }
 
     @Override

@@ -51,6 +51,7 @@ public class LibraryScreen {
     public static final String clearAllKey = "library:clearall";
     public static final String clearFiltersKey = "library:clearfilters";
     public static final String backWords = "Back";
+    public static final String addGameKey = "library:addgame";
 
     public static String StateKey(GameState state){ return "library:state:" + state.name(); }
     public static String ReviewKey(ReviewState review){ return "library:review:" + review.name(); }
@@ -196,7 +197,12 @@ public class LibraryScreen {
 
         List<NavEntry> back = new ArrayList<>();
         back.add(new NavEntry(backKey, backWords, null, false, true, onBack));
-        y += strip.Paint(g, 0, y, shell.GetStateRowHeight(), width, null, back, mouse, hits) + shell.GetGap();
+        strip.Paint(g, 0, y, shell.GetStateRowHeight(), width, null, back, mouse, hits);
+        List<NavEntry> add = new ArrayList<>();
+        add.add(new NavEntry(addGameKey, LibraryWords.addGame, null, false, true, popups::ShowAddGame));
+        int addWidth = strip.Width(g, null, add);
+        strip.Paint(g, Math.max(strip.Width(g, null, back) + shell.GetItemGap(), width - addWidth), y, shell.GetStateRowHeight(), width, null, add, mouse, hits);
+        y += shell.GetStateRowHeight() + shell.GetGap();
         y += PaintTitle(g, y, width) + shell.GetGap();
         y += PaintSearchLine(g, y, width, mouse) + shell.GetGap();
         y += PaintChips(g, y, width, LibraryWords.stateCaption, StateEntries(shown), mouse);

@@ -22,6 +22,7 @@ public class LibraryWords {
     public static final String lastYear = "Last year";
     public static final String anyTime = "Any time";
     public static final String clearAll = "Clear all";
+    public static final String addGame = "+ Add game manually";
     public static final String noMatchTitle = "No games match";
     public static final String noMatchHint = "Nothing in your library matches these filters. Remove one, or clear them all.";
     public static final String clearAllFilters = "Clear all filters";

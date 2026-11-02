@@ -16,6 +16,9 @@ public interface LibraryPopups {
     // Shows the date ranges to choose from and calls onPick with the one chosen (DateRange.None() for any time)
     void ShowRanges(String title, Consumer<DateRange> onPick);
 
+    // Shows the window for adding a game that isn't on Steam
+    default void ShowAddGame(){ }
+
     static LibraryPopups None(){
         return new LibraryPopups(){
             @Override public void ShowChoices(String title, List<ListChip> options, Consumer<String> onToggle){ }

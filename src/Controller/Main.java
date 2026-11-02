@@ -56,7 +56,7 @@ class Main extends JFrame{
         private SeriesViewScreen mySeriesView;
         private LibraryScreen myLibrary;
         private final ScreenFlow flow = new ScreenFlow();
-        private final RowActionHandler rowActions = new RowActionHandler(this, this::ReloadAndRepaint);
+        private final RowActionHandler rowActions = new RowActionHandler(this, this::ReloadAndRepaint, this::OpenGameByTitle);
 
         // What the current press landed on, so release only acts if it's still on the same target
         private GameCell pressedCell;
@@ -108,7 +108,11 @@ class Main extends JFrame{
 
         // A game's row was clicked on the main view
         private void OpenGameFromMainView(LibraryGame game){
-            GameDetailData page = GameDetailLoader.Load(game.GetTitle());
+            OpenGameByTitle(game.GetTitle());
+        }
+
+        private void OpenGameByTitle(String title){
+            GameDetailData page = GameDetailLoader.Load(title);
             if(page == null){
                 return;
             }
@@ -185,7 +189,7 @@ class Main extends JFrame{
         // The Library button: every game, with search, filters and order. Back returns to the main view
         private void OpenLibrary(){
             myLibrary = new LibraryScreen(LibraryGameLoader.Load(), SeriesDao.GetAllSeries(), layout, this::CloseLibrary, this::OpenGameFromMainView, rowActions::Run,
-                    (game, items) -> rowActions.ShowMenu(game, items, mousePos), new LibraryPopupMenus(this, () -> mousePos, this::repaint));
+                    (game, items) -> rowActions.ShowMenu(game, items, mousePos), new LibraryPopupMenus(this, () -> mousePos, this::repaint, this::AddGameManually));
             flow.ShowLibrary();
         }
 
@@ -208,6 +212,14 @@ class Main extends JFrame{
         private void CloseSeries(){
             flow.CloseSeries();
             ReloadMainView();
+        }
+
+        // + Add game manually on the Library: a review for a game that isn't on Steam, then its page
+        private void AddGameManually(){
+            NewReviewDialog.Show(this, null, title -> {
+                ReloadAndRepaint();
+                OpenGameByTitle(title);
+            });
         }
 
         // Asks for a name and template, makes the series, and opens its (empty) page
