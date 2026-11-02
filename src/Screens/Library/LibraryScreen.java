@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import Controller.BackEnd.LibraryView.DateRange;
 import Controller.BackEnd.LibraryView.LibraryBuilder;
 import Controller.BackEnd.LibraryView.LibraryQuery;
 import Controller.BackEnd.LibraryView.LibraryResult;
@@ -28,6 +29,7 @@ import Model.Layout.ShellLayout;
 import Model.Library.LibraryGame;
 import Model.Reviews.GameState;
 import Model.Reviews.ReviewState;
+import Model.Reviews.Series;
 import Model.Themes.TextStyle;
 import Model.Themes.Theme;
 import Screens.MainView.GameRowPainter;
@@ -58,7 +60,15 @@ public class LibraryScreen {
     public static String ActionKey(int index, RowAction action){ return "library:act:" + index + ":" + action.name(); }
     public static String MenuKey(int index){ return "library:menu:" + index; }
 
+    public static final String seriesFilterKey = "library:filter:series";
+    public static final String genreFilterKey = "library:filter:genre";
+    public static final String platformFilterKey = "library:filter:platform";
+    public static final String completedFilterKey = "library:filter:completed";
+    public static final String addedFilterKey = "library:filter:added";
+
     private List<LibraryGame> games;
+    private List<Series> series;
+    private final LibraryPopups popups;
     private final Layout layout;
     private final Runnable onBack;
     private final Consumer<LibraryGame> onOpen;
@@ -79,7 +89,15 @@ public class LibraryScreen {
 
     public LibraryScreen(List<LibraryGame> games, Layout layout, Runnable onBack, Consumer<LibraryGame> onOpen, BiConsumer<RowAction, LibraryGame> onAction,
             BiConsumer<LibraryGame, List<RowAction>> onMenu){
+        this(games, new ArrayList<>(), layout, onBack, onOpen, onAction, onMenu, LibraryPopups.None());
+    }
+
+    // series is where the Series filter's names come from; popups shows the lists and date ranges the filter buttons ask for
+    public LibraryScreen(List<LibraryGame> games, List<Series> series, Layout layout, Runnable onBack, Consumer<LibraryGame> onOpen, BiConsumer<RowAction, LibraryGame> onAction,
+            BiConsumer<LibraryGame, List<RowAction>> onMenu, LibraryPopups popups){
         this.games = games;
+        this.series = series;
+        this.popups = popups;
         this.layout = layout;
         this.onBack = onBack;
         this.onOpen = onOpen;
@@ -94,6 +112,11 @@ public class LibraryScreen {
     public void Reload(List<LibraryGame> fresh){
         this.games = fresh;
         result = null;
+    }
+
+    public void Reload(List<LibraryGame> fresh, List<Series> freshSeries){
+        this.series = freshSeries;
+        Reload(fresh);
     }
 
     public boolean IsTyping(){ return searchFocused; }
@@ -177,6 +200,7 @@ public class LibraryScreen {
         y += PaintTitle(g, y, width) + shell.GetGap();
         y += PaintSearchLine(g, y, width, mouse) + shell.GetGap();
         y += PaintChips(g, y, width, LibraryWords.stateCaption, StateEntries(shown), mouse);
+        y += PaintChips(g, y, width, LibraryWords.moreFiltersCaption, MoreFilterEntries(shown), mouse);
         y += PaintChips(g, y, width, LibraryWords.reviewCaption, ReviewEntries(shown), mouse);
         y += PaintChips(g, y, width, LibraryWords.filtersCaption, FilterEntries(shown), mouse);
 
@@ -248,6 +272,23 @@ public class LibraryScreen {
         if(tag != null){
             entries.add(new NavEntry(tagKey, tag.GetLabel(), tag.GetCount(), tag.IsOn(), true, () -> Pick(query.WithMoreAchievements(!tag.IsOn()))));
         }
+        return entries;
+    }
+
+    // The buttons for the other filters. Each says how many are picked, and is lit when any are
+    private List<NavEntry> MoreFilterEntries(LibraryResult shown){
+        List<NavEntry> entries = new ArrayList<>();
+        int seriesPicked = query.GetExtras().GetSeriesIds().size(), genresPicked = query.GetExtras().GetGenres().size(), platformsPicked = query.GetExtras().GetPlatforms().size();
+        entries.add(new NavEntry(seriesFilterKey, LibraryWords.seriesFilter, seriesPicked == 0 ? null : seriesPicked, seriesPicked > 0, true,
+                () -> popups.ShowChoices(LibraryWords.seriesFilter, shown.GetSeriesOptions(), id -> Pick(query.WithSeries(id, !query.GetExtras().GetSeriesIds().contains(id))))));
+        entries.add(new NavEntry(genreFilterKey, LibraryWords.genreFilter, genresPicked == 0 ? null : genresPicked, genresPicked > 0, true,
+                () -> popups.ShowChoices(LibraryWords.genreFilter, shown.GetGenreOptions(), genre -> Pick(query.WithGenre(genre, !query.GetExtras().GetGenres().contains(genre))))));
+        entries.add(new NavEntry(platformFilterKey, LibraryWords.platformFilter, platformsPicked == 0 ? null : platformsPicked, platformsPicked > 0, true,
+                () -> popups.ShowChoices(LibraryWords.platformFilter, shown.GetPlatformOptions(), platform -> Pick(query.WithPlatform(platform, !query.GetExtras().GetPlatforms().contains(platform))))));
+        entries.add(new NavEntry(completedFilterKey, LibraryWords.completedFilter, null, query.GetExtras().GetCompleted().IsSet(), true,
+                () -> popups.ShowRanges(LibraryWords.completedFilter, range -> Pick(query.WithCompleted(range)))));
+        entries.add(new NavEntry(addedFilterKey, LibraryWords.addedFilter, null, query.GetExtras().GetAdded().IsSet(), true,
+                () -> popups.ShowRanges(LibraryWords.addedFilter, range -> Pick(query.WithAdded(range)))));
         return entries;
     }
 
@@ -352,6 +393,16 @@ public class LibraryScreen {
             Pick(query.WithAllStates());
         } else if(filterKey.equals(LibraryBuilder.moreAchievementsKey)){
             Pick(query.WithMoreAchievements(false));
+        } else if(filterKey.equals(LibraryBuilder.seriesKey)){
+            Pick(query.WithoutSeries());
+        } else if(filterKey.equals(LibraryBuilder.genreKey)){
+            Pick(query.WithoutGenres());
+        } else if(filterKey.equals(LibraryBuilder.platformKey)){
+            Pick(query.WithoutPlatforms());
+        } else if(filterKey.equals(LibraryBuilder.completedKey)){
+            Pick(query.WithCompleted(DateRange.None()));
+        } else if(filterKey.equals(LibraryBuilder.addedKey)){
+            Pick(query.WithAdded(DateRange.None()));
         } else if(filterKey.equals(LibraryBuilder.searchKey)){
             typed = "";
             Pick(query.WithSearch(""));
@@ -362,7 +413,7 @@ public class LibraryScreen {
 
     private LibraryResult Result(){
         if(result == null){
-            result = LibraryBuilder.Build(games, query, layout.GetList().GetPageSize());
+            result = LibraryBuilder.Build(games, series, query, layout.GetList().GetPageSize());
         }
         return result;
     }

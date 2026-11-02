@@ -10,6 +10,7 @@ import Screens.MainView.MainViewScreen;
 import Screens.MainView.SeriesActions;
 import Screens.SeriesView.SeriesViewScreen;
 import Screens.Library.LibraryScreen;
+import Database.Dao.SeriesDao;
 import Controller.BackEnd.MainView.LibraryGameLoader;
 import Controller.BackEnd.SeriesView.SeriesViewData;
 import Controller.BackEnd.SeriesView.SeriesViewLoader;
@@ -105,8 +106,8 @@ class Main extends JFrame{
 
         // The Library button: every game, with search, filters and order. Back returns to the main view
         private void OpenLibrary(){
-            myLibrary = new LibraryScreen(LibraryGameLoader.Load(), layout, this::CloseLibrary, this::OpenGameFromMainView, rowActions::Run,
-                    (game, items) -> rowActions.ShowMenu(game, items, mousePos));
+            myLibrary = new LibraryScreen(LibraryGameLoader.Load(), SeriesDao.GetAllSeries(), layout, this::CloseLibrary, this::OpenGameFromMainView, rowActions::Run,
+                    (game, items) -> rowActions.ShowMenu(game, items, mousePos), new LibraryPopupMenus(this, () -> mousePos, this::repaint));
             flow.ShowLibrary();
         }
 
@@ -173,7 +174,7 @@ class Main extends JFrame{
             if(back == Screen.MAIN_VIEW){
                 ReloadMainView();
             } else if(back == Screen.LIBRARY){
-                myLibrary.Reload(LibraryGameLoader.Load());
+                myLibrary.Reload(LibraryGameLoader.Load(), SeriesDao.GetAllSeries());
             } else if(back == Screen.SERIES_VIEW){
                 SeriesViewData fresh = SeriesViewLoader.Load(mySeriesView.GetSeriesId());
                 if(fresh == null){
@@ -191,7 +192,7 @@ class Main extends JFrame{
         private void ReloadAndRepaint(){
             ReloadMainView();
             if(flow.Current() == Screen.LIBRARY){
-                myLibrary.Reload(LibraryGameLoader.Load());
+                myLibrary.Reload(LibraryGameLoader.Load(), SeriesDao.GetAllSeries());
             }
             repaint();
         }

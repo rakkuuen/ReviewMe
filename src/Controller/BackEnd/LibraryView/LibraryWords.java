@@ -11,6 +11,16 @@ public class LibraryWords {
     public static final String stateCaption = "State";
     public static final String reviewCaption = "Review";
     public static final String filtersCaption = "Filters";
+    public static final String moreFiltersCaption = "Filter by";
+    public static final String seriesFilter = "Series";
+    public static final String genreFilter = "Genre";
+    public static final String platformFilter = "Platform";
+    public static final String completedFilter = "Completed on";
+    public static final String addedFilter = "Added";
+    public static final String last30Days = "Last 30 days";
+    public static final String thisYear = "This year";
+    public static final String lastYear = "Last year";
+    public static final String anyTime = "Any time";
     public static final String clearAll = "Clear all";
     public static final String noMatchTitle = "No games match";
     public static final String noMatchHint = "Nothing in your library matches these filters. Remove one, or clear them all.";
