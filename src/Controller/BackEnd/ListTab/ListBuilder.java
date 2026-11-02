@@ -1,8 +1,6 @@
 package Controller.BackEnd.ListTab;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.function.Function;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +16,6 @@ import Controller.BackEnd.MainView.ViewRules;
 import Controller.BackEnd.Overview.GameRow;
 import Controller.BackEnd.Overview.OverviewRows;
 import Controller.BackEnd.Overview.OverviewSectionKind;
-import Controller.BackEnd.Reviews.GameNumbers;
 import Model.Library.LibraryGame;
 import Model.Reviews.ReviewGap;
 import Model.Reviews.ReviewState;
@@ -70,7 +67,7 @@ public class ListBuilder {
                 matching.add(game);
             }
         }
-        matching.sort(Order(query));
+        matching.sort(ListOrder.Of(query.GetSort(), query.IsDescending()));
 
         OverviewSectionKind kind = KindOf(tab, selection);
         int shown = Math.min(matching.size(), pageSize * (query.GetMorePages() + 1));
@@ -172,28 +169,5 @@ public class ListBuilder {
             return false;
         }
         return true;
-    }
-
-    // Games with nothing to sort on (no rating, never played) always go last, whichever way round it is; ties fall back to title
-    private static Comparator<LibraryGame> Order(ListQuery query){
-        Comparator<LibraryGame> byTitle = (a, b) -> a.GetTitle().compareToIgnoreCase(b.GetTitle());
-        Comparator<LibraryGame> main;
-        switch(query.GetSort()){
-            case RATING: main = NullsLast(g -> GameNumbers.RatingOf(g.GetReview()), query.IsDescending()); break;
-            case PLAYTIME: main = NullsLast(g -> (long) GameNumbers.PlaytimeMinutes(g.GetReview(), g.GetSteam()), query.IsDescending()); break;
-            case LAST_PLAYED: main = NullsLast(g -> g.GetSteam() == null ? null : g.GetSteam().GetLastPlayed(), query.IsDescending()); break;
-            default: main = query.IsDescending() ? byTitle.reversed() : byTitle; break;
-        }
-        return main.thenComparing(byTitle);
-    }
-
-    private static <T extends Comparable<T>> Comparator<LibraryGame> NullsLast(Function<LibraryGame, T> key, boolean descending){
-        return (a, b) -> {
-            T x = key.apply(a), y = key.apply(b);
-            if(x == null || y == null){
-                return x == y ? 0 : (x == null ? 1 : -1);
-            }
-            return descending ? y.compareTo(x) : x.compareTo(y);
-        };
     }
 }
