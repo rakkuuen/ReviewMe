@@ -106,7 +106,7 @@ class Main extends JFrame{
             if(page == null){
                 return;
             }
-            mySeriesView = new SeriesViewScreen(page, layout, this::CloseSeries, this::NewSeries, this::EditSeries, id -> SeriesEditingComesLater(),
+            mySeriesView = new SeriesViewScreen(page, layout, this::CloseSeries, this::NewSeries, this::EditSeries, this::AssignGames,
                     this::OpenGameFromMainView);
             flow.OpenSeries();
         }
@@ -127,19 +127,21 @@ class Main extends JFrame{
 
         // Opens the Edit series window; afterwards the page and the main view show what was saved
         private void EditSeries(String seriesId){
-            EditSeriesDialog.Show(this, seriesId, () -> {
-                ReloadMainView();
-                SeriesViewData fresh = SeriesViewLoader.Load(seriesId);
-                if(fresh != null){
-                    mySeriesView.Reload(fresh);
-                }
-                repaint();
-            });
+            EditSeriesDialog.Show(this, seriesId, () -> ShowSeriesChanges(seriesId));
         }
 
-        // Assigning games comes with the next step
-        private void SeriesEditingComesLater(){
-            JOptionPane.showMessageDialog(this, "Assigning games comes in the next step.", "Series", JOptionPane.INFORMATION_MESSAGE);
+        // Opens the assign picker; afterwards the page and the main view show the games that were added
+        private void AssignGames(String seriesId){
+            AssignGamesDialog.Show(this, seriesId, () -> ShowSeriesChanges(seriesId));
+        }
+
+        private void ShowSeriesChanges(String seriesId){
+            ReloadMainView();
+            SeriesViewData fresh = SeriesViewLoader.Load(seriesId);
+            if(fresh != null){
+                mySeriesView.Reload(fresh);
+            }
+            repaint();
         }
 
         // Opens a game's page. Back returns to wherever it was opened from
