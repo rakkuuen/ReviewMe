@@ -9,6 +9,8 @@ import Screens.GameInfoScreen;
 import Screens.MainView.MainViewScreen;
 import Screens.MainView.SeriesActions;
 import Screens.SeriesView.SeriesViewScreen;
+import Screens.Library.LibraryScreen;
+import Controller.BackEnd.MainView.LibraryGameLoader;
 import Controller.BackEnd.SeriesView.SeriesViewData;
 import Controller.BackEnd.SeriesView.SeriesViewLoader;
 import Controller.BackEnd.MainView.MainViewData;
@@ -42,6 +44,7 @@ class Main extends JFrame{
         private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;
         private SeriesViewScreen mySeriesView;
+        private LibraryScreen myLibrary;
         private final ScreenFlow flow = new ScreenFlow();
         private final RowActionHandler rowActions = new RowActionHandler(this, this::ReloadAndRepaint);
 
@@ -67,7 +70,7 @@ class Main extends JFrame{
             this.addComponentListener(this);
             this.addKeyListener(this);
 
-            myMainView = new MainViewScreen(data, layout, flow::ShowFrontPage, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos),
+            myMainView = new MainViewScreen(data, layout, this::OpenLibrary, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos),
                     new SeriesActions(this::OpenSeries, this::NewSeries));
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
@@ -98,6 +101,18 @@ class Main extends JFrame{
             if(review != null){
                 ShowGame(review);
             }
+        }
+
+        // The Library button: every game, with search, filters and order. Back returns to the main view
+        private void OpenLibrary(){
+            myLibrary = new LibraryScreen(LibraryGameLoader.Load(), layout, this::CloseLibrary, this::OpenGameFromMainView, rowActions::Run,
+                    (game, items) -> rowActions.ShowMenu(game, items, mousePos));
+            flow.ShowLibrary();
+        }
+
+        private void CloseLibrary(){
+            flow.ShowMainView();
+            ReloadMainView();
         }
 
         // Opens a series' page (from the Series tab). Back returns to the main view
@@ -157,6 +172,8 @@ class Main extends JFrame{
             Screen back = flow.CloseGame();
             if(back == Screen.MAIN_VIEW){
                 ReloadMainView();
+            } else if(back == Screen.LIBRARY){
+                myLibrary.Reload(LibraryGameLoader.Load());
             } else if(back == Screen.SERIES_VIEW){
                 SeriesViewData fresh = SeriesViewLoader.Load(mySeriesView.GetSeriesId());
                 if(fresh == null){
@@ -173,6 +190,9 @@ class Main extends JFrame{
 
         private void ReloadAndRepaint(){
             ReloadMainView();
+            if(flow.Current() == Screen.LIBRARY){
+                myLibrary.Reload(LibraryGameLoader.Load());
+            }
             repaint();
         }
 
@@ -191,6 +211,9 @@ class Main extends JFrame{
                     break;
                 case SERIES_VIEW:
                     mySeriesView.Paint(g, mousePos, getSize());
+                    break;
+                case LIBRARY:
+                    myLibrary.Paint(g, mousePos, getSize());
                     break;
                 case GAME_INFO_SCREEN:
                     if(myGameInfoScreen != null){
@@ -225,6 +248,9 @@ class Main extends JFrame{
                 case SERIES_VIEW:
                     mySeriesView.Press(mousePos);
                     break;
+                case LIBRARY:
+                    myLibrary.Press(mousePos);
+                    break;
                 case GAME_INFO_SCREEN:
                     myGameInfoScreen.NotifyBackPressed(mousePos);
                     pressedOnEditButton = myGameInfoScreen.WasEditClicked(mousePos);
@@ -244,6 +270,9 @@ class Main extends JFrame{
                     break;
                 case SERIES_VIEW:
                     mySeriesView.Release(mousePos);
+                    break;
+                case LIBRARY:
+                    myLibrary.Release(mousePos);
                     break;
                 case FRONT_PAGE:
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
@@ -307,6 +336,9 @@ class Main extends JFrame{
             } else if(flow.Current() == Screen.SERIES_VIEW){
                 mySeriesView.Scroll(e.getWheelRotation());
                 repaint();
+            } else if(flow.Current() == Screen.LIBRARY){
+                myLibrary.Scroll(e.getWheelRotation());
+                repaint();
             }
         }
 
@@ -334,10 +366,14 @@ class Main extends JFrame{
         // properties that don't work that way. Escape goes from the old list back to the main view
         @Override
         public void keyPressed(KeyEvent e) {
-            boolean typing = flow.Current() == Screen.MAIN_VIEW && myMainView.IsTyping();
+            boolean typing = (flow.Current() == Screen.MAIN_VIEW && myMainView.IsTyping()) || (flow.Current() == Screen.LIBRARY && myLibrary.IsTyping());
             if(typing){
                 if(e.getKeyCode() == KeyEvent.VK_ESCAPE){
-                    myMainView.StopTyping();
+                    if(flow.Current() == Screen.LIBRARY){
+                        myLibrary.StopTyping();
+                    } else {
+                        myMainView.StopTyping();
+                    }
                     repaint();
                 }
             } else if(e.getKeyCode() == KeyEvent.VK_T && darkTheme != null){
@@ -358,6 +394,8 @@ class Main extends JFrame{
         @Override
         public void keyTyped(KeyEvent e) {
             if(flow.Current() == Screen.MAIN_VIEW && myMainView.KeyTyped(e.getKeyChar())){
+                repaint();
+            } else if(flow.Current() == Screen.LIBRARY && myLibrary.KeyTyped(e.getKeyChar())){
                 repaint();
             }
         }

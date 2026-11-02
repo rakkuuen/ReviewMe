@@ -8,6 +8,7 @@ public class ScreenFlow {
         MAIN_VIEW,
         FRONT_PAGE,   // TEMP: the old flat list of every review, until the Library screen is built
         SERIES_VIEW,
+        LIBRARY,
         GAME_INFO_SCREEN
     }
 
@@ -24,6 +25,10 @@ public class ScreenFlow {
         current = Screen.FRONT_PAGE;
     }
 
+    public void ShowLibrary(){
+        current = Screen.LIBRARY;
+    }
+
     // A series' page was opened from the main view
     public void OpenSeries(){
         current = Screen.SERIES_VIEW;
@@ -36,9 +41,9 @@ public class ScreenFlow {
         }
     }
 
-    // Escape on the old list or a series' page goes back to the main view. Anywhere else it does nothing. True if it moved
+    // Escape on the old list, the Library or a series' page goes back to the main view. Anywhere else it does nothing. True if it moved
     public boolean Escape(){
-        if(current != Screen.FRONT_PAGE && current != Screen.SERIES_VIEW){
+        if(current != Screen.FRONT_PAGE && current != Screen.SERIES_VIEW && current != Screen.LIBRARY){
             return false;
         }
         current = Screen.MAIN_VIEW;
