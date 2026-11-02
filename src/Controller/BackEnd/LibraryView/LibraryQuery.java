@@ -18,25 +18,27 @@ import Model.Reviews.ReviewState;
 // query, and any change to what is listed starts again from the first page
 public class LibraryQuery {
     // The orders the Library offers, in the order the sort button goes through them
-    public static final List<ListSort> sorts = Collections.unmodifiableList(Arrays.asList(ListSort.TITLE, ListSort.PLAYTIME, ListSort.RATING, ListSort.LAST_PLAYED));
+    public static final List<ListSort> sorts = Collections.unmodifiableList(Arrays.asList(ListSort.TITLE, ListSort.PLAYTIME, ListSort.RATING, ListSort.LAST_PLAYED, ListSort.ADDED));
 
     private final String search;
     private final ListSort sort;
     private final boolean descending;
     private final ViewFilter filter;
+    private final LibraryExtras extras;
     private final int morePages;
 
-    private LibraryQuery(String search, ListSort sort, boolean descending, ViewFilter filter, int morePages){
+    private LibraryQuery(String search, ListSort sort, boolean descending, ViewFilter filter, LibraryExtras extras, int morePages){
         this.search = search;
         this.sort = sort;
         this.descending = descending;
         this.filter = filter;
+        this.extras = extras;
         this.morePages = morePages;
     }
 
     // How the Library opens: 100%ed games, titles A to Z, nothing else picked
     public static LibraryQuery Initial(){
-        return new LibraryQuery("", ListSort.TITLE, false, ViewFilter.Default(), 0);
+        return new LibraryQuery("", ListSort.TITLE, false, ViewFilter.Default(), LibraryExtras.None(), 0);
     }
 
     public String GetSearch(){ return search; }
@@ -44,16 +46,17 @@ public class LibraryQuery {
     public boolean IsDescending(){ return descending; }
     public ViewFilter GetFilter(){ return filter; }
     public StateSelection GetStates(){ return filter.GetStates(); }
+    public LibraryExtras GetExtras(){ return extras; }
     public int GetMorePages(){ return morePages; }
 
     public LibraryQuery WithSearch(String text){
-        return new LibraryQuery(text == null ? "" : text.trim(), sort, descending, filter, 0);
+        return new LibraryQuery(text == null ? "" : text.trim(), sort, descending, filter, extras, 0);
     }
 
     // A new order takes its usual direction (titles A to Z, the rest high to low); the same one again flips it
     public LibraryQuery WithSort(ListSort next){
         boolean flipped = next == sort ? !descending : ListRules.DefaultDescending(next);
-        return new LibraryQuery(search, next, flipped, filter, 0);
+        return new LibraryQuery(search, next, flipped, filter, extras, 0);
     }
 
     // The sort button's choice: the next order in the list
@@ -63,28 +66,41 @@ public class LibraryQuery {
 
     // One state turned on or off. Turning every state off is the same as All
     public LibraryQuery WithState(GameState state, boolean on){
-        return new LibraryQuery(search, sort, descending, filter.WithStates(filter.GetStates().With(state, on)), 0);
+        return new LibraryQuery(search, sort, descending, filter.WithStates(filter.GetStates().With(state, on)), extras, 0);
     }
 
     public LibraryQuery WithAllStates(){
-        return new LibraryQuery(search, sort, descending, filter.WithStates(StateSelection.All()), 0);
+        return new LibraryQuery(search, sort, descending, filter.WithStates(StateSelection.All()), extras, 0);
     }
 
     public LibraryQuery WithReviewState(ReviewState review, boolean on){
-        return new LibraryQuery(search, sort, descending, filter.WithReviewState(review, on), 0);
+        return new LibraryQuery(search, sort, descending, filter.WithReviewState(review, on), extras, 0);
     }
 
     public LibraryQuery WithMoreAchievements(boolean on){
-        return new LibraryQuery(search, sort, descending, filter.WithMoreAchievements(on), 0);
+        return new LibraryQuery(search, sort, descending, filter.WithMoreAchievements(on), extras, 0);
     }
 
-    // Everything off: no search, every state, no chips. The order stays ("Clear all")
+    public LibraryQuery WithSeries(String id, boolean on){ return WithExtras(extras.WithSeries(id, on)); }
+    public LibraryQuery WithGenre(String genre, boolean on){ return WithExtras(extras.WithGenre(genre, on)); }
+    public LibraryQuery WithPlatform(String platform, boolean on){ return WithExtras(extras.WithPlatform(platform, on)); }
+    public LibraryQuery WithCompleted(DateRange range){ return WithExtras(extras.WithCompleted(range)); }
+    public LibraryQuery WithAdded(DateRange range){ return WithExtras(extras.WithAdded(range)); }
+    public LibraryQuery WithoutSeries(){ return WithExtras(extras.WithoutSeries()); }
+    public LibraryQuery WithoutGenres(){ return WithExtras(extras.WithoutGenres()); }
+    public LibraryQuery WithoutPlatforms(){ return WithExtras(extras.WithoutPlatforms()); }
+
+    private LibraryQuery WithExtras(LibraryExtras next){
+        return new LibraryQuery(search, sort, descending, filter, next, 0);
+    }
+
+    // Everything off: no search, every state, no chips, none of the other filters. The order stays ("Clear all")
     public LibraryQuery Cleared(){
-        return new LibraryQuery("", sort, descending, new ViewFilter(StateSelection.All(), EnumSet.noneOf(ReviewState.class), false), 0);
+        return new LibraryQuery("", sort, descending, new ViewFilter(StateSelection.All(), EnumSet.noneOf(ReviewState.class), false), LibraryExtras.None(), 0);
     }
 
     public LibraryQuery WithMorePages(){
-        return new LibraryQuery(search, sort, descending, filter, morePages + 1);
+        return new LibraryQuery(search, sort, descending, filter, extras, morePages + 1);
     }
 
     public Set<ReviewState> GetReviewStates(){ return filter.GetReviewStates(); }

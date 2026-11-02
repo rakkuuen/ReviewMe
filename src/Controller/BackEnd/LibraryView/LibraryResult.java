@@ -33,8 +33,12 @@ public class LibraryResult {
     private final List<ListChip> reviewChips;
     private final ListChip moreAchievementsChip;
     private final List<ActiveFilter> activeFilters;
+    private final List<ListChip> seriesOptions;
+    private final List<ListChip> genreOptions;
+    private final List<ListChip> platformOptions;
 
-    public LibraryResult(List<GameRow> rows, int matching, int total, List<ListChip> stateChips, List<ListChip> reviewChips, ListChip moreAchievementsChip, List<ActiveFilter> activeFilters){
+    public LibraryResult(List<GameRow> rows, int matching, int total, List<ListChip> stateChips, List<ListChip> reviewChips, ListChip moreAchievementsChip, List<ActiveFilter> activeFilters,
+            List<ListChip> seriesOptions, List<ListChip> genreOptions, List<ListChip> platformOptions){
         this.rows = Collections.unmodifiableList(rows);
         this.matching = matching;
         this.total = total;
@@ -42,6 +46,9 @@ public class LibraryResult {
         this.reviewChips = Collections.unmodifiableList(reviewChips);
         this.moreAchievementsChip = moreAchievementsChip;
         this.activeFilters = Collections.unmodifiableList(activeFilters);
+        this.seriesOptions = Collections.unmodifiableList(seriesOptions);
+        this.genreOptions = Collections.unmodifiableList(genreOptions);
+        this.platformOptions = Collections.unmodifiableList(platformOptions);
     }
 
     public List<GameRow> GetRows(){ return rows; }
@@ -59,6 +66,12 @@ public class LibraryResult {
     public ListChip GetMoreAchievementsChip(){ return moreAchievementsChip; }
 
     public List<ActiveFilter> GetActiveFilters(){ return activeFilters; }
+
+    // What can be picked for each of the other filters, with how many games have it. Each is on when it is picked (key is the series' id,
+    // or the genre or platform as written)
+    public List<ListChip> GetSeriesOptions(){ return seriesOptions; }
+    public List<ListChip> GetGenreOptions(){ return genreOptions; }
+    public List<ListChip> GetPlatformOptions(){ return platformOptions; }
     public boolean HasMore(){ return rows.size() < matching; }
 
     public Emptiness GetEmptiness(){

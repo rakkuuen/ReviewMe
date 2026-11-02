@@ -17,6 +17,7 @@ public class ListOrder {
             case RATING: main = NullsLast(g -> GameNumbers.RatingOf(g.GetReview()), descending); break;
             case PLAYTIME: main = NullsLast(g -> (long) GameNumbers.PlaytimeMinutes(g.GetReview(), g.GetSteam()), descending); break;
             case LAST_PLAYED: main = NullsLast(g -> g.GetSteam() == null ? null : g.GetSteam().GetLastPlayed(), descending); break;
+            case ADDED: main = NullsLast(g -> Controller.BackEnd.LibraryView.LibraryExtras.AddedOn(g), descending); break;
             default: main = descending ? byTitle.reversed() : byTitle; break;
         }
         return main.thenComparing(byTitle);

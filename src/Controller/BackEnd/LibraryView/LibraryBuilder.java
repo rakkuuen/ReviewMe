@@ -1,9 +1,11 @@
 package Controller.BackEnd.LibraryView;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TreeMap;
 
 import Controller.BackEnd.ListTab.ListChip;
 import Controller.BackEnd.ListTab.ListOrder;
@@ -16,6 +18,7 @@ import Controller.BackEnd.Overview.OverviewRows;
 import Model.Library.LibraryGame;
 import Model.Reviews.GameState;
 import Model.Reviews.ReviewState;
+import Model.Reviews.Series;
 
 // Works out the Library: which games match the search and filters, their order, the first pages of them as rows, and the chips with
 // their counts. No drawing and no database in here
@@ -24,11 +27,21 @@ public class LibraryBuilder {
     public static final String reviewKeyPrefix = "review:";
     public static final String moreAchievementsKey = "tag:more";
     public static final String searchKey = "search";
+    public static final String seriesKey = "series:";
+    public static final String genreKey = "genre:";
+    public static final String platformKey = "platform:";
+    public static final String completedKey = "completed:";
+    public static final String addedKey = "added:";
 
     public static LibraryResult Build(List<LibraryGame> games, LibraryQuery query, int pageSize){
+        return Build(games, new ArrayList<>(), query, pageSize);
+    }
+
+    // allSeries is where the Series filter's names come from
+    public static LibraryResult Build(List<LibraryGame> games, List<Series> allSeries, LibraryQuery query, int pageSize){
         List<LibraryGame> matching = new ArrayList<>();
         for(LibraryGame game : games){
-            if(query.GetFilter().Matches(game) && Matches(game, query.GetSearch())){
+            if(query.GetFilter().Matches(game) && query.GetExtras().Matches(game) && Matches(game, query.GetSearch())){
                 matching.add(game);
             }
         }
@@ -41,7 +54,7 @@ public class LibraryBuilder {
         }
         StateSelection states = query.GetStates();
         return new LibraryResult(rows, matching.size(), games.size(), StateChips(games, states), ReviewChips(games, query), MoreAchievementsChip(games, query),
-                ActiveFilters(query));
+                ActiveFilters(query, allSeries), SeriesOptions(games, allSeries, query), TagOptions(games, query, true), TagOptions(games, query, false));
     }
 
     private static boolean Matches(LibraryGame game, String search){
@@ -77,7 +90,47 @@ public class LibraryBuilder {
         return new ListChip(moreAchievementsKey, "Has More achievements tag", ViewCounter.MoreAchievementsCount(games, query.GetStates()), query.IsMoreAchievementsOnly());
     }
 
-    private static List<LibraryResult.ActiveFilter> ActiveFilters(LibraryQuery query){
+    // Every series that has a game, with how many, in name order
+    private static List<ListChip> SeriesOptions(List<LibraryGame> games, List<Series> allSeries, LibraryQuery query){
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for(LibraryGame game : games){
+            if(game.HasReview() && game.GetReview().GetSeriesId() != null){
+                counts.merge(game.GetReview().GetSeriesId(), 1, Integer::sum);
+            }
+        }
+        List<ListChip> options = new ArrayList<>();
+        for(Series series : allSeries){
+            if(counts.containsKey(series.GetId())){
+                options.add(new ListChip(series.GetId(), series.GetName(), counts.get(series.GetId()), query.GetExtras().GetSeriesIds().contains(series.GetId())));
+            }
+        }
+        options.sort((a, b) -> a.GetLabel().compareToIgnoreCase(b.GetLabel()));
+        return options;
+    }
+
+    // Every genre (or platform) any review has, with how many, in name order
+    private static List<ListChip> TagOptions(List<LibraryGame> games, LibraryQuery query, boolean genres){
+        Map<String, Integer> counts = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        for(LibraryGame game : games){
+            if(!game.HasReview()){
+                continue;
+            }
+            List<String> values = genres ? game.GetReview().GetGenres() : game.GetReview().GetPlatforms();
+            if(values != null){
+                for(String value : new java.util.LinkedHashSet<>(values)){
+                    counts.merge(value, 1, Integer::sum);
+                }
+            }
+        }
+        List<ListChip> options = new ArrayList<>();
+        for(Map.Entry<String, Integer> entry : counts.entrySet()){
+            boolean on = (genres ? query.GetExtras().GetGenres() : query.GetExtras().GetPlatforms()).contains(entry.getKey());
+            options.add(new ListChip(entry.getKey(), entry.getKey(), entry.getValue(), on));
+        }
+        return options;
+    }
+
+    private static List<LibraryResult.ActiveFilter> ActiveFilters(LibraryQuery query, List<Series> allSeries){
         List<LibraryResult.ActiveFilter> filters = new ArrayList<>();
         if(!query.GetStates().IsAll()){
             List<String> names = new ArrayList<>();
@@ -96,10 +149,38 @@ public class LibraryBuilder {
         if(query.IsMoreAchievementsOnly()){
             filters.add(new LibraryResult.ActiveFilter(moreAchievementsKey, "Tag: Has More achievements"));
         }
+        if(!query.GetExtras().GetSeriesIds().isEmpty()){
+            List<String> names = new ArrayList<>();
+            for(String id : query.GetExtras().GetSeriesIds()){
+                names.add(SeriesName(id, allSeries));
+            }
+            filters.add(new LibraryResult.ActiveFilter(seriesKey, "Series: " + String.join(", ", names)));
+        }
+        if(!query.GetExtras().GetGenres().isEmpty()){
+            filters.add(new LibraryResult.ActiveFilter(genreKey, "Genre: " + String.join(", ", query.GetExtras().GetGenres())));
+        }
+        if(!query.GetExtras().GetPlatforms().isEmpty()){
+            filters.add(new LibraryResult.ActiveFilter(platformKey, "Platform: " + String.join(", ", query.GetExtras().GetPlatforms())));
+        }
+        if(query.GetExtras().GetCompleted().IsSet()){
+            filters.add(new LibraryResult.ActiveFilter(completedKey, "Completed: " + query.GetExtras().GetCompleted().Describe()));
+        }
+        if(query.GetExtras().GetAdded().IsSet()){
+            filters.add(new LibraryResult.ActiveFilter(addedKey, "Added: " + query.GetExtras().GetAdded().Describe()));
+        }
         if(!query.GetSearch().isEmpty()){
             filters.add(new LibraryResult.ActiveFilter(searchKey, "Search: " + query.GetSearch()));
         }
         return filters;
+    }
+
+    private static String SeriesName(String id, List<Series> allSeries){
+        for(Series series : allSeries){
+            if(series.GetId().equals(id)){
+                return series.GetName();
+            }
+        }
+        return id;
     }
 
     private static String ReviewWords(ReviewState review){

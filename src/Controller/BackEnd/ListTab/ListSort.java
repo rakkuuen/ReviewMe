@@ -5,7 +5,8 @@ public enum ListSort {
     TITLE("Title", "A to Z", "Z to A"),
     RATING("Rating", "low to high", "high to low"),
     PLAYTIME("Playtime", "shortest first", "longest first"),
-    LAST_PLAYED("Last played", "oldest first", "latest first");
+    LAST_PLAYED("Last played", "oldest first", "latest first"),
+    ADDED("Added to library", "oldest first", "newest first");
 
     private final String label;
     private final String ascendingWords;
