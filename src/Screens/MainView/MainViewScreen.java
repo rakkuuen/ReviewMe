@@ -41,8 +41,12 @@ public class MainViewScreen {
     private final MainViewState state = new MainViewState();
     private final HitMap hits = new HitMap();
     private final NavStrip strip;
+    private final BodyPainter overviewBody;
     private MainViewModel model;
     private String pressedKey;
+    private int scroll;           // How far the body's content is scrolled up
+    private int contentHeight;    // How tall the body's content was when last painted
+    private int viewportHeight;   // How tall the space it is shown in was
 
     // onLibrary is what the header's Library button does
     public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary){
@@ -50,6 +54,7 @@ public class MainViewScreen {
         this.layout = layout;
         this.onLibrary = onLibrary;
         this.strip = new NavStrip(layout.GetShell());
+        this.overviewBody = new OverviewBody(data.GetOverview(), layout);
         Refresh();
     }
 
@@ -75,11 +80,37 @@ public class MainViewScreen {
             y += strip.Paint(g, area.x, y, shell.GetStateRowHeight(), area.width, stateCaption, StateEntries(), mouse, hits) + shell.GetGap();
             y += strip.Paint(g, area.x, y, shell.GetTabBarHeight(), area.width, null, TabEntries(), mouse, hits) + shell.GetGap();
 
-            Rectangle body = new Rectangle(area.x, y, area.width, Math.max(0, area.y + area.height - y));
-            BodyFor(state.GetTab()).Paint(g, body, mouse, hits);
+            PaintBody(g, new Rectangle(area.x, y, area.width, Math.max(0, area.y + area.height - y)), mouse);
         } finally {
             g.dispose();
         }
+    }
+
+    // Moves the body's content up or down by that many wheel notches (positive is down). Stops at the top and the bottom
+    public void Scroll(int wheelRotation){
+        scroll = ClampScroll(scroll + wheelRotation * layout.GetList().GetScrollStep());
+    }
+
+    // The body paints in its own coordinates; this shifts them up by the scroll and cuts them to the space under the tab bar
+    private void PaintBody(Graphics2D g, Rectangle body, Point mouse){
+        viewportHeight = body.height;
+        scroll = ClampScroll(scroll);
+        Graphics2D inBody = (Graphics2D) g.create();
+        try {
+            inBody.clipRect(body.x, body.y, body.width, body.height);
+            inBody.translate(body.x, body.y - scroll);
+            hits.SetFrame(body.x, body.y - scroll, body);
+            Point inContent = new Point(mouse.x - body.x, mouse.y - body.y + scroll);
+            contentHeight = BodyFor(state.GetTab()).Paint(inBody, new Rectangle(0, 0, body.width, body.height), inContent, hits);
+        } finally {
+            hits.ClearFrame();
+            inBody.dispose();
+        }
+        scroll = ClampScroll(scroll);
+    }
+
+    private int ClampScroll(int value){
+        return Math.max(0, Math.min(value, Math.max(0, contentHeight - viewportHeight)));
     }
 
     // Remembers what was pressed. A click only happens if the release is on the same thing
@@ -103,8 +134,10 @@ public class MainViewScreen {
     public static String StateKey(String label){ return "state:" + label; }
     public static String TabKey(MainTab tab){ return "tab:" + tab.name(); }
 
+    // Rebuilds what is drawn for the current state, and starts the new tab at the top
     private void Refresh(){
         model = MainViewModel.Build(data.GetGames(), data.GetSeriesIds(), state);
+        scroll = 0;
     }
 
     private List<NavEntry> StateEntries(){
@@ -138,6 +171,9 @@ public class MainViewScreen {
     }
 
     private BodyPainter BodyFor(MainTab tab){
+        if(tab == MainTab.OVERVIEW){
+            return overviewBody;
+        }
         return new PlaceholderBody(MainViewLabels.TabLabel(tab) + " is not built yet");
     }
 

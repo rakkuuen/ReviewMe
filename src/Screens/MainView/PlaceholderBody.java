@@ -18,13 +18,14 @@ public class PlaceholderBody implements BodyPainter {
     }
 
     @Override
-    public void Paint(Graphics2D g, Rectangle area, Point mouse, HitMap hits){
+    public int Paint(Graphics2D g, Rectangle viewport, Point mouse, HitMap hits){
         TextStyle style = Theme.Current.GetHeading();
         FontMetrics metrics = g.getFontMetrics(style.GetFont());
         g.setFont(style.GetFont());
         g.setColor(style.GetColour());
-        int x = area.x + LayoutMath.Centre(area.width, metrics.stringWidth(text));
-        int baseline = area.y + LayoutMath.Centre(area.height, metrics.getHeight()) + metrics.getAscent();
+        int x = viewport.x + LayoutMath.Centre(viewport.width, metrics.stringWidth(text));
+        int baseline = viewport.y + LayoutMath.Centre(viewport.height, metrics.getHeight()) + metrics.getAscent();
         g.drawString(text, x, baseline);
+        return viewport.height;
     }
 }

@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Where the clickable things were drawn, so a press and a release can be matched to the same thing. Components add their areas as
-// they paint, each under a key that stays the same from one paint to the next (the areas themselves move when the window does)
+// they paint, each under a key that stays the same from one paint to the next (the areas themselves move when the window does).
+// While a frame is set (for content that scrolls), areas are given in the content's own coordinates: they are moved into the window
+// and cut to what is visible, so nothing scrolled out of sight can be clicked
 public class HitMap {
 
     private static class Region {
@@ -22,13 +24,37 @@ public class HitMap {
     }
 
     private final List<Region> regions = new ArrayList<>();
+    private int offsetX, offsetY;
+    private Rectangle visible;   // Null when no frame is set
 
     public void Clear(){
         regions.clear();
+        ClearFrame();
+    }
+
+    // From now on areas added are in content coordinates: moved by (offsetX, offsetY) into the window, and cut to the visible rectangle
+    public void SetFrame(int offsetX, int offsetY, Rectangle visible){
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.visible = new Rectangle(visible);
+    }
+
+    public void ClearFrame(){
+        offsetX = 0;
+        offsetY = 0;
+        visible = null;
     }
 
     public void Add(String key, Rectangle bounds, Runnable action){
-        regions.add(new Region(key, new Rectangle(bounds), action));
+        Rectangle placed = new Rectangle(bounds);
+        if(visible != null){
+            placed.translate(offsetX, offsetY);
+            placed = placed.intersection(visible);
+            if(placed.isEmpty()){
+                return;
+            }
+        }
+        regions.add(new Region(key, placed, action));
     }
 
     // The key of the thing at that point, or null for empty space. The first one added wins where they overlap
@@ -41,7 +67,7 @@ public class HitMap {
         return null;
     }
 
-    // Where a key was last drawn, or null
+    // Where a key was last drawn (in the window, and only the part that is visible), or null
     public Rectangle BoundsOf(String key){
         for(Region region : regions){
             if(region.key.equals(key)){

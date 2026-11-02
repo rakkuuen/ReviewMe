@@ -205,7 +205,10 @@ class Main extends JFrame{
             // GameInfoScreen's field list handles its own mouse wheel internally
             // (see AutoGrowFieldList); only FrontPage's custom-painted cells need
             // scrolling driven manually from here
-            if(currentScreen == Screen.FRONT_PAGE){
+            if(currentScreen == Screen.MAIN_VIEW){
+                myMainView.Scroll(e.getWheelRotation());
+                repaint();
+            } else if(currentScreen == Screen.FRONT_PAGE){
                 myFrontPage.Scroll(e.getWheelRotation());
                 repaint();
             }
