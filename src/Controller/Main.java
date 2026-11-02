@@ -38,6 +38,7 @@ class Main extends JFrame{
         private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;
         private final ScreenFlow flow = new ScreenFlow();
+        private final RowActionHandler rowActions = new RowActionHandler(this, this::ReloadAndRepaint);
 
         // What the current press landed on, so release only acts if it's still on the same target
         private GameCell pressedCell;
@@ -61,7 +62,7 @@ class Main extends JFrame{
             this.addComponentListener(this);
             this.addKeyListener(this);
 
-            myMainView = new MainViewScreen(data, layout, flow::ShowFrontPage, this::OpenGameFromMainView);
+            myMainView = new MainViewScreen(data, layout, flow::ShowFrontPage, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos));
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
@@ -110,6 +111,11 @@ class Main extends JFrame{
 
         private void ReloadMainView(){
             myMainView.Reload(MainViewLoader.Load(layout.GetOverview().GetRowsPerSection(), layout.GetOverview().GetTopPickSlots()));
+        }
+
+        private void ReloadAndRepaint(){
+            ReloadMainView();
+            repaint();
         }
 
         @Override
@@ -258,7 +264,13 @@ class Main extends JFrame{
         // properties that don't work that way. Escape goes from the old list back to the main view
         @Override
         public void keyPressed(KeyEvent e) {
-            if(e.getKeyCode() == KeyEvent.VK_T && darkTheme != null){
+            boolean typing = flow.Current() == Screen.MAIN_VIEW && myMainView.IsTyping();
+            if(typing){
+                if(e.getKeyCode() == KeyEvent.VK_ESCAPE){
+                    myMainView.StopTyping();
+                    repaint();
+                }
+            } else if(e.getKeyCode() == KeyEvent.VK_T && darkTheme != null){
                 Theme.Current = (Theme.Current == defaultTheme) ? darkTheme : defaultTheme;
                 if(myGameInfoScreen != null){
                     myGameInfoScreen.ReapplyTheme();
@@ -274,7 +286,11 @@ class Main extends JFrame{
         public void keyReleased(KeyEvent e) { }
 
         @Override
-        public void keyTyped(KeyEvent e) { }
+        public void keyTyped(KeyEvent e) {
+            if(flow.Current() == Screen.MAIN_VIEW && myMainView.KeyTyped(e.getKeyChar())){
+                repaint();
+            }
+        }
 
     }
 

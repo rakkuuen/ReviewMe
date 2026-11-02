@@ -21,6 +21,8 @@ public enum LayoutKey {
     LIST_ROW_GAP("list.rowGap", 0),
     LIST_SCROLL_STEP("list.scrollStep", 1),
     LIST_BOTTOM_PADDING("list.bottomPadding", 0),
+    LIST_SEARCH_WIDTH("list.searchWidth", 1),                 // The search box above a list
+    LIST_PAGE_SIZE("list.pageSize", 1, 500),                  // Rows a list shows before "Show more" (a count)
 
     OVERVIEW_ROWS_PER_SECTION("overview.rowsPerSection", 1, 100),
     OVERVIEW_TOP_PICK_SLOTS("overview.topPickSlots", 1, 5),   // 5 is the most the database holds (the topPickSlot column's check)

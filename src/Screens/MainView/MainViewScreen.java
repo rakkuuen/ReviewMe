@@ -11,8 +11,11 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import Controller.BackEnd.ListTab.ListRules;
+import Controller.BackEnd.ListTab.RowAction;
 import Controller.BackEnd.MainView.ViewTarget;
 import Controller.BackEnd.MainView.HeaderText;
 import Controller.BackEnd.MainView.MainViewData;
@@ -45,6 +48,7 @@ public class MainViewScreen {
     private final HitMap hits = new HitMap();
     private final NavStrip strip;
     private final OverviewBody overviewBody;
+    private final ListBody listBody;
     private MainViewModel model;
     private String pressedKey;
     private int scroll;           // How far the body's content is scrolled up
@@ -58,11 +62,18 @@ public class MainViewScreen {
 
     // onOpenGame is what clicking a game's row does
     public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary, Consumer<LibraryGame> onOpenGame){
+        this(data, layout, onLibrary, onOpenGame, (action, game) -> { }, (game, items) -> { });
+    }
+
+    // onRowAction is what a button on a game's row does; onRowMenu shows the menu of a row's "..." button
+    public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary, Consumer<LibraryGame> onOpenGame, BiConsumer<RowAction, LibraryGame> onRowAction,
+            BiConsumer<LibraryGame, List<RowAction>> onRowMenu){
         this.data = data;
         this.layout = layout;
         this.onLibrary = onLibrary;
         this.strip = new NavStrip(layout.GetShell());
         this.overviewBody = new OverviewBody(data.GetOverview(), layout, this::OpenTarget, onOpenGame);
+        this.listBody = new ListBody(data.GetGames(), layout, onOpenGame, onRowAction, onRowMenu);
         Refresh();
     }
 
@@ -70,6 +81,7 @@ public class MainViewScreen {
     public void Reload(MainViewData fresh){
         this.data = fresh;
         overviewBody.Reload(fresh.GetOverview());
+        listBody.Reload(fresh.GetGames());
         Rebuild();
     }
 
@@ -158,7 +170,32 @@ public class MainViewScreen {
         String key = hits.KeyAt(point);
         boolean clicked = key != null && key.equals(pressedKey);
         pressedKey = null;
+        if(!ListBody.searchKey.equals(key)){
+            listBody.Blur();
+        }
         return clicked && hits.Run(key);
+    }
+
+    // A letter typed on the keyboard (a backspace is ''). Goes to the open list's search box if it has the keys. True if the screen
+    // changed and needs painting again
+    public boolean KeyTyped(char letter){
+        boolean changed = ListRules.IsListTab(state.GetTab()) && listBody.Type(letter);
+        if(changed){
+            scroll = 0;
+        }
+        return changed;
+    }
+
+    // True while the keys are going to a search box, so the window shouldn't treat them as shortcuts
+    public boolean IsTyping(){
+        return listBody.IsTyping();
+    }
+
+    // Takes the keys off the search box. True if it had them
+    public boolean StopTyping(){
+        boolean was = listBody.IsTyping();
+        listBody.Blur();
+        return was;
     }
 
     // Where a button was last drawn, or null (for tests and for anything that needs to point at a button)
@@ -212,6 +249,10 @@ public class MainViewScreen {
     private BodyPainter BodyFor(MainTab tab){
         if(tab == MainTab.OVERVIEW){
             return overviewBody;
+        }
+        if(ListRules.IsListTab(tab)){
+            listBody.Show(tab, state.GetSelection());
+            return listBody;
         }
         return new PlaceholderBody(MainViewLabels.TabLabel(tab) + " is not built yet");
     }
