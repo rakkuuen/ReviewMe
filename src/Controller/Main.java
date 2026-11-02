@@ -68,7 +68,7 @@ class Main extends JFrame{
             this.addKeyListener(this);
 
             myMainView = new MainViewScreen(data, layout, flow::ShowFrontPage, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos),
-                    new SeriesActions(this::OpenSeries, this::SeriesEditingComesLater));
+                    new SeriesActions(this::OpenSeries, this::NewSeries));
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
@@ -106,7 +106,7 @@ class Main extends JFrame{
             if(page == null){
                 return;
             }
-            mySeriesView = new SeriesViewScreen(page, layout, this::CloseSeries, () -> SeriesEditingComesLater(), id -> SeriesEditingComesLater(), id -> SeriesEditingComesLater(),
+            mySeriesView = new SeriesViewScreen(page, layout, this::CloseSeries, this::NewSeries, id -> SeriesEditingComesLater(), id -> SeriesEditingComesLater(),
                     this::OpenGameFromMainView);
             flow.OpenSeries();
         }
@@ -116,9 +116,18 @@ class Main extends JFrame{
             ReloadMainView();
         }
 
-        // Making, editing and assigning series comes with the series editing step
+        // Asks for a name and template, makes the series, and opens its (empty) page
+        private void NewSeries(){
+            NewSeriesDialog.Show(this, id -> {
+                ReloadMainView();
+                OpenSeries(id);
+                repaint();
+            });
+        }
+
+        // Editing and assigning series comes with the next steps
         private void SeriesEditingComesLater(){
-            JOptionPane.showMessageDialog(this, "Making and editing series comes in the next step.", "Series", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Editing series and assigning games comes in the next step.", "Series", JOptionPane.INFORMATION_MESSAGE);
         }
 
         // Opens a game's page. Back returns to wherever it was opened from
