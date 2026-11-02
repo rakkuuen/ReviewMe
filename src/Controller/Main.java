@@ -10,6 +10,9 @@ import Screens.MainView.MainViewScreen;
 import Screens.MainView.SeriesActions;
 import Screens.SeriesView.SeriesViewScreen;
 import Screens.Library.LibraryScreen;
+import Screens.GameDetail.GameDetailScreen;
+import Controller.BackEnd.GameDetail.GameDetailData;
+import Controller.BackEnd.GameDetail.GameDetailLoader;
 import Database.Dao.SeriesDao;
 import Controller.BackEnd.MainView.LibraryGameLoader;
 import Controller.BackEnd.SeriesView.SeriesViewData;
@@ -43,7 +46,9 @@ class Main extends JFrame{
         private final Layout layout;
         private MainViewScreen myMainView;
         private FrontPage myFrontPage;
-        private GameInfoScreen myGameInfoScreen;
+        private GameInfoScreen myGameInfoScreen;   // The old page: now only the editor, opened from the new page's Edit
+        private GameDetailScreen myGameDetail;
+        private boolean editingGame;
         private SeriesViewScreen mySeriesView;
         private LibraryScreen myLibrary;
         private final ScreenFlow flow = new ScreenFlow();
@@ -98,10 +103,52 @@ class Main extends JFrame{
 
         // A game's row was clicked on the main view
         private void OpenGameFromMainView(LibraryGame game){
-            LoadedReview review = ReviewLoader.Load(game.GetTitle());
-            if(review != null){
-                ShowGame(review);
+            GameDetailData page = GameDetailLoader.Load(game.GetTitle());
+            if(page == null){
+                return;
             }
+            myGameDetail = new GameDetailScreen(page, layout, this::CloseGameDetail, this::EditGame, this::OpenSeriesFromGame, this::AchievementsComeLater);
+            editingGame = false;
+            flow.OpenGame();
+        }
+
+        // Edit on a game's page: the old editor opens in edit mode. When it is closed the page shows what was saved
+        private void EditGame(){
+            LoadedReview review = ReviewLoader.Load(myGameDetail.GetTitle());
+            if(review == null){
+                return;
+            }
+            myGameInfoScreen = new GameInfoScreen(review, windowDimension, this::EndEditing);
+            myGameInfoScreen.AddComponentsTo(this);
+            myGameInfoScreen.EnterEditMode();
+            editingGame = true;
+        }
+
+        private void EndEditing(){
+            myGameInfoScreen.RemoveComponentsFrom(this);
+            editingGame = false;
+            GameDetailData fresh = GameDetailLoader.Load(myGameDetail.GetTitle());
+            if(fresh == null){
+                CloseGameDetail();
+            } else {
+                myGameDetail.Reload(fresh);
+            }
+        }
+
+        // The series link on a game's page: leaves the game and opens the series
+        private void OpenSeriesFromGame(String seriesId){
+            AfterGameClosed(flow.CloseGame());
+            OpenSeries(seriesId);
+        }
+
+        // The full achievements list comes with its own step
+        private void AchievementsComeLater(){
+            JOptionPane.showMessageDialog(this, "The full achievements list comes in a later step.", "Achievements", JOptionPane.INFORMATION_MESSAGE);
+        }
+
+        // Back from a game's page
+        private void CloseGameDetail(){
+            AfterGameClosed(flow.CloseGame());
         }
 
         // The Library button: every game, with search, filters and order. Back returns to the main view
@@ -170,7 +217,11 @@ class Main extends JFrame{
         // Back from a game's page. The main view re-reads the database first, since the game may have been changed
         private void CloseGame(){
             myGameInfoScreen.RemoveComponentsFrom(this);
-            Screen back = flow.CloseGame();
+            AfterGameClosed(flow.CloseGame());
+        }
+
+        // Whatever the game was opened from re-reads the database, since the game may have been changed
+        private void AfterGameClosed(Screen back){
             if(back == Screen.MAIN_VIEW){
                 ReloadMainView();
             } else if(back == Screen.LIBRARY){
@@ -217,8 +268,12 @@ class Main extends JFrame{
                     myLibrary.Paint(g, mousePos, getSize());
                     break;
                 case GAME_INFO_SCREEN:
-                    if(myGameInfoScreen != null){
-                        myGameInfoScreen.paint(g, mousePos, windowDimension);
+                    if(editingGame || myGameDetail == null){
+                        if(myGameInfoScreen != null){
+                            myGameInfoScreen.paint(g, mousePos, windowDimension);
+                        }
+                    } else {
+                        myGameDetail.Paint(g, mousePos, getSize());
                     }
                     break;
                 default:
@@ -253,6 +308,10 @@ class Main extends JFrame{
                     myLibrary.Press(mousePos);
                     break;
                 case GAME_INFO_SCREEN:
+                    if(!editingGame && myGameDetail != null){
+                        myGameDetail.Press(mousePos);
+                        break;
+                    }
                     myGameInfoScreen.NotifyBackPressed(mousePos);
                     pressedOnEditButton = myGameInfoScreen.WasEditClicked(mousePos);
                     pressedOnSaveButton = myGameInfoScreen.WasSaveClicked(mousePos);
@@ -284,6 +343,10 @@ class Main extends JFrame{
                     }
                     break;
                 case GAME_INFO_SCREEN:
+                    if(!editingGame && myGameDetail != null){
+                        myGameDetail.Release(mousePos);
+                        break;
+                    }
                     myGameInfoScreen.NotifyBackReleased(mousePos);
                     if(pressedOnEditButton && myGameInfoScreen.WasEditClicked(mousePos)){
                         myGameInfoScreen.EnterEditMode();
@@ -339,6 +402,9 @@ class Main extends JFrame{
                 repaint();
             } else if(flow.Current() == Screen.LIBRARY){
                 myLibrary.Scroll(e.getWheelRotation());
+                repaint();
+            } else if(flow.Current() == Screen.GAME_INFO_SCREEN && !editingGame && myGameDetail != null){
+                myGameDetail.Scroll(e.getWheelRotation());
                 repaint();
             }
         }
