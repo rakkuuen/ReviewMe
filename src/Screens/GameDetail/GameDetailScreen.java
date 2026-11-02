@@ -61,6 +61,7 @@ public class GameDetailScreen {
     private final HitMap hits = new HitMap();
     private final NavStrip strip;
     private String pressedKey;
+    private String toast;   // A short message shown over the bottom of the window, or null
     private int scroll;
     private int contentHeight;
     private int viewportHeight;
@@ -81,6 +82,11 @@ public class GameDetailScreen {
     }
 
     public String GetTitle(){ return data.GetTitle(); }
+
+    // Shows a short message ("Saved") over the bottom of the window until ClearToast
+    public void ShowToast(String message){ toast = message; }
+    public void ClearToast(){ toast = null; }
+    public String GetToast(){ return toast; }
 
     public void Paint(Graphics graphics, Point mouse, Dimension size){
         Graphics2D g = (Graphics2D) graphics.create();
@@ -105,9 +111,30 @@ public class GameDetailScreen {
                 g.fillRect(0, 0, size.width, size.height);
                 PaintPage(g, area, mouse);
             }
+            PaintToast(g, size);
         } finally {
             g.dispose();
         }
+    }
+
+    // The toast sits in the middle of the bottom of the window, over the page, in the accent colour
+    private void PaintToast(Graphics2D g, Dimension size){
+        if(toast == null){
+            return;
+        }
+        NavTheme nav = Theme.Current.GetNav();
+        Font font = nav.GetFont();
+        FontMetrics metrics = g.getFontMetrics(font);
+        ShellLayout shell = layout.GetShell();
+        int width = metrics.stringWidth(toast) + shell.GetItemPaddingX() + shell.GetItemPaddingX();
+        int height = metrics.getHeight() + shell.GetItemGap() + shell.GetItemGap();
+        Rectangle box = new Rectangle(LayoutMath.Centre(size.width, width), size.height - shell.GetPadding() - height, width, height);
+        g.setClip(null);
+        g.setColor(nav.GetSelected());
+        g.fillRoundRect(box.x, box.y, box.width - 1, box.height - 1, nav.GetCornerArc(), nav.GetCornerArc());
+        g.setFont(font);
+        g.setColor(nav.GetSelectedText());
+        g.drawString(toast, box.x + shell.GetItemPaddingX(), TextLine.Baseline(box.y, box.height, metrics));
     }
 
     private void PaintPage(Graphics2D g, Rectangle area, Point mouse){

@@ -32,6 +32,7 @@ public class GameInfoScreen{
     private Button saveButton;
     private Button cancelButton;
     private boolean isEditing = false;
+    private boolean savedWhileOpen = false;
 
     // One line under the title: "Saved", or why a save was refused
     private String statusMessage;
@@ -201,6 +202,9 @@ public class GameInfoScreen{
     }
 
     // Reads the boxes back into the review and saves it. If the save is refused the boxes stay as they are, in edit mode
+    // True if Save worked at any point since this screen was opened
+    public boolean WasSaved(){ return savedWhileOpen; }
+
     public void SaveChanges(){
         if(!isEditing){
             return;
@@ -209,11 +213,17 @@ public class GameInfoScreen{
             section.ReadInto(loadedReview.GetReview());
         }
 
+        // The Top picks slot is changed elsewhere, so take the stored one rather than write back an older copy
+        LoadedReview stored = ReviewLoader.Load(loadedReview.GetReview().GetTitle());
+        if(stored != null){
+            loadedReview.GetReview().SetTopPickSlot(stored.GetReview().GetTopPickSlot());
+        }
         SaveResult result = ReviewSaver.Save(loadedReview);
         if(!result.Succeeded()){
             ShowStatus("Not saved: " + String.join("; ", result.GetErrors()), true);
             return;
         }
+        savedWhileOpen = true;
         LeaveEditMode();
         ShowStatus("Saved", false);
         RefreshState();

@@ -125,6 +125,7 @@ class Main extends JFrame{
         }
 
         private void EndEditing(){
+            boolean saved = myGameInfoScreen.WasSaved();
             myGameInfoScreen.RemoveComponentsFrom(this);
             editingGame = false;
             GameDetailData fresh = GameDetailLoader.Load(myGameDetail.GetTitle());
@@ -132,7 +133,23 @@ class Main extends JFrame{
                 CloseGameDetail();
             } else {
                 myGameDetail.Reload(fresh);
+                if(saved){
+                    ShowGameToast("Saved");
+                }
             }
+        }
+
+        // A short message over the game's page that goes away by itself
+        private void ShowGameToast(String message){
+            myGameDetail.ShowToast(message);
+            javax.swing.Timer timer = new javax.swing.Timer(layout.GetShell().GetToastMillis(), e -> {
+                if(myGameDetail != null && message.equals(myGameDetail.GetToast())){
+                    myGameDetail.ClearToast();
+                    repaint();
+                }
+            });
+            timer.setRepeats(false);
+            timer.start();
         }
 
         // The series link on a game's page: leaves the game and opens the series

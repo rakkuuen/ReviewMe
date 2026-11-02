@@ -16,6 +16,7 @@ public enum LayoutKey {
     SHELL_TAB_BAR_HEIGHT("shell.tabBarHeight", 1),
     SHELL_ITEM_PADDING_X("shell.itemPaddingX", 0),            // Sideways padding inside a state button or tab
     SHELL_ITEM_GAP("shell.itemGap", 0),                       // Space between state buttons, and between tabs
+    SHELL_TOAST_MILLIS("shell.toastMillis", 1),               // How long a short message ("Saved") stays on screen, in milliseconds
 
     LIST_ROW_HEIGHT("list.rowHeight", 1),
     LIST_ROW_GAP("list.rowGap", 0),
