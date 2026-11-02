@@ -18,7 +18,6 @@ import Controller.BackEnd.Overview.OverviewSection;
 import Controller.BackEnd.Overview.OverviewSectionInfo;
 import Controller.BackEnd.Overview.OverviewSectionKind;
 import Controller.BackEnd.Overview.OverviewSeriesGroup;
-import Controller.BackEnd.Overview.SeriesHeading;
 import Controller.BackEnd.Overview.StatCard;
 import Controller.BackEnd.Overview.StatCards;
 import Controller.BackEnd.Overview.TopPickItem;
@@ -38,8 +37,6 @@ import Model.Themes.Theme;
 public class OverviewBody implements BodyPainter {
     private static final String statsCaption = "Your stats";
     private static final String viewAllWords = "View all";
-    private static final String collapsedMark = "+";
-    private static final String openMark = "-";
     private static final OverviewSectionKind[] pairedKinds = {OverviewSectionKind.INCOMPLETE, OverviewSectionKind.MORE_ACHIEVEMENTS};
     private static final OverviewSectionKind[] stackedBeforeSeries = {OverviewSectionKind.IN_PROGRESS, OverviewSectionKind.COMPLETED};
     private static final OverviewSectionKind[] stackedAfterSeries = {OverviewSectionKind.SHELVED, OverviewSectionKind.NOT_STARTED};
@@ -54,6 +51,7 @@ public class OverviewBody implements BodyPainter {
     private final StatCardPainter cardPainter;
     private final TopPicksPanel picksPanel;
     private final GameRowPainter rowPainter;
+    private final SeriesGroupPainter groupPainter;
     private final Set<String> collapsedSeries = new HashSet<>();
 
     public OverviewBody(OverviewData data, Layout layout){
@@ -68,6 +66,7 @@ public class OverviewBody implements BodyPainter {
         this.cardPainter = new StatCardPainter(layout.GetOverview());
         this.picksPanel = new TopPicksPanel(layout.GetOverview(), layout.GetList());
         this.rowPainter = new GameRowPainter(layout.GetOverview());
+        this.groupPainter = new SeriesGroupPainter(layout, rowPainter);
     }
 
     // Shows newer numbers. Series that were folded stay folded
@@ -181,16 +180,11 @@ public class OverviewBody implements BodyPainter {
         }
         for(OverviewSeriesGroup group : groups){
             String id = group.GetSeries().GetId();
-            boolean collapsed = collapsedSeries.contains(id);
-            y += PaintGroupHeading(g, new Rectangle(area.x, y, area.width, layout.GetList().GetRowHeight()), group, collapsed, mouse, hits) + layout.GetList().GetRowGap();
-            if(!collapsed){
-                int index = 0;
-                for(LibraryGame game : group.GetGames()){
-                    y += PaintGameRow(g, new Rectangle(area.x + overview.GetSeriesIndent(), y, area.width - overview.GetSeriesIndent(), layout.GetList().GetRowHeight()),
-                            OverviewRows.BuildForSeries(game), "row:series:" + id + ":" + index, mouse, hits) + layout.GetList().GetRowGap();
-                    index++;
+            y += groupPainter.Paint(g, area.x, y, area.width, group, collapsedSeries.contains(id), mouse, hits, () -> {
+                if(!collapsedSeries.remove(id)){
+                    collapsedSeries.add(id);
                 }
-            }
+            }, openGame, null, null) + layout.GetList().GetRowGap();
         }
         return y - layout.GetList().GetRowGap() - area.y;
     }
@@ -222,38 +216,6 @@ public class OverviewBody implements BodyPainter {
         if(row.CanOpen()){
             hits.Add(key, box, () -> openGame.accept(row.GetGame()));
         }
-        return box.height;
-    }
-
-    // A series heading: + or - to show whether it is folded, the name, and its summary
-    private int PaintGroupHeading(Graphics2D g, Rectangle box, OverviewSeriesGroup group, boolean collapsed, Point mouse, HitMap hits){
-        CardBox.Paint(g, box, box.contains(mouse));
-        Font headingFont = Theme.Current.GetHeading().GetFont(), smallFont = Theme.Current.GetField().GetFont();
-        FontMetrics headingMetrics = g.getFontMetrics(headingFont), smallMetrics = g.getFontMetrics(smallFont);
-        int pad = layout.GetOverview().GetCardPadding();
-
-        Graphics2D inside = (Graphics2D) g.create();
-        try {
-            inside.clipRect(box.x, box.y, box.width, box.height);
-            inside.setFont(headingFont);
-            inside.setColor(Theme.Current.GetHeading().GetColour());
-            String mark = collapsed ? collapsedMark : openMark;
-            int markX = box.x + pad;
-            int nameX = markX + headingMetrics.stringWidth(collapsedMark) + pad;
-            inside.drawString(mark, markX, TextLine.Baseline(box.y, box.height, headingMetrics));
-            inside.drawString(SeriesHeading.Name(group), nameX, TextLine.Baseline(box.y, box.height, headingMetrics));
-            String summary = SeriesHeading.Summary(group);
-            inside.setFont(smallFont);
-            inside.drawString(summary, box.x + box.width - pad - smallMetrics.stringWidth(summary), TextLine.Baseline(box.y, box.height, smallMetrics));
-        } finally {
-            inside.dispose();
-        }
-        String id = group.GetSeries().GetId();
-        hits.Add("series:" + id, box, () -> {
-            if(!collapsedSeries.remove(id)){
-                collapsedSeries.add(id);
-            }
-        });
         return box.height;
     }
 

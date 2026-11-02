@@ -49,6 +49,7 @@ public class MainViewScreen {
     private final NavStrip strip;
     private final OverviewBody overviewBody;
     private final ListBody listBody;
+    private final SeriesBody seriesBody;
     private MainViewModel model;
     private String pressedKey;
     private int scroll;           // How far the body's content is scrolled up
@@ -68,12 +69,19 @@ public class MainViewScreen {
     // onRowAction is what a button on a game's row does; onRowMenu shows the menu of a row's "..." button
     public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary, Consumer<LibraryGame> onOpenGame, BiConsumer<RowAction, LibraryGame> onRowAction,
             BiConsumer<LibraryGame, List<RowAction>> onRowMenu){
+        this(data, layout, onLibrary, onOpenGame, onRowAction, onRowMenu, SeriesActions.None());
+    }
+
+    // series is what the Series tab's buttons do (open a series, make a new one)
+    public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary, Consumer<LibraryGame> onOpenGame, BiConsumer<RowAction, LibraryGame> onRowAction,
+            BiConsumer<LibraryGame, List<RowAction>> onRowMenu, SeriesActions series){
         this.data = data;
         this.layout = layout;
         this.onLibrary = onLibrary;
         this.strip = new NavStrip(layout.GetShell());
         this.overviewBody = new OverviewBody(data.GetOverview(), layout, this::OpenTarget, onOpenGame);
         this.listBody = new ListBody(data.GetGames(), layout, onOpenGame, onRowAction, onRowMenu);
+        this.seriesBody = new SeriesBody(data.GetGames(), data.GetSeries(), layout, onOpenGame, series);
         Refresh();
     }
 
@@ -82,6 +90,7 @@ public class MainViewScreen {
         this.data = fresh;
         overviewBody.Reload(fresh.GetOverview());
         listBody.Reload(fresh.GetGames());
+        seriesBody.Reload(fresh.GetGames(), fresh.GetSeries());
         Rebuild();
     }
 
@@ -253,6 +262,10 @@ public class MainViewScreen {
         if(ListRules.IsListTab(tab)){
             listBody.Show(tab, state.GetSelection());
             return listBody;
+        }
+        if(tab == MainTab.SERIES){
+            seriesBody.Show(state.GetSelection());
+            return seriesBody;
         }
         return new PlaceholderBody(MainViewLabels.TabLabel(tab) + " is not built yet");
     }
