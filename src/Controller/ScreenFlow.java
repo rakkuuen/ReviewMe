@@ -9,6 +9,7 @@ public class ScreenFlow {
         FRONT_PAGE,   // TEMP: the old flat list of every review, until the Library screen is built
         SERIES_VIEW,
         LIBRARY,
+        ACHIEVEMENTS,
         GAME_INFO_SCREEN
     }
 
@@ -41,8 +42,26 @@ public class ScreenFlow {
         }
     }
 
-    // Escape on the old list, the Library or a series' page goes back to the main view. Anywhere else it does nothing. True if it moved
+    // A game's achievements were opened from its page
+    public void OpenAchievements(){
+        if(current == Screen.GAME_INFO_SCREEN){
+            current = Screen.ACHIEVEMENTS;
+        }
+    }
+
+    // Back from the achievements to the game's page
+    public void CloseAchievements(){
+        if(current == Screen.ACHIEVEMENTS){
+            current = Screen.GAME_INFO_SCREEN;
+        }
+    }
+
+    // Escape on the achievements goes back to the game. On the old list, the Library or a series' page it goes back to the main view. Anywhere else it does nothing. True if it moved
     public boolean Escape(){
+        if(current == Screen.ACHIEVEMENTS){
+            current = Screen.GAME_INFO_SCREEN;
+            return true;
+        }
         if(current != Screen.FRONT_PAGE && current != Screen.SERIES_VIEW && current != Screen.LIBRARY){
             return false;
         }

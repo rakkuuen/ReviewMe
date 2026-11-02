@@ -11,6 +11,9 @@ import Screens.MainView.SeriesActions;
 import Screens.SeriesView.SeriesViewScreen;
 import Screens.Library.LibraryScreen;
 import Screens.GameDetail.GameDetailScreen;
+import Screens.Achievements.AchievementsScreen;
+import Controller.BackEnd.AchievementView.AchievementViewData;
+import Controller.BackEnd.AchievementView.AchievementViewLoader;
 import Controller.BackEnd.GameDetail.GameDetailData;
 import Controller.BackEnd.GameDetail.GameDetailLoader;
 import Database.Dao.SeriesDao;
@@ -48,6 +51,7 @@ class Main extends JFrame{
         private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;   // The old page: now only the editor, opened from the new page's Edit
         private GameDetailScreen myGameDetail;
+        private AchievementsScreen myAchievements;
         private boolean editingGame;
         private SeriesViewScreen mySeriesView;
         private LibraryScreen myLibrary;
@@ -107,7 +111,7 @@ class Main extends JFrame{
             if(page == null){
                 return;
             }
-            myGameDetail = new GameDetailScreen(page, layout, this::CloseGameDetail, this::EditGame, this::OpenSeriesFromGame, this::AchievementsComeLater);
+            myGameDetail = new GameDetailScreen(page, layout, this::CloseGameDetail, this::EditGame, this::OpenSeriesFromGame, this::OpenAchievements);
             editingGame = false;
             flow.OpenGame();
         }
@@ -158,9 +162,18 @@ class Main extends JFrame{
             OpenSeries(seriesId);
         }
 
-        // The full achievements list comes with its own step
-        private void AchievementsComeLater(){
-            JOptionPane.showMessageDialog(this, "The full achievements list comes in a later step.", "Achievements", JOptionPane.INFORMATION_MESSAGE);
+        // View all on a game's page: its achievements, with filter and order. Back returns to the game
+        private void OpenAchievements(){
+            AchievementViewData page = AchievementViewLoader.Load(myGameDetail.GetTitle());
+            if(page == null){
+                return;
+            }
+            myAchievements = new AchievementsScreen(page, layout, this::CloseAchievements);
+            flow.OpenAchievements();
+        }
+
+        private void CloseAchievements(){
+            flow.CloseAchievements();
         }
 
         // Back from a game's page
@@ -284,6 +297,9 @@ class Main extends JFrame{
                 case LIBRARY:
                     myLibrary.Paint(g, mousePos, getSize());
                     break;
+                case ACHIEVEMENTS:
+                    myAchievements.Paint(g, mousePos, getSize());
+                    break;
                 case GAME_INFO_SCREEN:
                     if(editingGame || myGameDetail == null){
                         if(myGameInfoScreen != null){
@@ -324,6 +340,9 @@ class Main extends JFrame{
                 case LIBRARY:
                     myLibrary.Press(mousePos);
                     break;
+                case ACHIEVEMENTS:
+                    myAchievements.Press(mousePos);
+                    break;
                 case GAME_INFO_SCREEN:
                     if(!editingGame && myGameDetail != null){
                         myGameDetail.Press(mousePos);
@@ -350,6 +369,9 @@ class Main extends JFrame{
                     break;
                 case LIBRARY:
                     myLibrary.Release(mousePos);
+                    break;
+                case ACHIEVEMENTS:
+                    myAchievements.Release(mousePos);
                     break;
                 case FRONT_PAGE:
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
@@ -419,6 +441,9 @@ class Main extends JFrame{
                 repaint();
             } else if(flow.Current() == Screen.LIBRARY){
                 myLibrary.Scroll(e.getWheelRotation());
+                repaint();
+            } else if(flow.Current() == Screen.ACHIEVEMENTS){
+                myAchievements.Scroll(e.getWheelRotation());
                 repaint();
             } else if(flow.Current() == Screen.GAME_INFO_SCREEN && !editingGame && myGameDetail != null){
                 myGameDetail.Scroll(e.getWheelRotation());
