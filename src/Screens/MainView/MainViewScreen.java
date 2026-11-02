@@ -38,13 +38,13 @@ public class MainViewScreen {
     private static final String syncKey = "action:sync";
     private static final String libraryKey = "action:library";
 
-    private final MainViewData data;
+    private MainViewData data;
     private final Layout layout;
     private final Runnable onLibrary;
     private final MainViewState state = new MainViewState();
     private final HitMap hits = new HitMap();
     private final NavStrip strip;
-    private final BodyPainter overviewBody;
+    private final OverviewBody overviewBody;
     private MainViewModel model;
     private String pressedKey;
     private int scroll;           // How far the body's content is scrolled up
@@ -64,6 +64,13 @@ public class MainViewScreen {
         this.strip = new NavStrip(layout.GetShell());
         this.overviewBody = new OverviewBody(data.GetOverview(), layout, this::OpenTarget, onOpenGame);
         Refresh();
+    }
+
+    // Shows newer data (after a game was edited, say) and stays where it is: the same state, tab and scroll, series still folded
+    public void Reload(MainViewData fresh){
+        this.data = fresh;
+        overviewBody.Reload(fresh.GetOverview());
+        Rebuild();
     }
 
     // Goes to a state and tab ("View all" on the Overview)
@@ -109,6 +116,20 @@ public class MainViewScreen {
     private void PaintBody(Graphics2D g, Rectangle body, Point mouse){
         viewportHeight = body.height;
         scroll = ClampScroll(scroll);
+        int scrolledTo = scroll;
+        int mark = hits.Size();
+        PaintBodyAt(g, body, mouse);
+        if(scroll != scrolledTo){
+            // The content turned out shorter than the scroll allowed (newer data, say): wipe that attempt and paint from where it can be
+            hits.TruncateTo(mark);
+            g.setColor(Theme.Current.GetBackground());
+            g.fillRect(body.x, body.y, body.width, body.height);
+            PaintBodyAt(g, body, mouse);
+        }
+    }
+
+    // One go at painting the body at the current scroll. Afterwards the scroll is held to what the content allows
+    private void PaintBodyAt(Graphics2D g, Rectangle body, Point mouse){
         Graphics2D inBody = (Graphics2D) g.create();
         try {
             inBody.clipRect(body.x, body.y, body.width, body.height);
@@ -150,8 +171,12 @@ public class MainViewScreen {
 
     // Rebuilds what is drawn for the current state, and starts the new tab at the top
     private void Refresh(){
-        model = MainViewModel.Build(data.GetGames(), data.GetSeriesIds(), state);
+        Rebuild();
         scroll = 0;
+    }
+
+    private void Rebuild(){
+        model = MainViewModel.Build(data.GetGames(), data.GetSeriesIds(), state);
     }
 
     private List<NavEntry> StateEntries(){

@@ -44,13 +44,13 @@ public class OverviewBody implements BodyPainter {
     private static final OverviewSectionKind[] stackedBeforeSeries = {OverviewSectionKind.IN_PROGRESS, OverviewSectionKind.COMPLETED};
     private static final OverviewSectionKind[] stackedAfterSeries = {OverviewSectionKind.SHELVED, OverviewSectionKind.NOT_STARTED};
 
-    private final OverviewData data;
+    private OverviewData data;
     private final Layout layout;
     private final Consumer<ViewTarget> viewAll;
     private final Consumer<LibraryGame> openGame;
-    private final List<StatCard> cards;
-    private final List<YearBar> bars;
-    private final List<TopPickItem> picks;
+    private List<StatCard> cards;
+    private List<YearBar> bars;
+    private List<TopPickItem> picks;
     private final StatCardPainter cardPainter;
     private final TopPicksPanel picksPanel;
     private final GameRowPainter rowPainter;
@@ -61,16 +61,21 @@ public class OverviewBody implements BodyPainter {
     }
 
     public OverviewBody(OverviewData data, Layout layout, Consumer<ViewTarget> viewAll, Consumer<LibraryGame> openGame){
-        this.data = data;
         this.layout = layout;
         this.viewAll = viewAll;
         this.openGame = openGame;
-        this.cards = StatCards.Build(data.GetStats());
-        this.bars = YearBars.Build(data.GetStats().GetCompletedByYear(), layout.GetOverview().GetChartYears());
-        this.picks = TopPickItems.Build(data.GetTopPicks());
+        Reload(data);
         this.cardPainter = new StatCardPainter(layout.GetOverview());
         this.picksPanel = new TopPicksPanel(layout.GetOverview(), layout.GetList());
         this.rowPainter = new GameRowPainter(layout.GetOverview());
+    }
+
+    // Shows newer numbers. Series that were folded stay folded
+    public void Reload(OverviewData fresh){
+        this.data = fresh;
+        this.cards = StatCards.Build(fresh.GetStats());
+        this.bars = YearBars.Build(fresh.GetStats().GetCompletedByYear(), layout.GetOverview().GetChartYears());
+        this.picks = TopPickItems.Build(fresh.GetTopPicks());
     }
 
     @Override

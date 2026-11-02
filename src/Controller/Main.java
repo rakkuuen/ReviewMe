@@ -10,10 +10,13 @@ import Screens.MainView.MainViewScreen;
 import Controller.BackEnd.MainView.MainViewData;
 import Controller.BackEnd.MainView.MainViewLoader;
 import Controller.BackEnd.Reviews.LoadedReview;
+import Controller.BackEnd.Reviews.ReviewLoader;
+import Controller.ScreenFlow.Screen;
 import Model.Layout.Layout;
 import Model.Layout.LayoutException;
 import Model.Layout.LayoutLoader;
 import Model.Layout.WindowLayout;
+import Model.Library.LibraryGame;
 import Model.Widgets.GameCell;
 import Model.Themes.Theme;
 import Model.Themes.ThemeLoader;
@@ -29,18 +32,12 @@ class Main extends JFrame{
     Dimension windowDimension;
     Point mousePos;
 
-    // This will track my screens to switch through
-    enum Screen{
-        MAIN_VIEW,
-        FRONT_PAGE,   // TEMP: the old flat list of every review, reached from the header's Library button until the Library screen is built
-        GAME_INFO_SCREEN
-    }
-
     class App extends JPanel implements MouseListener, MouseMotionListener, MouseWheelListener, ComponentListener, KeyListener {
+        private final Layout layout;
         private MainViewScreen myMainView;
         private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;
-        private Screen currentScreen = Screen.MAIN_VIEW;
+        private final ScreenFlow flow = new ScreenFlow();
 
         // What the current press landed on, so release only acts if it's still on the same target
         private GameCell pressedCell;
@@ -53,6 +50,7 @@ class Main extends JFrame{
         private Theme darkTheme;
 
         public App(Layout layout, MainViewData data) {
+            this.layout = layout;
             WindowLayout window = layout.GetWindow();
             setPreferredSize(new Dimension(window.GetStartWidth(), window.GetStartHeight()));
             setLayout(null); // Absolute positioning, to match GameCell/Button's coordinate style
@@ -63,7 +61,7 @@ class Main extends JFrame{
             this.addComponentListener(this);
             this.addKeyListener(this);
 
-            myMainView = new MainViewScreen(data, layout, () -> currentScreen = Screen.FRONT_PAGE);
+            myMainView = new MainViewScreen(data, layout, flow::ShowFrontPage, this::OpenGameFromMainView);
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
@@ -87,13 +85,40 @@ class Main extends JFrame{
             }
         }
 
+        // A game's row was clicked on the main view
+        private void OpenGameFromMainView(LibraryGame game){
+            LoadedReview review = ReviewLoader.Load(game.GetTitle());
+            if(review != null){
+                ShowGame(review);
+            }
+        }
+
+        // Opens a game's page. Back returns to wherever it was opened from
+        private void ShowGame(LoadedReview review){
+            flow.OpenGame();
+            myGameInfoScreen = new GameInfoScreen(review, windowDimension, this::CloseGame);
+            myGameInfoScreen.AddComponentsTo(this);
+        }
+
+        // Back from a game's page. The main view re-reads the database first, since the game may have been changed
+        private void CloseGame(){
+            myGameInfoScreen.RemoveComponentsFrom(this);
+            if(flow.CloseGame() == Screen.MAIN_VIEW){
+                ReloadMainView();
+            }
+        }
+
+        private void ReloadMainView(){
+            myMainView.Reload(MainViewLoader.Load(layout.GetOverview().GetRowsPerSection(), layout.GetOverview().GetTopPickSlots()));
+        }
+
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g); // Clears the panel before repainting
             g.setColor(Theme.Current.GetBackground());
             g.fillRect(0, 0, getWidth(), getHeight());
 
-            switch(currentScreen){
+            switch(flow.Current()){
                 case MAIN_VIEW:
                     myMainView.Paint(g, mousePos, getSize());
                     break;
@@ -106,7 +131,7 @@ class Main extends JFrame{
                     }
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected Screen: " + currentScreen);
+                    throw new IllegalStateException("Unexpected Screen: " + flow.Current());
             }
 
         }
@@ -123,7 +148,7 @@ class Main extends JFrame{
         public void mousePressed(MouseEvent e) {
             // Just note what the press landed on; the actual action only fires on release,
             // and only if the release is still on the same target (see mouseReleased)
-            switch (currentScreen) {
+            switch (flow.Current()) {
                 case MAIN_VIEW:
                     myMainView.Press(mousePos);
                     break;
@@ -143,7 +168,7 @@ class Main extends JFrame{
 
         @Override
         public void mouseReleased(MouseEvent e) {
-            switch (currentScreen) {
+            switch (flow.Current()) {
                 case MAIN_VIEW:
                     myMainView.Release(mousePos);
                     break;
@@ -151,12 +176,7 @@ class Main extends JFrame{
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
                         LoadedReview clickedReview = myFrontPage.CheckWhichCellWasClicked(mousePos);
                         if(clickedReview != null){
-                            myGameInfoScreen = new GameInfoScreen(clickedReview, windowDimension, () -> {
-                                myGameInfoScreen.RemoveComponentsFrom(this);
-                                currentScreen = Screen.FRONT_PAGE;
-                            });
-                            myGameInfoScreen.AddComponentsTo(this);
-                            currentScreen = Screen.GAME_INFO_SCREEN;
+                            ShowGame(clickedReview);
                         }
                     }
                     break;
@@ -203,12 +223,12 @@ class Main extends JFrame{
         @Override
         public void mouseWheelMoved(MouseWheelEvent e) {
             // GameInfoScreen's field list handles its own mouse wheel internally
-            // (see AutoGrowFieldList); only FrontPage's custom-painted cells need
-            // scrolling driven manually from here
-            if(currentScreen == Screen.MAIN_VIEW){
+            // (see AutoGrowFieldList); the main view and the old list scroll their
+            // custom-painted content from here
+            if(flow.Current() == Screen.MAIN_VIEW){
                 myMainView.Scroll(e.getWheelRotation());
                 repaint();
-            } else if(currentScreen == Screen.FRONT_PAGE){
+            } else if(flow.Current() == Screen.FRONT_PAGE){
                 myFrontPage.Scroll(e.getWheelRotation());
                 repaint();
             }
@@ -244,8 +264,8 @@ class Main extends JFrame{
                     myGameInfoScreen.ReapplyTheme();
                 }
                 repaint();
-            } else if(e.getKeyCode() == KeyEvent.VK_ESCAPE && currentScreen == Screen.FRONT_PAGE){
-                currentScreen = Screen.MAIN_VIEW;
+            } else if(e.getKeyCode() == KeyEvent.VK_ESCAPE && flow.Escape()){
+                ReloadMainView();
                 repaint();
             }
         }

@@ -27,6 +27,17 @@ public class HitMap {
     private int offsetX, offsetY;
     private Rectangle visible;   // Null when no frame is set
 
+    // How many areas there are now, so what a paint added after this can be thrown away again with TruncateTo
+    public int Size(){
+        return regions.size();
+    }
+
+    public void TruncateTo(int size){
+        while(regions.size() > size){
+            regions.remove(regions.size() - 1);
+        }
+    }
+
     public void Clear(){
         regions.clear();
         ClearFrame();
