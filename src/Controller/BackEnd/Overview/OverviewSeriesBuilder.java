@@ -26,7 +26,8 @@ public class OverviewSeriesBuilder {
         return groups;
     }
 
-    private static OverviewSeriesGroup GroupOf(Series series, List<LibraryGame> games){
+    // One series with its games in series order and its numbers. games can be any selection of the library: the ones in the series count
+    public static OverviewSeriesGroup GroupOf(Series series, List<LibraryGame> games){
         Map<GameReview, LibraryGame> gameByReview = new IdentityHashMap<>();
         List<GameReview> reviews = new ArrayList<>();
         for(LibraryGame game : games){

@@ -1,6 +1,5 @@
 package Controller.BackEnd.MainView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import Controller.BackEnd.Overview.OverviewLoader;
@@ -13,10 +12,7 @@ public class MainViewLoader {
 
     public static MainViewData Load(int rowsPerSection, int topPickSlots){
         List<LibraryGame> games = LibraryGameLoader.Load();
-        List<String> seriesIds = new ArrayList<>();
-        for(Series series : SeriesDao.GetAllSeries()){
-            seriesIds.add(series.GetId());
-        }
-        return new MainViewData(games, seriesIds, OverviewLoader.Load(games, rowsPerSection, topPickSlots));
+        List<Series> series = SeriesDao.GetAllSeries();
+        return MainViewData.WithSeries(games, series, OverviewLoader.Load(games, rowsPerSection, topPickSlots));
     }
 }
