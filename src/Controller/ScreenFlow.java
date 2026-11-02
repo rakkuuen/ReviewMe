@@ -1,12 +1,13 @@
 package Controller;
 
-// Which screen is showing, and where Back goes from a game. A game opened from the main view goes back to the main view, and one opened
-// from the old list (the Library stopgap) goes back to the list. No drawing in here, so the routes can be checked on their own
+// Which screen is showing, and where Back goes from a game or a series. A game opened from the main view goes back to the main view,
+// one opened from a series' page goes back to that page, and one opened from the old list (the Library stopgap) goes back to the list. No drawing in here, so the routes can be checked on their own
 public class ScreenFlow {
 
     public enum Screen {
         MAIN_VIEW,
         FRONT_PAGE,   // TEMP: the old flat list of every review, until the Library screen is built
+        SERIES_VIEW,
         GAME_INFO_SCREEN
     }
 
@@ -23,9 +24,21 @@ public class ScreenFlow {
         current = Screen.FRONT_PAGE;
     }
 
-    // Escape on the old list goes back to the main view. Anywhere else it does nothing. True if it moved
+    // A series' page was opened from the main view
+    public void OpenSeries(){
+        current = Screen.SERIES_VIEW;
+    }
+
+    // Back from a series' page to the main view
+    public void CloseSeries(){
+        if(current == Screen.SERIES_VIEW){
+            current = Screen.MAIN_VIEW;
+        }
+    }
+
+    // Escape on the old list or a series' page goes back to the main view. Anywhere else it does nothing. True if it moved
     public boolean Escape(){
-        if(current != Screen.FRONT_PAGE){
+        if(current != Screen.FRONT_PAGE && current != Screen.SERIES_VIEW){
             return false;
         }
         current = Screen.MAIN_VIEW;

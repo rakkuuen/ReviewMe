@@ -7,6 +7,10 @@ import Database.Dao.GameReviewDao;
 import Screens.FrontPage;
 import Screens.GameInfoScreen;
 import Screens.MainView.MainViewScreen;
+import Screens.MainView.SeriesActions;
+import Screens.SeriesView.SeriesViewScreen;
+import Controller.BackEnd.SeriesView.SeriesViewData;
+import Controller.BackEnd.SeriesView.SeriesViewLoader;
 import Controller.BackEnd.MainView.MainViewData;
 import Controller.BackEnd.MainView.MainViewLoader;
 import Controller.BackEnd.Reviews.LoadedReview;
@@ -37,6 +41,7 @@ class Main extends JFrame{
         private MainViewScreen myMainView;
         private FrontPage myFrontPage;
         private GameInfoScreen myGameInfoScreen;
+        private SeriesViewScreen mySeriesView;
         private final ScreenFlow flow = new ScreenFlow();
         private final RowActionHandler rowActions = new RowActionHandler(this, this::ReloadAndRepaint);
 
@@ -62,7 +67,8 @@ class Main extends JFrame{
             this.addComponentListener(this);
             this.addKeyListener(this);
 
-            myMainView = new MainViewScreen(data, layout, flow::ShowFrontPage, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos));
+            myMainView = new MainViewScreen(data, layout, flow::ShowFrontPage, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos),
+                    new SeriesActions(this::OpenSeries, this::SeriesEditingComesLater));
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
@@ -94,6 +100,27 @@ class Main extends JFrame{
             }
         }
 
+        // Opens a series' page (from the Series tab). Back returns to the main view
+        private void OpenSeries(String seriesId){
+            SeriesViewData page = SeriesViewLoader.Load(seriesId);
+            if(page == null){
+                return;
+            }
+            mySeriesView = new SeriesViewScreen(page, layout, this::CloseSeries, () -> SeriesEditingComesLater(), id -> SeriesEditingComesLater(), id -> SeriesEditingComesLater(),
+                    this::OpenGameFromMainView);
+            flow.OpenSeries();
+        }
+
+        private void CloseSeries(){
+            flow.CloseSeries();
+            ReloadMainView();
+        }
+
+        // Making, editing and assigning series comes with the series editing step
+        private void SeriesEditingComesLater(){
+            JOptionPane.showMessageDialog(this, "Making and editing series comes in the next step.", "Series", JOptionPane.INFORMATION_MESSAGE);
+        }
+
         // Opens a game's page. Back returns to wherever it was opened from
         private void ShowGame(LoadedReview review){
             flow.OpenGame();
@@ -104,8 +131,16 @@ class Main extends JFrame{
         // Back from a game's page. The main view re-reads the database first, since the game may have been changed
         private void CloseGame(){
             myGameInfoScreen.RemoveComponentsFrom(this);
-            if(flow.CloseGame() == Screen.MAIN_VIEW){
+            Screen back = flow.CloseGame();
+            if(back == Screen.MAIN_VIEW){
                 ReloadMainView();
+            } else if(back == Screen.SERIES_VIEW){
+                SeriesViewData fresh = SeriesViewLoader.Load(mySeriesView.GetSeriesId());
+                if(fresh == null){
+                    CloseSeries();
+                } else {
+                    mySeriesView.Reload(fresh);
+                }
             }
         }
 
@@ -130,6 +165,9 @@ class Main extends JFrame{
                     break;
                 case FRONT_PAGE:
                     myFrontPage.paint(g, mousePos);
+                    break;
+                case SERIES_VIEW:
+                    mySeriesView.Paint(g, mousePos, getSize());
                     break;
                 case GAME_INFO_SCREEN:
                     if(myGameInfoScreen != null){
@@ -161,6 +199,9 @@ class Main extends JFrame{
                 case FRONT_PAGE:
                     pressedCell = myFrontPage.GetCellAt(mousePos);
                     break;
+                case SERIES_VIEW:
+                    mySeriesView.Press(mousePos);
+                    break;
                 case GAME_INFO_SCREEN:
                     myGameInfoScreen.NotifyBackPressed(mousePos);
                     pressedOnEditButton = myGameInfoScreen.WasEditClicked(mousePos);
@@ -177,6 +218,9 @@ class Main extends JFrame{
             switch (flow.Current()) {
                 case MAIN_VIEW:
                     myMainView.Release(mousePos);
+                    break;
+                case SERIES_VIEW:
+                    mySeriesView.Release(mousePos);
                     break;
                 case FRONT_PAGE:
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
@@ -236,6 +280,9 @@ class Main extends JFrame{
                 repaint();
             } else if(flow.Current() == Screen.FRONT_PAGE){
                 myFrontPage.Scroll(e.getWheelRotation());
+                repaint();
+            } else if(flow.Current() == Screen.SERIES_VIEW){
+                mySeriesView.Scroll(e.getWheelRotation());
                 repaint();
             }
         }
