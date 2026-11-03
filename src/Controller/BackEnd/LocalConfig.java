@@ -10,6 +10,11 @@ public class LocalConfig {
     private static final String filePath = "Resources/local.properties";
     private static Properties properties;
 
+    // Reads the file again at the next Get, after the settings were changed
+    public static void Reload(){
+        properties = null;
+    }
+
     public static String Get(String key) throws IOException {
         if(properties == null){
             Properties loaded = new Properties();

@@ -18,6 +18,8 @@ import Screens.SeriesView.SeriesViewScreen;
 import Screens.Library.LibraryScreen;
 import Screens.GameDetail.GameDetailScreen;
 import Screens.Achievements.AchievementsScreen;
+import Screens.Settings.SettingsScreen;
+import Controller.BackEnd.LocalConfig;
 import Controller.BackEnd.AchievementView.AchievementViewData;
 import Controller.BackEnd.AchievementView.AchievementViewLoader;
 import Controller.BackEnd.GameDetail.GameDetailData;
@@ -38,14 +40,12 @@ import Model.Layout.WindowLayout;
 import Model.Library.LibraryGame;
 import Model.Widgets.GameCell;
 import Model.Themes.Theme;
-import Model.Themes.ThemeLoader;
 
 
 
 class Main extends JFrame{
     private static final String layoutPath = "Resources/Themes/layout.properties";
     private static final String startTheme = "Resources/Themes/default.properties";   // Its layout.* lines (if any) are laid over the layout file
-    private static final String darkThemePath = "Resources/Themes/dark.properties";
 
     App canvas;
     Dimension windowDimension;
@@ -58,6 +58,8 @@ class Main extends JFrame{
         private GameInfoScreen myGameInfoScreen;   // The old page: now only the editor, opened from the new page's Edit
         private GameDetailScreen myGameDetail;
         private AchievementsScreen myAchievements;
+        private SettingsScreen mySettings;
+        private SettingsController settingsController;
         private boolean editingGame;
         private volatile SyncSnapshot syncStatus = SyncWords.Idle();   // Written by the sync thread, read when painting
         private SeriesViewScreen mySeriesView;
@@ -72,10 +74,6 @@ class Main extends JFrame{
         private boolean pressedOnCancelButton;
         private boolean pressedOnSectionsButton;
 
-        // TEMP: proves live theme switching actually works end to end - press T to toggle
-        private Theme defaultTheme = Theme.Current;
-        private Theme darkTheme;
-
         public App(Layout layout, MainViewData data) {
             this.layout = layout;
             WindowLayout window = layout.GetWindow();
@@ -89,19 +87,13 @@ class Main extends JFrame{
             this.addKeyListener(this);
 
             myMainView = new MainViewScreen(data, layout, this::OpenLibrary, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos),
-                    new SeriesActions(this::OpenSeries, this::NewSeries), new SyncActions(() -> syncStatus, this::StartSync, this::SettingsComeLater));
+                    new SeriesActions(this::OpenSeries, this::NewSeries), new SyncActions(() -> syncStatus, this::StartSync, this::OpenSettings));
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
             // Main's constructor once the real windowDimension is known after pack()) corrects
             // it to the actual final size.
             myFrontPage = new FrontPage(getPreferredSize());
-
-            try {
-                darkTheme = ThemeLoader.Load(darkThemePath);
-            } catch (java.io.IOException | java.awt.FontFormatException e) {
-                System.err.println("Could not load dark theme for test toggle: " + e.getMessage());
-            }
         }
 
         // Re-lays out every screen against the current windowDimension - called once after
@@ -248,9 +240,35 @@ class Main extends JFrame{
             repaint();
         }
 
-        // Settings is the next step
-        private void SettingsComeLater(){
-            JOptionPane.showMessageDialog(this, "Settings (Steam key and ID) comes in the next step. For now they are in Resources/local.properties.", "Settings", JOptionPane.INFORMATION_MESSAGE);
+        // The header's Settings button, and Open settings on a failed sync: the Steam key and ID, folders, theme and backups. Back returns to the main view
+        private void OpenSettings(){
+            settingsController = new SettingsController(this, this::CloseSettings, this::ShowSettingsChange, this::ShowThemeChange, this::ShowRestoredDatabase);
+            mySettings = new SettingsScreen(settingsController.Read(), layout, settingsController);
+            flow.ShowSettings();
+            repaint();
+        }
+
+        private void CloseSettings(){
+            flow.ShowMainView();
+            repaint();
+        }
+
+        private void ShowSettingsChange(){
+            mySettings.Reload(settingsController.Read());
+            repaint();
+        }
+
+        private void ShowThemeChange(){
+            if(myGameInfoScreen != null){
+                myGameInfoScreen.ReapplyTheme();
+            }
+            ShowSettingsChange();
+        }
+
+        // A backup was put in place of the database, so everything on show is read in again
+        private void ShowRestoredDatabase(){
+            ReloadAndRepaint();
+            ShowSettingsChange();
         }
 
         // + Add game manually on the Library: a review for a game that isn't on Steam, then its page
@@ -352,6 +370,9 @@ class Main extends JFrame{
                 case ACHIEVEMENTS:
                     myAchievements.Paint(g, mousePos, getSize());
                     break;
+                case SETTINGS:
+                    mySettings.Paint(g, mousePos, getSize());
+                    break;
                 case GAME_INFO_SCREEN:
                     if(editingGame || myGameDetail == null){
                         if(myGameInfoScreen != null){
@@ -395,6 +416,9 @@ class Main extends JFrame{
                 case ACHIEVEMENTS:
                     myAchievements.Press(mousePos);
                     break;
+                case SETTINGS:
+                    mySettings.Press(mousePos);
+                    break;
                 case GAME_INFO_SCREEN:
                     if(!editingGame && myGameDetail != null){
                         myGameDetail.Press(mousePos);
@@ -425,6 +449,9 @@ class Main extends JFrame{
                     break;
                 case ACHIEVEMENTS:
                     myAchievements.Release(mousePos);
+                    break;
+                case SETTINGS:
+                    mySettings.Release(mousePos);
                     break;
                 case FRONT_PAGE:
                     if(pressedCell != null && pressedCell == myFrontPage.GetCellAt(mousePos)){
@@ -501,6 +528,9 @@ class Main extends JFrame{
             } else if(flow.Current() == Screen.ACHIEVEMENTS){
                 myAchievements.Scroll(e.getWheelRotation());
                 repaint();
+            } else if(flow.Current() == Screen.SETTINGS){
+                mySettings.Scroll(e.getWheelRotation());
+                repaint();
             } else if(flow.Current() == Screen.GAME_INFO_SCREEN && !editingGame && myGameDetail != null){
                 myGameDetail.Scroll(e.getWheelRotation());
                 repaint();
@@ -525,10 +555,7 @@ class Main extends JFrame{
         @Override
         public void componentHidden(ComponentEvent e) { }
 
-        // TEMP: proves live theme switching actually works end to end - press T to toggle.
-        // Custom-painted stuff (Button/GameCell/field backgrounds) picks up Theme.Current
-        // automatically on the next repaint; ReapplyTheme() handles the real Swing text
-        // properties that don't work that way. Escape goes from the old list back to the main view
+        // Escape goes from the old list, the Library, Settings or a series' page back to the main view
         @Override
         public void keyPressed(KeyEvent e) {
             boolean typing = (flow.Current() == Screen.MAIN_VIEW && myMainView.IsTyping()) || (flow.Current() == Screen.LIBRARY && myLibrary.IsTyping());
@@ -541,12 +568,6 @@ class Main extends JFrame{
                     }
                     repaint();
                 }
-            } else if(e.getKeyCode() == KeyEvent.VK_T && darkTheme != null){
-                Theme.Current = (Theme.Current == defaultTheme) ? darkTheme : defaultTheme;
-                if(myGameInfoScreen != null){
-                    myGameInfoScreen.ReapplyTheme();
-                }
-                repaint();
             } else if(e.getKeyCode() == KeyEvent.VK_ESCAPE && flow.Escape()){
                 ReloadMainView();
                 repaint();
@@ -580,6 +601,12 @@ class Main extends JFrame{
             return;
         }
 
+        // The theme chosen in Settings last time (the built-in one when none was)
+        Theme saved = SettingsController.SavedTheme();
+        if(saved != null){
+            Theme.Current = saved;
+        }
+
         MainViewData data = MainViewLoader.Load(layout.GetOverview().GetRowsPerSection(), layout.GetOverview().GetTopPickSlots());
 
         // Swing GUI work (creation, events, painting) all belongs on the EDT
@@ -598,7 +625,7 @@ class Main extends JFrame{
         // Get dimension of window to pass through and use
         windowDimension = canvas.getSize();
         canvas.ReflowAll(); // Correct the initial estimate (preferred size) to the real packed size
-        canvas.requestFocusInWindow(); // So the theme-toggle test hook (key T) works immediately
+        canvas.requestFocusInWindow(); // So Escape works straight away
     }
 
     // Get mouse position

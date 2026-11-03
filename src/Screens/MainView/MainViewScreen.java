@@ -45,6 +45,7 @@ public class MainViewScreen {
     private static final String libraryKey = "action:library";
     public static final String retryKey = "action:retry";
     public static final String settingsKey = "action:settings";
+    public static final String headerSettingsKey = "action:headersettings";
     public static final String syncActionKey = syncKey;
 
     private MainViewData data;
@@ -270,6 +271,7 @@ public class MainViewScreen {
         List<NavEntry> actions = new ArrayList<>();
         actions.add(new NavEntry(syncKey, SyncWords.syncButton, null, false, sync.GetState() != SyncState.RUNNING, syncActions::Sync));
         actions.add(new NavEntry(libraryKey, "Library", null, false, true, onLibrary));
+        actions.add(new NavEntry(headerSettingsKey, "Settings", null, false, true, syncActions::OpenSettings));
         return actions;
     }
 

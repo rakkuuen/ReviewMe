@@ -10,6 +10,7 @@ public class ScreenFlow {
         SERIES_VIEW,
         LIBRARY,
         ACHIEVEMENTS,
+        SETTINGS,
         GAME_INFO_SCREEN
     }
 
@@ -28,6 +29,11 @@ public class ScreenFlow {
 
     public void ShowLibrary(){
         current = Screen.LIBRARY;
+    }
+
+    // Settings was opened from the main view. Back (or Escape) returns there
+    public void ShowSettings(){
+        current = Screen.SETTINGS;
     }
 
     // A series' page was opened from the main view
@@ -56,13 +62,13 @@ public class ScreenFlow {
         }
     }
 
-    // Escape on the achievements goes back to the game. On the old list, the Library or a series' page it goes back to the main view. Anywhere else it does nothing. True if it moved
+    // Escape on the achievements goes back to the game. On the old list, the Library, Settings or a series' page it goes back to the main view. Anywhere else it does nothing. True if it moved
     public boolean Escape(){
         if(current == Screen.ACHIEVEMENTS){
             current = Screen.GAME_INFO_SCREEN;
             return true;
         }
-        if(current != Screen.FRONT_PAGE && current != Screen.SERIES_VIEW && current != Screen.LIBRARY){
+        if(current != Screen.FRONT_PAGE && current != Screen.SERIES_VIEW && current != Screen.LIBRARY && current != Screen.SETTINGS){
             return false;
         }
         current = Screen.MAIN_VIEW;
