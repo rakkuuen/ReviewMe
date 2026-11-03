@@ -8,6 +8,12 @@ import Screens.FrontPage;
 import Screens.GameInfoScreen;
 import Screens.MainView.MainViewScreen;
 import Screens.MainView.SeriesActions;
+import Screens.MainView.SyncActions;
+import Controller.BackEnd.SyncRun.RealSyncSteps;
+import Controller.BackEnd.SyncRun.SyncRunner;
+import Controller.BackEnd.SyncRun.SyncSnapshot;
+import Controller.BackEnd.SyncRun.SyncState;
+import Controller.BackEnd.SyncRun.SyncWords;
 import Screens.SeriesView.SeriesViewScreen;
 import Screens.Library.LibraryScreen;
 import Screens.GameDetail.GameDetailScreen;
@@ -53,6 +59,7 @@ class Main extends JFrame{
         private GameDetailScreen myGameDetail;
         private AchievementsScreen myAchievements;
         private boolean editingGame;
+        private volatile SyncSnapshot syncStatus = SyncWords.Idle();   // Written by the sync thread, read when painting
         private SeriesViewScreen mySeriesView;
         private LibraryScreen myLibrary;
         private final ScreenFlow flow = new ScreenFlow();
@@ -82,7 +89,7 @@ class Main extends JFrame{
             this.addKeyListener(this);
 
             myMainView = new MainViewScreen(data, layout, this::OpenLibrary, this::OpenGameFromMainView, rowActions::Run, (game, items) -> rowActions.ShowMenu(game, items, mousePos),
-                    new SeriesActions(this::OpenSeries, this::NewSeries));
+                    new SeriesActions(this::OpenSeries, this::NewSeries), new SyncActions(() -> syncStatus, this::StartSync, this::SettingsComeLater));
 
             // The panel isn't packed/realized yet, so getSize() would still read (0,0) here -
             // use the preferred size as the initial layout estimate. ReflowAll() (called from
@@ -212,6 +219,38 @@ class Main extends JFrame{
         private void CloseSeries(){
             flow.CloseSeries();
             ReloadMainView();
+        }
+
+        // The Sync button: the library and then the achievements, on a thread of its own so the window stays alive. The screen shows how
+        // far it is and, when it stops, why. Whatever it saved is read in again when it ends
+        private void StartSync(){
+            if(syncStatus.GetState() == SyncState.RUNNING){
+                return;
+            }
+            syncStatus = SyncWords.Running(0, 0);
+            repaint();
+            Thread worker = new Thread(() -> {
+                SyncRunner.Run(new RealSyncSteps(), snapshot -> {
+                    syncStatus = snapshot;
+                    SwingUtilities.invokeLater(this::repaint);
+                });
+                SwingUtilities.invokeLater(this::ReloadAfterSync);
+            }, "steam-sync");
+            worker.setDaemon(true);
+            worker.start();
+        }
+
+        private void ReloadAfterSync(){
+            ReloadMainView();
+            if(flow.Current() == Screen.LIBRARY){
+                myLibrary.Reload(LibraryGameLoader.Load(), SeriesDao.GetAllSeries());
+            }
+            repaint();
+        }
+
+        // Settings is the next step
+        private void SettingsComeLater(){
+            JOptionPane.showMessageDialog(this, "Settings (Steam key and ID) comes in the next step. For now they are in Resources/local.properties.", "Settings", JOptionPane.INFORMATION_MESSAGE);
         }
 
         // + Add game manually on the Library: a review for a game that isn't on Steam, then its page

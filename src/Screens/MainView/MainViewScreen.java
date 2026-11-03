@@ -17,6 +17,9 @@ import java.util.function.Consumer;
 import Controller.BackEnd.ListTab.ListRules;
 import Controller.BackEnd.ListTab.RowAction;
 import Controller.BackEnd.MainView.ViewTarget;
+import Controller.BackEnd.SyncRun.SyncSnapshot;
+import Controller.BackEnd.SyncRun.SyncState;
+import Controller.BackEnd.SyncRun.SyncWords;
 import Controller.BackEnd.MainView.HeaderText;
 import Controller.BackEnd.MainView.MainViewData;
 import Controller.BackEnd.MainView.MainViewLabels;
@@ -40,10 +43,14 @@ public class MainViewScreen {
     private static final String stateCaption = "State";
     private static final String syncKey = "action:sync";
     private static final String libraryKey = "action:library";
+    public static final String retryKey = "action:retry";
+    public static final String settingsKey = "action:settings";
+    public static final String syncActionKey = syncKey;
 
     private MainViewData data;
     private final Layout layout;
     private final Runnable onLibrary;
+    private final SyncActions syncActions;
     private final MainViewState state = new MainViewState();
     private final HitMap hits = new HitMap();
     private final NavStrip strip;
@@ -75,6 +82,13 @@ public class MainViewScreen {
     // series is what the Series tab's buttons do (open a series, make a new one)
     public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary, Consumer<LibraryGame> onOpenGame, BiConsumer<RowAction, LibraryGame> onRowAction,
             BiConsumer<LibraryGame, List<RowAction>> onRowMenu, SeriesActions series){
+        this(data, layout, onLibrary, onOpenGame, onRowAction, onRowMenu, series, SyncActions.None());
+    }
+
+    // sync is how the sync stands and what its buttons do
+    public MainViewScreen(MainViewData data, Layout layout, Runnable onLibrary, Consumer<LibraryGame> onOpenGame, BiConsumer<RowAction, LibraryGame> onRowAction,
+            BiConsumer<LibraryGame, List<RowAction>> onRowMenu, SeriesActions series, SyncActions sync){
+        this.syncActions = sync;
         this.data = data;
         this.layout = layout;
         this.onLibrary = onLibrary;
@@ -117,8 +131,12 @@ public class MainViewScreen {
             g.setClip(area);
 
             int y = area.y;
-            PaintHeader(g, area.x, y, area.width, mouse);
+            SyncSnapshot sync = syncActions.Status();
+            PaintHeader(g, area.x, y, area.width, mouse, sync);
             y += shell.GetHeaderHeight() + shell.GetGap();
+            if(sync.GetState().IsFailure()){
+                y += PaintBanner(g, area.x, y, area.width, mouse, sync) + shell.GetGap();
+            }
             y += strip.Paint(g, area.x, y, shell.GetStateRowHeight(), area.width, stateCaption, StateEntries(), mouse, hits) + shell.GetGap();
             y += strip.Paint(g, area.x, y, shell.GetTabBarHeight(), area.width, null, TabEntries(), mouse, hits) + shell.GetGap();
 
@@ -248,9 +266,9 @@ public class MainViewScreen {
     }
 
     // Sync can't be used from here yet; Library goes where onLibrary says
-    private List<NavEntry> HeaderActions(){
+    private List<NavEntry> HeaderActions(SyncSnapshot sync){
         List<NavEntry> actions = new ArrayList<>();
-        actions.add(new NavEntry(syncKey, "Sync", null, false, false, null));
+        actions.add(new NavEntry(syncKey, SyncWords.syncButton, null, false, sync.GetState() != SyncState.RUNNING, syncActions::Sync));
         actions.add(new NavEntry(libraryKey, "Library", null, false, true, onLibrary));
         return actions;
     }
@@ -270,8 +288,39 @@ public class MainViewScreen {
         return new PlaceholderBody(MainViewLabels.TabLabel(tab) + " is not built yet");
     }
 
+    // A failed sync: what went wrong and what to do, with Retry (and Open settings for a key problem) at the right
+    private int PaintBanner(Graphics2D g, int x, int y, int width, Point mouse, SyncSnapshot sync){
+        ShellLayout shell = layout.GetShell();
+        int pad = layout.GetOverview().GetCardPadding();
+        TextStyle headline = Theme.Current.GetHeading();
+        FontMetrics headMetrics = g.getFontMetrics(headline.GetFont());
+        FontMetrics detailMetrics = g.getFontMetrics(Theme.Current.GetField().GetFont());
+        Rectangle box = new Rectangle(x, y, width, Math.max(layout.GetList().GetRowHeight(), pad + headMetrics.getHeight() + detailMetrics.getHeight() + pad));
+        CardBox.Paint(g, box, false);
+
+        List<NavEntry> buttons = new ArrayList<>();
+        if(sync.OpensSettings()){
+            buttons.add(new NavEntry(settingsKey, SyncWords.settingsButton, null, false, true, syncActions::OpenSettings));
+        }
+        if(sync.CanRetry()){
+            buttons.add(new NavEntry(retryKey, SyncWords.retryButton, null, false, true, syncActions::Sync));
+        }
+        int buttonsWidth = strip.Width(g, null, buttons);
+        strip.Paint(g, box.x + box.width - pad - buttonsWidth, box.y + LayoutMath.Centre(box.height, shell.GetStateRowHeight()), shell.GetStateRowHeight(), buttonsWidth, null, buttons, mouse, hits);
+
+        int textWidth = Math.max(0, box.width - pad - pad - buttonsWidth - shell.GetItemGap());
+        int top = box.y + LayoutMath.Centre(box.height, headMetrics.getHeight() + detailMetrics.getHeight());
+        g.setFont(headline.GetFont());
+        g.setColor(Theme.Current.GetNav().GetSelected());
+        g.drawString(TextFit.Fit(headMetrics, sync.GetHeadline(), textWidth), box.x + pad, top + headMetrics.getAscent());
+        g.setFont(Theme.Current.GetField().GetFont());
+        g.setColor(Theme.Current.GetHeading().GetColour());
+        g.drawString(TextFit.Fit(detailMetrics, sync.GetDetail(), textWidth), box.x + pad, top + headMetrics.getHeight() + detailMetrics.getAscent());
+        return box.height;
+    }
+
     // The app's name with its summary line under it on the left; the last sync time and the header's actions on the right
-    private void PaintHeader(Graphics2D g, int x, int y, int width, Point mouse){
+    private void PaintHeader(Graphics2D g, int x, int y, int width, Point mouse, SyncSnapshot sync){
         ShellLayout shell = layout.GetShell();
         TextStyle title = Theme.Current.GetTitle();
         TextStyle line = Theme.Current.GetHeading();
@@ -288,11 +337,12 @@ public class MainViewScreen {
         g.setColor(line.GetColour());
         g.drawString(summary, x, top + titleMetrics.getHeight() + lineMetrics.getAscent());
 
-        List<NavEntry> actions = HeaderActions();
+        List<NavEntry> actions = HeaderActions(sync);
         int actionsX = x + width - strip.Width(g, null, actions);
         strip.Paint(g, actionsX, y + LayoutMath.Centre(shell.GetHeaderHeight(), shell.GetStateRowHeight()), shell.GetStateRowHeight(), Integer.MAX_VALUE, null, actions, mouse, hits);
 
-        String synced = HeaderText.LastSynced(stats.GetLastSyncedAt(), Instant.now().getEpochSecond(), ZoneId.systemDefault());
+        String synced = sync.GetState() == SyncState.RUNNING ? sync.GetHeadline() + (sync.GetTotal() > 0 ? " " + sync.GetPercent() + "%" : "")
+                : HeaderText.LastSynced(stats.GetLastSyncedAt(), Instant.now().getEpochSecond(), ZoneId.systemDefault());
         int syncedX = actionsX - shell.GetItemGap() - lineMetrics.stringWidth(synced);
         int leftBlockEnd = x + Math.max(titleMetrics.stringWidth(appName), lineMetrics.stringWidth(summary)) + shell.GetGap();
         if(syncedX > leftBlockEnd){
