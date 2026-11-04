@@ -3,3 +3,4 @@ Resources/Databases/*.db
 bin/
 import_dry_run.txt
 Resources/local.properties
+Resources/Emoji/mine/

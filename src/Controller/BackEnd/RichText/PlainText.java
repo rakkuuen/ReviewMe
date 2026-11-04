@@ -4,9 +4,9 @@ import java.util.List;
 
 // A document as one line of plain text, for the places that preview a written field (list rows, search results, series cards). Marks are
 // dropped (bold, italic, colour, font; a link keeps its words), line and paragraph breaks become a space, items after the first in a
-// list are separated with " · ", and runs of spaces become one. The caller cuts it to the width it has
+// list are separated with a middle dot, and runs of spaces become one. The caller cuts it to the width it has
 public class PlainText {
-    private static final String itemSeparator = " · ";
+    private static final String itemSeparator = " " + (char) 0x00B7 + " ";
 
     // How an emoji shows in a preview: as :name:, or not at all
     public enum EmojiMode { SHORTCODE, HIDDEN }

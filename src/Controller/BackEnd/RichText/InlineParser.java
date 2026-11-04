@@ -1,5 +1,6 @@
 package Controller.BackEnd.RichText;
 
+import Controller.BackEnd.Emoji.EmojiNames;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -18,8 +19,6 @@ class InlineParser {
     private static final Pattern spanOpen = Pattern.compile("<span class=\"([^\"<>]*)\">");
     private static final Pattern classKey = Pattern.compile("rm-([cf])-([a-z0-9_]+)");
     private static final Pattern link = Pattern.compile("\\[((?:\\\\.|[^\\[\\]\\n\\\\])*)\\]\\((https?://[^\\s()]+)\\)");
-    private static final int emojiNameMin = 2;
-    private static final int emojiNameMax = 24;
     private static final int longestEmphasis = 3;
     private static final int boldMarks = 2;
 
@@ -198,19 +197,15 @@ class InlineParser {
     // Where the emoji starting at this colon ends, or the colon's own position when there isn't a known one here
     private int EmojiEnd(int colon){
         int j = colon + 1;
-        while(j < length && !literal[j] && !consumed[j] && IsNameChar(text.charAt(j))){
+        while(j < length && !literal[j] && !consumed[j] && EmojiNames.IsNameChar(text.charAt(j))){
             j++;
         }
         int nameLength = j - colon - 1;
         boolean closed = j < length && text.charAt(j) == ':' && !literal[j] && !consumed[j];
-        if(closed && nameLength >= emojiNameMin && nameLength <= emojiNameMax && knownEmoji.test(text.substring(colon + 1, j))){
+        if(closed && nameLength >= EmojiNames.minLength && nameLength <= EmojiNames.maxLength && knownEmoji.test(text.substring(colon + 1, j))){
             return j + 1;
         }
         return colon;
-    }
-
-    private static boolean IsNameChar(char c){
-        return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
     }
 
     // Matches runs of * as openers and closers. A run opens when a non-space follows it and closes when a non-space is before it. A
