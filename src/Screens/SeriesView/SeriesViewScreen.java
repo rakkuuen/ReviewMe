@@ -1,5 +1,6 @@
 package Screens.SeriesView;
 
+import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -31,6 +32,9 @@ import Screens.MainView.NavStrip;
 import Screens.MainView.StatCardPainter;
 import Screens.MainView.TextFit;
 import Screens.MainView.TextLine;
+import Screens.RichText.RichBox;
+import Screens.RichText.RichLayout;
+import Screens.RichText.RichTextKit;
 
 // One series' page: Back and the series buttons across the top, its name and template, the four stat cards, its notes and its games
 // in order with an assign button. Draws what the backend worked out (SeriesViewData) and hands every click back through the
@@ -50,6 +54,8 @@ public class SeriesViewScreen {
     public static final String noGamesTitle = "No games in this series yet";
     public static final String noGamesHint = "Assign games from your library. They switch to this series' template.";
 
+    private static final String notesKey = "seriesview:notes";
+
     public static String RowKey(int index){ return "seriesview:row:" + index; }
 
     private SeriesViewData data;
@@ -61,12 +67,13 @@ public class SeriesViewScreen {
     private final NavStrip strip;
     private final StatCardPainter cardPainter;
     private final GameRowPainter rowPainter;
+    private final RichBox rich;
     private String pressedKey;
     private int scroll;
     private int contentHeight;
     private int viewportHeight;
 
-    public SeriesViewScreen(SeriesViewData data, Layout layout, Runnable onBack, Runnable onNewSeries, Consumer<String> onEdit, Consumer<String> onAssign, Consumer<LibraryGame> onOpenGame){
+    public SeriesViewScreen(SeriesViewData data, Layout layout, Runnable onBack, Runnable onNewSeries, Consumer<String> onEdit, Consumer<String> onAssign, Consumer<LibraryGame> onOpenGame, RichTextKit kit, Consumer<String> onOpenLink){
         this.data = data;
         this.layout = layout;
         this.onBack = onBack;
@@ -77,6 +84,7 @@ public class SeriesViewScreen {
         this.strip = new NavStrip(layout.GetShell());
         this.cardPainter = new StatCardPainter(layout.GetOverview());
         this.rowPainter = new GameRowPainter(layout.GetOverview());
+        this.rich = new RichBox(kit, layout.GetRich(), hits, onOpenLink);
     }
 
     // Shows the series as it is now, staying where it is scrolled to
@@ -136,7 +144,7 @@ public class SeriesViewScreen {
         y += PaintTopBar(g, y, width, mouse) + shell.GetGap();
         y += PaintTitle(g, y, width) + shell.GetGap();
         y += PaintCards(g, y, width) + overview.GetSectionGap();
-        y += PaintNotes(g, y, width) + overview.GetSectionGap();
+        y += PaintNotes(g, y, width, mouse) + overview.GetSectionGap();
         y += PaintGames(g, y, width, mouse);
         return y + layout.GetList().GetBottomPadding();
     }
@@ -201,19 +209,27 @@ public class SeriesViewScreen {
         return y + overview.GetStatCardHeight() - top;
     }
 
-    // The notes in a box, wrapped to its width; the stand-in words (no notes yet) are drawn quieter
-    private int PaintNotes(Graphics2D g, int top, int width){
+    // The notes in a box, formatted; the stand-in words (no notes yet) are plain and drawn quieter
+    private int PaintNotes(Graphics2D g, int top, int width, Point mouse){
         OverviewLayout overview = layout.GetOverview();
         int y = top + PaintHeading(g, top, notesHeading);
-        FontMetrics metrics = g.getFontMetrics(Theme.Current.GetField().GetFont());
+        Font font = Theme.Current.GetField().GetFont();
         int pad = overview.GetCardPadding();
-        List<String> lines = TextWrap.Lines(metrics, data.GetNotes(), Math.max(1, width - pad - pad));
-        Rectangle box = new Rectangle(0, y, width, pad + lines.size() * metrics.getHeight() + pad);
+        int room = Math.max(1, width - pad - pad);
+        RichLayout notes = data.HasNotes() ? rich.Lay(g, data.GetNotes(), room, font, Theme.Current.GetCell().GetText()) : null;
+        FontMetrics metrics = g.getFontMetrics(font);
+        List<String> lines = data.HasNotes() ? Collections.emptyList() : TextWrap.Lines(metrics, data.GetNotes(), room);
+        int textHeight = notes == null ? lines.size() * metrics.getHeight() : notes.GetHeight();
+        Rectangle box = new Rectangle(0, y, width, pad + textHeight + pad);
         CardBox.Paint(g, box, false);
-        g.setFont(Theme.Current.GetField().GetFont());
-        g.setColor(data.HasNotes() ? Theme.Current.GetCell().GetText() : Theme.Current.GetNav().GetDisabledText());
-        for(int i = 0; i < lines.size(); i++){
-            g.drawString(lines.get(i), box.x + pad, box.y + pad + i * metrics.getHeight() + metrics.getAscent());
+        if(notes != null){
+            rich.Paint(g, notes, box.x + pad, box.y + pad, mouse, notesKey);
+        } else {
+            g.setFont(font);
+            g.setColor(Theme.Current.GetNav().GetDisabledText());
+            for(int i = 0; i < lines.size(); i++){
+                g.drawString(lines.get(i), box.x + pad, box.y + pad + i * metrics.getHeight() + metrics.getAscent());
+            }
         }
         return box.y + box.height - top;
     }
@@ -304,6 +320,11 @@ public class SeriesViewScreen {
         boolean clicked = key != null && key.equals(pressedKey);
         pressedKey = null;
         return clicked && hits.Run(key);
+    }
+
+    // Is that point on a link in the notes (so the pointer should be a hand)?
+    public boolean IsOverLink(Point point){
+        return RichBox.IsLinkKey(hits.KeyAt(point));
     }
 
     // Where a button was last drawn, or null

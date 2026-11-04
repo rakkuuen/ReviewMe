@@ -128,27 +128,23 @@ final class RichLayouter {
         int x = indent;
         StringBuilder run = new StringBuilder();
         Piece runPiece = null;
-        int runX = x;
         for(Piece piece : line){
             if(runPiece != null && !Joins(runPiece, piece)){
-                AddText(run, runPiece, runX, x - runX, baseline, top, height);
+                x += AddText(run, runPiece, x, baseline, top, height);
                 run.setLength(0);
                 runPiece = null;
             }
             if(piece.IsEmoji()){
                 out.add(new RichFragment(RichFragment.Kind.EMOJI, piece.GetText(), x, baseline, piece.GetWidth(), top, height, piece.GetFont(), piece.GetColour(),
                         piece.GetScale(), piece.GetLink(), piece.GetLinkId()));
+                x += piece.GetWidth();
             } else {
-                if(runPiece == null){
-                    runPiece = piece;
-                    runX = x;
-                }
+                runPiece = runPiece == null ? piece : runPiece;
                 run.append(piece.GetText());
             }
-            x += piece.GetWidth();
         }
         if(runPiece != null){
-            AddText(run, runPiece, runX, x - runX, baseline, top, height);
+            AddText(run, runPiece, x, baseline, top, height);
         }
         return top + height;
     }
@@ -157,9 +153,13 @@ final class RichLayouter {
         return !b.IsEmoji() && a.GetFont().equals(b.GetFont()) && a.GetColour().equals(b.GetColour()) && Objects.equals(a.GetLink(), b.GetLink());
     }
 
-    private void AddText(StringBuilder run, Piece first, int x, int width, int baseline, int top, int height){
+    // A run of text is drawn in one go, so its width is measured in one go (the words measured one by one, each rounded to a pixel, add up
+    // to a little more or less over a long run). Returns that width
+    private int AddText(StringBuilder run, Piece first, int x, int baseline, int top, int height){
+        int width = g.getFontMetrics(first.GetFont()).stringWidth(run.toString());
         out.add(new RichFragment(RichFragment.Kind.TEXT, run.toString(), x, baseline, width, top, height, first.GetFont(), first.GetColour(), 0, first.GetLink(),
                 first.GetLinkId()));
+        return width;
     }
 
     // A bullet or "3." in the marker column, level with the item's first line

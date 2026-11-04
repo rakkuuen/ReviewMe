@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import Controller.BackEnd.GameDetail.DetailBadge;
-import Controller.BackEnd.GameDetail.DetailPart;
 import Controller.BackEnd.GameDetail.DetailSection;
 import Controller.BackEnd.GameDetail.DetailStat;
 import Controller.BackEnd.GameDetail.GameDetailData;
@@ -32,7 +31,8 @@ import Screens.MainView.NavEntry;
 import Screens.MainView.NavStrip;
 import Screens.MainView.TextFit;
 import Screens.MainView.TextLine;
-import Screens.SeriesView.TextWrap;
+import Screens.RichText.RichBox;
+import Screens.RichText.RichTextKit;
 
 // A game's page, read only: Back, Edit and Export across the top, the title with its series link and badges, the stats strip, tags, and
 // every section of the review (missing ones marked, subsections nested). Draws what GameDetailBuilder worked out and hands every click
@@ -60,13 +60,14 @@ public class GameDetailScreen {
     private final Consumer<String> onOpenSeries;
     private final HitMap hits = new HitMap();
     private final NavStrip strip;
+    private final DetailSectionPainter sections;
     private String pressedKey;
     private String toast;   // A short message shown over the bottom of the window, or null
     private int scroll;
     private int contentHeight;
     private int viewportHeight;
 
-    public GameDetailScreen(GameDetailData data, Layout layout, Runnable onBack, Runnable onEdit, Consumer<String> onOpenSeries, Runnable onViewAchievements){
+    public GameDetailScreen(GameDetailData data, Layout layout, Runnable onBack, Runnable onEdit, Consumer<String> onOpenSeries, Runnable onViewAchievements, RichTextKit kit, Consumer<String> onOpenLink){
         this.data = data;
         this.layout = layout;
         this.onBack = onBack;
@@ -74,6 +75,7 @@ public class GameDetailScreen {
         this.onOpenSeries = onOpenSeries;
         this.onViewAchievements = onViewAchievements;
         this.strip = new NavStrip(layout.GetShell());
+        this.sections = new DetailSectionPainter(layout, new RichBox(kit, layout.GetRich(), hits, onOpenLink));
     }
 
     // Shows the game as it is now, staying where it is scrolled to
@@ -162,7 +164,7 @@ public class GameDetailScreen {
         y += PaintTags(g, y, width);
         for(DetailSection section : data.GetSections()){
             y += overview.GetSectionGap();
-            y += PaintSection(g, y, width, section);
+            y += sections.Paint(g, y, width, section, mouse);
         }
         return y + layout.GetList().GetBottomPadding();
     }
@@ -352,126 +354,6 @@ public class GameDetailScreen {
         return y + height - top;
     }
 
-    // One section: its heading (with MISSING when it is), then a card with what is in it
-    private int PaintSection(Graphics2D g, int top, int width, DetailSection section){
-        OverviewLayout overview = layout.GetOverview();
-        TextStyle heading = Theme.Current.GetHeading();
-        FontMetrics headingMetrics = g.getFontMetrics(heading.GetFont());
-        int y = top;
-        g.setFont(heading.GetFont());
-        g.setColor(heading.GetColour());
-        g.drawString(section.GetHeading(), 0, y + headingMetrics.getAscent());
-        if(section.GetState() == DetailSection.State.MISSING){
-            g.setColor(Theme.Current.GetNav().GetSelected());
-            g.drawString(missingWord, headingMetrics.stringWidth(section.GetHeading()) + layout.GetShell().GetItemGap(), y + headingMetrics.getAscent());
-        }
-        y += Math.max(headingMetrics.getHeight(), overview.GetSectionHeaderHeight());
-
-        int pad = overview.GetCardPadding();
-        Font body = Theme.Current.GetField().GetFont();
-        FontMetrics bodyMetrics = g.getFontMetrics(body);
-        List<Line> lines = SectionLines(g, section, Math.max(1, width - pad - pad), body, bodyMetrics);
-        int contentHeight = 0;
-        for(Line line : lines){
-            contentHeight = Math.max(contentHeight, line.y + bodyMetrics.getHeight());
-        }
-        Rectangle box = new Rectangle(0, y, width, pad + contentHeight + pad);
-        CardBox.Paint(g, box, false);
-        Graphics2D inside = (Graphics2D) g.create();
-        try {
-            inside.clipRect(box.x, box.y, box.width, box.height);
-            for(Line line : lines){
-                inside.setFont(line.font);
-                inside.setColor(line.colour);
-                inside.drawString(line.text, box.x + pad + line.x, box.y + pad + line.y + g.getFontMetrics(line.font).getAscent());
-            }
-        } finally {
-            inside.dispose();
-        }
-        return box.y + box.height - top;
-    }
-
-    // A line of text inside a section's card: where it goes (from the card's padding), its font and colour
-    private static class Line {
-        private final String text;
-        private final int x, y;
-        private final Font font;
-        private final java.awt.Color colour;
-
-        private Line(String text, int x, int y, Font font, java.awt.Color colour){
-            this.text = text;
-            this.x = x;
-            this.y = y;
-            this.font = font;
-            this.colour = colour;
-        }
-    }
-
-    private List<Line> SectionLines(Graphics2D g, DetailSection section, int room, Font body, FontMetrics bodyMetrics){
-        List<Line> lines = new ArrayList<>();
-        java.awt.Color text = Theme.Current.GetCell().GetText(), quiet = Theme.Current.GetNav().GetDisabledText();
-        int lineHeight = bodyMetrics.getHeight();
-        int y = 0;
-        switch(section.GetState()){
-            case NOT_APPLICABLE:
-                lines.add(new Line(notApplicableText, 0, 0, body, quiet));
-                return lines;
-            case MISSING:
-                lines.add(new Line(missingText, 0, 0, body, Theme.Current.GetNav().GetSelected()));
-                return lines;
-            case EMPTY:
-                lines.add(new Line(emptyText, 0, 0, body, quiet));
-                return lines;
-            default:
-                break;
-        }
-        if(section.IsRating()){
-            lines.add(new Line(section.GetText(), 0, y, Theme.Current.GetCell().GetFont(), section.IsUnknownRating() ? quiet : text));
-            y += g.getFontMetrics(Theme.Current.GetCell().GetFont()).getHeight();
-            for(String wrapped : TextWrap.Lines(bodyMetrics, section.GetComment(), room)){
-                if(!wrapped.isEmpty()){
-                    lines.add(new Line(wrapped, 0, y, body, text));
-                    y += lineHeight;
-                }
-            }
-            return lines;
-        }
-        if(!section.GetText().isEmpty()){
-            for(String wrapped : TextWrap.Lines(bodyMetrics, section.GetText(), room)){
-                lines.add(new Line(wrapped, 0, y, body, text));
-                y += lineHeight;
-            }
-        }
-        for(DetailPart part : section.GetParts()){
-            y = PartLines(g, part, 0, y, room, body, bodyMetrics, lines, text, quiet);
-        }
-        return lines;
-    }
-
-    // A part's name, its text, and its nested parts, each level in by the layout's indent
-    private int PartLines(Graphics2D g, DetailPart part, int depth, int top, int room, Font body, FontMetrics bodyMetrics, List<Line> lines, java.awt.Color text, java.awt.Color quiet){
-        int indent = depth * layout.GetOverview().GetSeriesIndent();
-        Font nameFont = Theme.Current.GetHeading().GetFont();
-        FontMetrics nameMetrics = g.getFontMetrics(nameFont);
-        int y = top;
-        lines.add(new Line(part.GetName(), indent, y, nameFont, Theme.Current.GetHeading().GetColour()));
-        y += nameMetrics.getHeight();
-        if(part.IsEmpty()){
-            lines.add(new Line(emptyPartText, indent, y, body, quiet));
-            return y + bodyMetrics.getHeight();
-        }
-        if(!part.GetText().isEmpty()){
-            for(String wrapped : TextWrap.Lines(bodyMetrics, part.GetText(), Math.max(1, room - indent))){
-                lines.add(new Line(wrapped, indent, y, body, text));
-                y += bodyMetrics.getHeight();
-            }
-        }
-        for(DetailPart child : part.GetChildren()){
-            y = PartLines(g, child, depth + 1, y, room, body, bodyMetrics, lines, text, quiet);
-        }
-        return y;
-    }
-
     // Moves the page up or down by that many wheel notches (positive is down)
     public void Scroll(int wheelRotation){
         scroll = ClampScroll(scroll + wheelRotation * layout.GetList().GetScrollStep());
@@ -491,6 +373,11 @@ public class GameDetailScreen {
         boolean clicked = key != null && key.equals(pressedKey);
         pressedKey = null;
         return clicked && hits.Run(key);
+    }
+
+    // Is that point on a link in the review (so the pointer should be a hand)?
+    public boolean IsOverLink(Point point){
+        return RichBox.IsLinkKey(hits.KeyAt(point));
     }
 
     // Where a button was last drawn, or null

@@ -19,7 +19,11 @@ import Screens.Library.LibraryScreen;
 import Screens.GameDetail.GameDetailScreen;
 import Screens.Achievements.AchievementsScreen;
 import Screens.Settings.SettingsScreen;
+import Controller.BackEnd.Emoji.EmojiRegistry;
+import Controller.BackEnd.LinkOpener;
 import Controller.BackEnd.LocalConfig;
+import Screens.RichText.RichTextKit;
+import java.nio.file.Path;
 import Controller.BackEnd.AchievementView.AchievementViewData;
 import Controller.BackEnd.AchievementView.AchievementViewLoader;
 import Controller.BackEnd.GameDetail.GameDetailData;
@@ -45,6 +49,7 @@ import Model.Themes.Theme;
 
 class Main extends JFrame{
     private static final String layoutPath = "Resources/Themes/layout.properties";
+    private static final String emojiPath = "Resources/Emoji";
     private static final String startTheme = "Resources/Themes/default.properties";   // Its layout.* lines (if any) are laid over the layout file
 
     App canvas;
@@ -65,6 +70,7 @@ class Main extends JFrame{
         private SeriesViewScreen mySeriesView;
         private LibraryScreen myLibrary;
         private final ScreenFlow flow = new ScreenFlow();
+        private final RichTextKit richKit = new RichTextKit(EmojiRegistry.Load(Path.of(emojiPath)));
         private final RowActionHandler rowActions = new RowActionHandler(this, this::ReloadAndRepaint, this::OpenGameByTitle);
 
         // What the current press landed on, so release only acts if it's still on the same target
@@ -115,7 +121,7 @@ class Main extends JFrame{
             if(page == null){
                 return;
             }
-            myGameDetail = new GameDetailScreen(page, layout, this::CloseGameDetail, this::EditGame, this::OpenSeriesFromGame, this::OpenAchievements);
+            myGameDetail = new GameDetailScreen(page, layout, this::CloseGameDetail, this::EditGame, this::OpenSeriesFromGame, this::OpenAchievements, richKit, LinkOpener::Open);
             editingGame = false;
             flow.OpenGame();
         }
@@ -204,7 +210,7 @@ class Main extends JFrame{
                 return;
             }
             mySeriesView = new SeriesViewScreen(page, layout, this::CloseSeries, this::NewSeries, this::EditSeries, this::AssignGames,
-                    this::OpenGameFromMainView);
+                    this::OpenGameFromMainView, richKit, LinkOpener::Open);
             flow.OpenSeries();
         }
 
@@ -499,7 +505,16 @@ class Main extends JFrame{
         @Override
         public void mouseMoved(MouseEvent e) {
             mousePos = e.getPoint();
+            setCursor(Cursor.getPredefinedCursor(OverLink(mousePos) ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
             repaint();
+        }
+
+        // Is the point on a link in the text of the game or series page showing?
+        private boolean OverLink(Point point){
+            if(flow.Current() == Screen.SERIES_VIEW){
+                return mySeriesView.IsOverLink(point);
+            }
+            return flow.Current() == Screen.GAME_INFO_SCREEN && !editingGame && myGameDetail != null && myGameDetail.IsOverLink(point);
         }
 
         @Override
