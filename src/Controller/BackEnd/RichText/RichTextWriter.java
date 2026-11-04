@@ -145,7 +145,7 @@ public class RichTextWriter {
             added.sort((a, b) -> a.kind == 'L' ? -1 : b.kind == 'L' ? 1 : Integer.compare(LastIndex(inlines, at, b), LastIndex(inlines, at, a)));
             String words = inline.GetKind() == Inline.Kind.EMOJI ? ":" + inline.GetText() + ":" : Escaped(inline.GetText(), escape);
             if(escape && lineStart && open.isEmpty() && added.isEmpty()){
-                words = ListLookEscaped(words);
+                words = ListLookEscaped(words, LineText(inlines, i));
             }
             lineStart = false;
             String space = words.trim().isEmpty() ? "" : LeadingSpace(words);
@@ -219,16 +219,26 @@ public class RichTextWriter {
         return out.substring(start);
     }
 
-    // A line that starts like a list item ("- ", "+ ", "3. ", "3) ") has a backslash put before the mark so it stays text
-    private static String ListLookEscaped(String words){
-        if(words.length() > 1 && "-+".indexOf(words.charAt(0)) >= 0 && words.charAt(1) == ' '){
+    // The words of the line that starts at inline i (up to the next break), to see how the line begins
+    private static String LineText(List<Inline> inlines, int i){
+        StringBuilder line = new StringBuilder();
+        for(int k = i; k < inlines.size() && inlines.get(k).GetKind() != Inline.Kind.BREAK; k++){
+            line.append(inlines.get(k).GetKind() == Inline.Kind.EMOJI ? ":" + inlines.get(k).GetText() + ":" : inlines.get(k).GetText());
+        }
+        return line.toString();
+    }
+
+    // A line that starts like a list item ("- ", "+ ", "3. ", "3) ") has a backslash put before the mark so it stays text. words is the
+    // first run of the line, line all of it (the mark may be the whole first run and the space after it in the next)
+    private static String ListLookEscaped(String words, String line){
+        if(!words.isEmpty() && "-+".indexOf(words.charAt(0)) >= 0 && line.length() > 1 && line.charAt(1) == ' '){
             return "\\" + words;
         }
         int digits = 0;
         while(digits < words.length() && Character.isDigit(words.charAt(digits))){
             digits++;
         }
-        boolean numbered = digits > 0 && digits + 1 < words.length() && ".)".indexOf(words.charAt(digits)) >= 0 && words.charAt(digits + 1) == ' ';
+        boolean numbered = digits > 0 && digits < words.length() && ".)".indexOf(words.charAt(digits)) >= 0 && line.length() > digits + 1 && line.charAt(digits + 1) == ' ';
         return numbered ? words.substring(0, digits) + "\\" + words.substring(digits) : words;
     }
 
