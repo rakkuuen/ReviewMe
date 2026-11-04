@@ -39,7 +39,19 @@ public enum LayoutKey {
     OVERVIEW_CHART_BAR_WIDTH("overview.chartBarWidth", 1),
     OVERVIEW_CHART_BAR_GAP("overview.chartBarGap", 0),
     OVERVIEW_CHART_HEIGHT("overview.chartHeight", 1),
-    OVERVIEW_SERIES_INDENT("overview.seriesIndent", 0);          // How far a series' games sit in under its heading
+    OVERVIEW_SERIES_INDENT("overview.seriesIndent", 0),          // How far a series' games sit in under its heading
+
+    RICH_LINE_HEIGHT_PERCENT("rich.lineHeightPercent", 100, 400),   // Line height as a percentage of the font size (a percentage, not pixels)
+    RICH_BLOCK_GAP("rich.blockGap", 0),                             // Between paragraphs, and between a paragraph and a list
+    RICH_ITEM_GAP("rich.itemGap", 0),                               // Between list items
+    RICH_MARKER_COLUMN("rich.markerColumn", 1),                     // The column a list's bullets and numbers sit in, text starts after it
+    RICH_BULLET_SIZE("rich.bulletSize", 1),
+    RICH_BULLET_INSET("rich.bulletInset", 0),                       // From the left to the bullet
+    RICH_EMOJI_BELOW_BASELINE("rich.emojiBelowBaseline", 0),        // How far an emoji reaches below the text baseline, at 1x
+    RICH_EMOJI_SCALE("rich.emojiScale", 1, 8),                      // Pixels per emoji square beside text (a count)
+    RICH_EMOJI_ALONE_SCALE("rich.emojiAloneScale", 1, 8),           // The same, for a paragraph of only emoji (a count)
+    RICH_LINK_UNDERLINE("rich.linkUnderline", 1),
+    RICH_LINK_UNDERLINE_HOVER("rich.linkUnderlineHover", 1);
 
     private final String propertyName;
     private final int min;

@@ -128,6 +128,9 @@ public class LayoutLoader {
     private static void CheckTogether(Map<LayoutKey, Integer> numbers, List<String> problems){
         CheckNotSmaller(numbers, LayoutKey.WINDOW_START_WIDTH, LayoutKey.WINDOW_MIN_WIDTH, problems);
         CheckNotSmaller(numbers, LayoutKey.WINDOW_START_HEIGHT, LayoutKey.WINDOW_MIN_HEIGHT, problems);
+        if(numbers.get(LayoutKey.RICH_BULLET_INSET) + numbers.get(LayoutKey.RICH_BULLET_SIZE) > numbers.get(LayoutKey.RICH_MARKER_COLUMN)){
+            problems.add("Layout keys 'rich.bulletInset' and 'rich.bulletSize' together can't be wider than 'rich.markerColumn'");
+        }
     }
 
     private static void CheckNotSmaller(Map<LayoutKey, Integer> numbers, LayoutKey bigger, LayoutKey smaller, List<String> problems){

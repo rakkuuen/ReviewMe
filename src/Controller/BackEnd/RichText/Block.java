@@ -33,6 +33,9 @@ public class Block {
     // Line breaks between the end of the block before and the start of this one (0 for the first block)
     public int GetNewlinesBefore(){ return newlinesBefore; }
 
+    // Is there a blank line between the block before and this one
+    public boolean FollowsBlankLine(){ return newlinesBefore > 1; }
+
     // The item's number for a numbered item, otherwise 0
     public int GetNumber(){ return number; }
 

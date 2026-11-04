@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -60,9 +61,22 @@ public class ThemeLoader {
         TextStyle title = new TextStyle(ParseColor(props, "title.text"), ParseFont(props, "title.font", embeddedFonts));
         TextStyle heading = new TextStyle(ParseColor(props, "heading.text"), ParseFont(props, "heading.font", embeddedFonts));
 
+        RichTheme rich = LoadRich(props, embeddedFonts);
+
         Color background = ParseColor(props, "background");
 
-        return new Theme(button, cell, field, nav, title, heading, background);
+        return new Theme(button, cell, field, nav, title, heading, rich, background);
+    }
+
+    // The colours and fonts of formatted text (rich.colour.<key> for each key in the palette)
+    private static RichTheme LoadRich(Properties props, Map<String, Font> embeddedFonts){
+        Map<String, Color> palette = new LinkedHashMap<>();
+        for(String key : RichTheme.paletteKeys){
+            palette.put(key, ParseColor(props, "rich.colour." + key));
+        }
+        return new RichTheme(palette, ParseColor(props, "rich.boldText"), ParseColor(props, "rich.link"), ParseColor(props, "rich.linkUnderline"),
+                ParseColor(props, "rich.marker"), ParseFont(props, "rich.font." + RichTheme.serifKey, embeddedFonts),
+                ParseFont(props, "rich.font." + RichTheme.monoKey, embeddedFonts), ParseFont(props, "rich.font.marker", embeddedFonts));
     }
 
     // Loads embedded fonts
